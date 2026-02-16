@@ -1,0 +1,63 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Job {
+  id                    String      @id @default(uuid())
+  title                 String
+  location              String
+  employment_type       String      // full_time, part_time, contract, internship, freelance
+  description           String      @db.Text
+  salary_range          String?
+  currency_code         String?
+  calendly_link         String?
+  application_questions Json        @default("[]")
+  interview_questions   String?     @db.Text
+  status                String      @default("draft")
+  created_at            DateTime    @default(now())
+  updated_at            DateTime    @updatedAt
+  deleted_at            DateTime?
+  
+  candidates            Candidate[]
+
+  @@index([status])
+  @@index([employment_type])
+  @@index([deleted_at])
+}
+
+model Candidate {
+  id                      String    @id @default(uuid())
+  job_id                  String
+  name                    String
+  email                   String
+  phone_number            String?
+  linkedin_url            String?
+  resume_url              String
+  application_answers     Json      @default("[]")
+  status                  String    @default("new")
+  fit_score               Int?
+  resume_rating           Int?
+  answer_quality_rating   Int?
+  resume_summary          String?   @db.Text
+  experience_level        String?
+  needs_scoring           Boolean   @default(true)
+  created_at              DateTime  @default(now())
+  updated_at              DateTime  @updatedAt
+  deleted_at              DateTime?
+
+  job                     Job       @relation(fields: [job_id], references: [id])
+
+  @@index([job_id])
+  @@index([status])
+  @@index([fit_score])
+  @@index([needs_scoring])
+  @@index([deleted_at])
+}

@@ -1,0 +1,22 @@
+{
+  "name": "hunter-ai",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "dev:worker": "pnpm --filter worker dev",
+    "build": "pnpm --filter web build",
+    "build:worker": "pnpm --filter worker build",
+    "lint": "pnpm -r lint",
+    "db:generate": "pnpm --filter web exec prisma generate",
+    "db:push": "pnpm --filter web exec prisma db push",
+    "db:migrate": "pnpm --filter web exec prisma migrate dev",
+    "db:studio": "pnpm --filter web exec prisma studio"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
