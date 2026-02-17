@@ -1,41 +1,93 @@
 import 'dotenv/config';
-import { processQueue } from './jobs/processQueue.js';
+import http from 'node:http';
+import { processCandidate } from './jobs/processQueue.js';
 
-const POLL_INTERVAL_MS = parseInt(process.env.POLL_INTERVAL_MS || '30000', 10); // 30 seconds default
+const PORT = parseInt(process.env.PORT || '3001', 10);
+const WORKER_SECRET = process.env.WORKER_SECRET;
 
-console.log('Worker starting...');
-console.log(`Poll interval: ${POLL_INTERVAL_MS}ms`);
-
-async function main() {
-  // Initial run
-  await runProcessing();
-
-  // Set up polling interval
-  setInterval(runProcessing, POLL_INTERVAL_MS);
+function parseBody(req: http.IncomingMessage): Promise<Record<string, unknown>> {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', (chunk) => { body += chunk; });
+    req.on('end', () => {
+      try {
+        resolve(body ? JSON.parse(body) : {});
+      } catch {
+        reject(new Error('Invalid JSON'));
+      }
+    });
+    req.on('error', reject);
+  });
 }
 
-async function runProcessing() {
-  try {
-    console.log(`[${new Date().toISOString()}] Starting processing cycle...`);
-    await processQueue();
-    console.log(`[${new Date().toISOString()}] Processing cycle complete.`);
-  } catch (error) {
-    console.error(`[${new Date().toISOString()}] Error in processing cycle:`, error);
+const server = http.createServer(async (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+
+  // Health check
+  if (req.method === 'GET' && req.url === '/health') {
+    res.writeHead(200);
+    res.end(JSON.stringify({ status: 'ok' }));
+    return;
   }
-}
 
-// Handle graceful shutdown
+  // Process candidate (event-driven)
+  if (req.method === 'POST' && req.url === '/process') {
+    if (!WORKER_SECRET) {
+      res.writeHead(500);
+      res.end(JSON.stringify({ error: 'WORKER_SECRET not configured' }));
+      return;
+    }
+
+    const auth = req.headers.authorization;
+    const token = auth?.startsWith('Bearer ') ? auth.slice(7) : null;
+    if (token !== WORKER_SECRET) {
+      res.writeHead(401);
+      res.end(JSON.stringify({ error: 'Unauthorized' }));
+      return;
+    }
+
+    try {
+      const body = await parseBody(req);
+      const candidateId = typeof body.candidateId === 'string' ? body.candidateId : null;
+
+      if (!candidateId) {
+        res.writeHead(400);
+        res.end(JSON.stringify({ error: 'candidateId is required' }));
+        return;
+      }
+
+      const result = await processCandidate(candidateId);
+
+      if (result.ok) {
+        res.writeHead(200);
+        res.end(JSON.stringify({ ok: true }));
+      } else {
+        res.writeHead(400);
+        res.end(JSON.stringify({ ok: false, error: result.error }));
+      }
+    } catch (err) {
+      res.writeHead(500);
+      res.end(JSON.stringify({
+        error: err instanceof Error ? err.message : 'Internal server error',
+      }));
+    }
+    return;
+  }
+
+  res.writeHead(404);
+  res.end(JSON.stringify({ error: 'Not found' }));
+});
+
+server.listen(PORT, () => {
+  console.log(`Worker listening on port ${PORT} (event-driven)`);
+});
+
 process.on('SIGTERM', () => {
-  console.log('SIGTERM received. Shutting down gracefully...');
-  process.exit(0);
+  console.log('SIGTERM received. Shutting down...');
+  server.close(() => process.exit(0));
 });
 
 process.on('SIGINT', () => {
-  console.log('SIGINT received. Shutting down gracefully...');
-  process.exit(0);
-});
-
-main().catch((error) => {
-  console.error('Fatal error:', error);
-  process.exit(1);
+  console.log('SIGINT received. Shutting down...');
+  server.close(() => process.exit(0));
 });

@@ -89,7 +89,10 @@ Adicione as seguintes variaveis:
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Anon key do Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role key do Supabase |
 | `DATABASE_URL` | Connection string do Postgres |
+| `DIRECT_URL` | Connection string Session pooler (para migrations) |
 | `NEXT_PUBLIC_APP_URL` | URL do seu app na Vercel (ex: https://hunter-ai.vercel.app) |
+| `WORKER_URL` | URL publica do worker na Railway (ex: https://xxx.railway.app) |
+| `WORKER_SECRET` | Secret compartilhado - gere um valor aleatorio (ex: `openssl rand -hex 32`) e use o mesmo na Vercel e Railway |
 
 ### 3.3 Deploy
 
@@ -124,18 +127,24 @@ Va em **Variables** e adicione:
 | `SUPABASE_URL` | URL do seu projeto Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role key do Supabase |
 | `DATABASE_URL` | Connection string do Postgres |
-| `OPENAI_API_KEY` | Sua API key da OpenAI (opcional) |
+| `OPENAI_API_KEY` | Sua API key da OpenAI |
 | `RESEND_API_KEY` | Sua API key do Resend (opcional) |
 | `FROM_EMAIL` | Email de origem (ex: noreply@seudominio.com) |
 | `RECRUITER_EMAIL` | Email do recrutador para notificacoes |
 | `NEXT_PUBLIC_APP_URL` | URL do seu app na Vercel |
-| `POLL_INTERVAL_MS` | Intervalo de polling em ms (default: 30000) |
-| `BATCH_SIZE` | Quantidade de candidatos por ciclo (default: 5) |
+| `WORKER_SECRET` | Mesmo valor configurado na Vercel |
 
-### 4.4 Deploy
+### 4.4 Expor URL Publica do Worker
+
+1. Na Railway, clique no servico **worker**
+2. Va em **Settings** > **Networking** > **Generate Domain**
+3. Copie a URL gerada (ex: https://worker-production-xxx.up.railway.app)
+4. Adicione essa URL em `WORKER_URL` nas variaveis da **Vercel**
+
+### 4.5 Deploy
 
 1. O deploy sera automatico apos configurar as variaveis
-2. Verifique os logs para confirmar que o worker esta rodando
+2. Verifique os logs - deve aparecer "Worker listening on port XXXX (event-driven)"
 
 ## Passo 5: Verificar Deploy
 
@@ -145,11 +154,12 @@ Va em **Variables** e adicione:
 2. Faca login com o usuario admin criado
 3. Crie uma vaga de teste
 4. Compartilhe o link e faca uma aplicacao de teste
+5. O worker sera acionado automaticamente ao aplicar (event-driven)
 
 ### 5.2 Verificar Worker
 
 1. Na Railway, va em **Logs**
-2. Verifique se o worker esta processando candidatos
+2. Apos uma aplicacao, deve aparecer "Processing candidate: Nome (id)"
 3. Confirme que os scores estao sendo atualizados no painel
 
 ## Troubleshooting

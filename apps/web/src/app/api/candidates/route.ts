@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { triggerWorkerProcess } from '@/lib/worker';
 import { CreateCandidateSchema, CandidateFiltersSchema } from '@hunter/core';
 import { Prisma } from '@prisma/client';
 
@@ -149,6 +150,9 @@ export async function POST(request: NextRequest) {
         needs_scoring: true,
       },
     });
+
+    // Event-driven: trigger worker to process candidate
+    triggerWorkerProcess(candidate.id);
 
     return Response.json(candidate, { status: 201 });
   } catch (error) {
