@@ -125,6 +125,17 @@ export const LoginSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
+export const SignUpSchema = z
+  .object({
+    email: z.string().email('Invalid email'),
+    password: z.string().min(6, 'Password must be at least 6 characters'),
+    password_confirmation: z.string().min(6, 'Password must be at least 6 characters'),
+  })
+  .refine((data) => data.password === data.password_confirmation, {
+    message: 'Passwords do not match',
+    path: ['password_confirmation'],
+  });
+
 // ============================================
 // Query Schemas
 // ============================================
@@ -152,5 +163,6 @@ export type UpdateJobSchemaType = z.infer<typeof UpdateJobSchema>;
 export type CreateCandidateSchemaType = z.infer<typeof CreateCandidateSchema>;
 export type UpdateCandidateSchemaType = z.infer<typeof UpdateCandidateSchema>;
 export type LoginSchemaType = z.infer<typeof LoginSchema>;
+export type SignUpSchemaType = z.infer<typeof SignUpSchema>;
 export type JobFiltersSchemaType = z.infer<typeof JobFiltersSchema>;
 export type CandidateFiltersSchemaType = z.infer<typeof CandidateFiltersSchema>;

@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { processQueue } from './jobs/processQueue.js';
 
 const POLL_INTERVAL_MS = parseInt(process.env.POLL_INTERVAL_MS || '30000', 10); // 30 seconds default

@@ -137,6 +137,28 @@ class ApiClient {
     });
   }
 
+  async signup(
+    email: string,
+    password: string,
+    password_confirmation: string
+  ): Promise<{
+    user: { id: string; email: string };
+    access_token?: string;
+    refresh_token?: string;
+    expires_at?: number;
+    requires_confirmation?: boolean;
+    message?: string;
+  }> {
+    return this.request('/auth/signup', {
+      method: 'POST',
+      body: JSON.stringify({
+        email,
+        password,
+        password_confirmation,
+      }),
+    });
+  }
+
   async refreshToken(refreshToken: string): Promise<{
     access_token: string;
     refresh_token: string;

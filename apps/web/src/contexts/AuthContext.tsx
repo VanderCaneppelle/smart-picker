@@ -20,6 +20,11 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  signup: (
+    email: string,
+    password: string,
+    password_confirmation: string
+  ) => Promise<{ requires_confirmation: boolean }>;
   logout: () => void;
 }
 
@@ -86,6 +91,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(data.user);
   }, []);
 
+  const signup = useCallback(
+    async (email: string, password: string, password_confirmation: string) => {
+      const data = await apiClient.signup(email, password, password_confirmation);
+
+      if (!data.requires_confirmation && data.access_token) {
+        localStorage.setItem(TOKEN_KEY, data.access_token);
+        localStorage.setItem(REFRESH_TOKEN_KEY, data.refresh_token!);
+        localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+        apiClient.setToken(data.access_token);
+        setUser(data.user);
+      }
+
+      return {
+        requires_confirmation: data.requires_confirmation ?? false,
+      };
+    },
+    []
+  );
+
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
@@ -102,6 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         isAuthenticated: !!user,
         login,
+        signup,
         logout,
       }}
     >

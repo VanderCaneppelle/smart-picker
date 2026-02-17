@@ -8,11 +8,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button, Input } from '@/components/ui';
 import { Briefcase } from 'lucide-react';
 
-export default function LoginPage() {
+export default function SignUpPage() {
   const router = useRouter();
-  const { login, isAuthenticated } = useAuth();
+  const { signup, isAuthenticated } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordConfirmation, setPasswordConfirmation] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   // Redirect if already authenticated
@@ -26,11 +27,23 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
-      toast.success('Login successful!');
-      router.push('/jobs');
+      const { requires_confirmation } = await signup(
+        email,
+        password,
+        passwordConfirmation
+      );
+
+      if (requires_confirmation) {
+        toast.success(
+          'Account created! Check your email to confirm your account.'
+        );
+        router.push('/login');
+      } else {
+        toast.success('Account created successfully!');
+        router.push('/jobs');
+      }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Login failed');
+      toast.error(error instanceof Error ? error.message : 'Sign up failed');
     } finally {
       setIsLoading(false);
     }
@@ -49,14 +62,14 @@ export default function LoginPage() {
             Hunter AI
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Sign in to manage your job postings
+            Create your account to manage job postings
           </p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <Input
-              label="Email address"
+              label="Email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -71,8 +84,18 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              autoComplete="current-password"
-              placeholder="Enter your password"
+              autoComplete="new-password"
+              placeholder="At least 6 characters"
+            />
+
+            <Input
+              label="Confirm password"
+              type="password"
+              value={passwordConfirmation}
+              onChange={(e) => setPasswordConfirmation(e.target.value)}
+              required
+              autoComplete="new-password"
+              placeholder="Repeat your password"
             />
           </div>
 
@@ -82,17 +105,17 @@ export default function LoginPage() {
             size="lg"
             isLoading={isLoading}
           >
-            Sign in
+            Create account
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
-          Don&apos;t have an account?{' '}
+        <p className="text-center text-sm text-gray-600">
+          Already have an account?{' '}
           <Link
-            href="/signup"
+            href="/login"
             className="font-medium text-blue-600 hover:text-blue-500"
           >
-            Create account
+            Sign in
           </Link>
         </p>
       </div>

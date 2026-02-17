@@ -111,9 +111,9 @@ Adicione as seguintes variaveis:
 1. Clique no servico criado
 2. Va em **Settings**
 3. Configure:
-   - **Root Directory**: `apps/worker`
-   - **Build Command**: `pnpm install && pnpm build`
-   - **Start Command**: `pnpm start`
+   - **Root Directory**: deixe vazio ou `.` (raiz do monorepo)
+   - **Build Command**: `pnpm install && pnpm --filter worker build`
+   - **Start Command**: `pnpm --filter worker start`
 
 ### 4.3 Configurar Variaveis de Ambiente
 
