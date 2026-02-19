@@ -49,12 +49,22 @@ export const QuestionTypeSchema = z.enum([
 // Application Question Schemas
 // ============================================
 
+export const EliminatoryCriteriaSchema = z.object({
+  expected_answer: z.string().optional(),
+  accepted_values: z.array(z.string()).optional(),
+  range_min: z.number().optional(),
+  range_max: z.number().optional(),
+  tolerance_percent: z.number().optional(),
+});
+
 export const ApplicationQuestionSchema = z.object({
   id: z.string().uuid(),
   question: z.string().min(1, 'Question is required'),
   required: z.boolean(),
   type: QuestionTypeSchema,
   options: z.array(z.string()).optional(),
+  is_eliminatory: z.boolean().optional(),
+  eliminatory_criteria: EliminatoryCriteriaSchema.optional(),
 });
 
 export const ApplicationAnswerSchema = z.object({

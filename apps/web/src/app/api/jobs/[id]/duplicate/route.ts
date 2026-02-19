@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { verifyAuth, unauthorizedResponse, jobBelongsToUser } from '@/lib/auth';
 import { v4 as uuidv4 } from 'uuid';
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         salary_range: originalJob.salary_range,
         currency_code: originalJob.currency_code,
         calendly_link: originalJob.calendly_link,
-        application_questions: applicationQuestions,
+        application_questions: applicationQuestions as unknown as Prisma.InputJsonValue,
         interview_questions: originalJob.interview_questions,
         resume_weight: originalJob.resume_weight,
         answers_weight: originalJob.answers_weight,
