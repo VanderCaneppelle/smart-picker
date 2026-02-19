@@ -414,7 +414,8 @@ export default function ApplyPage() {
                   <h3 className="font-semibold text-gray-900">Perguntas adicionais</h3>
                   {questions.map((question) => (
                     <div key={question.id}>
-                      {question.type === 'textarea' ? (
+                      {/* Texto longo */}
+                      {question.type === 'textarea' && (
                         <Textarea
                           label={question.question}
                           value={answers[question.id] || ''}
@@ -425,7 +426,10 @@ export default function ApplyPage() {
                           required={question.required}
                           rows={4}
                         />
-                      ) : (
+                      )}
+
+                      {/* Texto curto */}
+                      {question.type === 'text' && (
                         <Input
                           label={question.question}
                           value={answers[question.id] || ''}
@@ -435,6 +439,90 @@ export default function ApplyPage() {
                           error={errors[`question_${question.id}`]}
                           required={question.required}
                         />
+                      )}
+
+                      {/* Sim/Não ou Escolha única */}
+                      {(question.type === 'yes_no' || question.type === 'select') && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            {question.question}
+                            {question.required && <span className="text-red-500 ml-1">*</span>}
+                          </label>
+                          <div className="space-y-2">
+                            {(question.options || (question.type === 'yes_no' ? ['Sim', 'Não'] : [])).map((option, optIndex) => (
+                              <label
+                                key={optIndex}
+                                className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                                  answers[question.id] === option
+                                    ? 'border-emerald-500 bg-emerald-50'
+                                    : 'border-gray-200 hover:border-gray-300'
+                                }`}
+                              >
+                                <input
+                                  type="radio"
+                                  name={`question_${question.id}`}
+                                  value={option}
+                                  checked={answers[question.id] === option}
+                                  onChange={(e) =>
+                                    setAnswers({ ...answers, [question.id]: e.target.value })
+                                  }
+                                  className="text-emerald-600 focus:ring-emerald-500"
+                                />
+                                <span className="text-gray-900">{option}</span>
+                              </label>
+                            ))}
+                          </div>
+                          {errors[`question_${question.id}`] && (
+                            <p className="mt-1 text-sm text-red-500">{errors[`question_${question.id}`]}</p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Múltipla escolha */}
+                      {question.type === 'multiselect' && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            {question.question}
+                            {question.required && <span className="text-red-500 ml-1">*</span>}
+                          </label>
+                          <p className="text-xs text-gray-500 mb-2">Selecione uma ou mais opções</p>
+                          <div className="space-y-2">
+                            {(question.options || []).map((option, optIndex) => {
+                              const selectedOptions = answers[question.id] ? answers[question.id].split('|||') : [];
+                              const isChecked = selectedOptions.includes(option);
+                              return (
+                                <label
+                                  key={optIndex}
+                                  className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                                    isChecked
+                                      ? 'border-emerald-500 bg-emerald-50'
+                                      : 'border-gray-200 hover:border-gray-300'
+                                  }`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    value={option}
+                                    checked={isChecked}
+                                    onChange={(e) => {
+                                      let newSelected: string[];
+                                      if (e.target.checked) {
+                                        newSelected = [...selectedOptions, option];
+                                      } else {
+                                        newSelected = selectedOptions.filter((o) => o !== option);
+                                      }
+                                      setAnswers({ ...answers, [question.id]: newSelected.join('|||') });
+                                    }}
+                                    className="rounded text-emerald-600 focus:ring-emerald-500"
+                                  />
+                                  <span className="text-gray-900">{option}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                          {errors[`question_${question.id}`] && (
+                            <p className="mt-1 text-sm text-red-500">{errors[`question_${question.id}`]}</p>
+                          )}
+                        </div>
                       )}
                     </div>
                   ))}

@@ -56,11 +56,11 @@ const currencyOptions = [
 ];
 
 const questionTypeOptions = [
-  { value: 'text', label: 'Short Text' },
-  { value: 'textarea', label: 'Long Text' },
-  { value: 'select', label: 'Single Choice' },
-  { value: 'multiselect', label: 'Multiple Choice' },
-  { value: 'file', label: 'File Upload' },
+  { value: 'text', label: 'Texto curto' },
+  { value: 'textarea', label: 'Texto longo' },
+  { value: 'yes_no', label: 'Sim / Não' },
+  { value: 'select', label: 'Escolha única' },
+  { value: 'multiselect', label: 'Múltipla escolha' },
 ];
 
 const getStatusBadgeVariant = (status: string) => {
@@ -200,6 +200,7 @@ export default function JobDetailPage() {
         question: '',
         required: false,
         type: 'text' as QuestionType,
+        options: [],
       },
     ]);
   };
@@ -207,6 +208,42 @@ export default function JobDetailPage() {
   const updateQuestion = (index: number, updates: Partial<ApplicationQuestion>) => {
     const newQuestions = [...applicationQuestions];
     newQuestions[index] = { ...newQuestions[index], ...updates };
+    
+    // Se mudou para yes_no, define as opções automaticamente
+    if (updates.type === 'yes_no') {
+      newQuestions[index].options = ['Sim', 'Não'];
+    }
+    // Se mudou para text ou textarea, limpa as opções
+    if (updates.type === 'text' || updates.type === 'textarea') {
+      newQuestions[index].options = [];
+    }
+    // Se mudou para select ou multiselect e não tem opções, inicializa vazio
+    if ((updates.type === 'select' || updates.type === 'multiselect') && !newQuestions[index].options?.length) {
+      newQuestions[index].options = [''];
+    }
+    
+    setApplicationQuestions(newQuestions);
+  };
+
+  const addOption = (questionIndex: number) => {
+    const newQuestions = [...applicationQuestions];
+    const options = newQuestions[questionIndex].options || [];
+    newQuestions[questionIndex].options = [...options, ''];
+    setApplicationQuestions(newQuestions);
+  };
+
+  const updateOption = (questionIndex: number, optionIndex: number, value: string) => {
+    const newQuestions = [...applicationQuestions];
+    const options = [...(newQuestions[questionIndex].options || [])];
+    options[optionIndex] = value;
+    newQuestions[questionIndex].options = options;
+    setApplicationQuestions(newQuestions);
+  };
+
+  const removeOption = (questionIndex: number, optionIndex: number) => {
+    const newQuestions = [...applicationQuestions];
+    const options = newQuestions[questionIndex].options || [];
+    newQuestions[questionIndex].options = options.filter((_, i) => i !== optionIndex);
     setApplicationQuestions(newQuestions);
   };
 
@@ -400,7 +437,7 @@ export default function JobDetailPage() {
 
             {applicationQuestions.length === 0 ? (
               <p className="text-gray-500 text-sm py-4 text-center">
-                No questions added yet.
+                Nenhuma pergunta adicionada.
               </p>
             ) : (
               <div className="space-y-4">
@@ -409,16 +446,17 @@ export default function JobDetailPage() {
                     <div className="flex items-start gap-4">
                       <div className="flex-1 space-y-3">
                         <Input
-                          label={`Question ${index + 1}`}
+                          label={`Pergunta ${index + 1}`}
                           value={question.question}
                           onChange={(e) => updateQuestion(index, { question: e.target.value })}
+                          placeholder="Digite sua pergunta"
                         />
                         <div className="flex items-center gap-4">
                           <Select
                             options={questionTypeOptions}
                             value={question.type}
                             onChange={(e) => updateQuestion(index, { type: e.target.value as QuestionType })}
-                            className="w-40"
+                            className="w-44"
                           />
                           <label className="flex items-center gap-2 text-sm">
                             <input
@@ -427,9 +465,57 @@ export default function JobDetailPage() {
                               onChange={(e) => updateQuestion(index, { required: e.target.checked })}
                               className="rounded border-gray-300"
                             />
-                            Required
+                            Obrigatória
                           </label>
                         </div>
+
+                        {/* Opções para select e multiselect */}
+                        {(question.type === 'select' || question.type === 'multiselect') && (
+                          <div className="mt-3 pl-4 border-l-2 border-gray-200">
+                            <p className="text-sm font-medium text-gray-700 mb-2">Opções de resposta:</p>
+                            <div className="space-y-2">
+                              {(question.options || []).map((option, optIndex) => (
+                                <div key={optIndex} className="flex items-center gap-2">
+                                  <Input
+                                    value={option}
+                                    onChange={(e) => updateOption(index, optIndex, e.target.value)}
+                                    placeholder={`Opção ${optIndex + 1}`}
+                                    className="flex-1"
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => removeOption(index, optIndex)}
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    disabled={(question.options?.length || 0) <= 1}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => addOption(index)}
+                              leftIcon={<Plus className="h-3 w-3" />}
+                              className="mt-2 text-emerald-600 hover:text-emerald-700"
+                            >
+                              Adicionar opção
+                            </Button>
+                          </div>
+                        )}
+
+                        {/* Mostrar opções fixas para yes_no */}
+                        {question.type === 'yes_no' && (
+                          <div className="mt-3 pl-4 border-l-2 border-gray-200">
+                            <p className="text-sm text-gray-500">
+                              Opções: <span className="font-medium">Sim</span> / <span className="font-medium">Não</span>
+                            </p>
+                          </div>
+                        )}
                       </div>
                       <Button
                         type="button"

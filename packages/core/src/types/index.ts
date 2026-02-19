@@ -53,6 +53,7 @@ export const QuestionType = {
   TEXTAREA: 'textarea',
   SELECT: 'select',
   MULTISELECT: 'multiselect',
+  YES_NO: 'yes_no',
   FILE: 'file',
 } as const;
 
