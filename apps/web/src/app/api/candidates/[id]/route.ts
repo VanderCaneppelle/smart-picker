@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { verifyAuth, unauthorizedResponse, jobBelongsToUser } from '@/lib/auth';
 import { UpdateCandidateSchema } from '@hunter/core';
 import { triggerScheduleInterviewEmail } from '@/lib/worker';
 
@@ -28,19 +28,22 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             location: true,
             employment_type: true,
             application_questions: true,
+            user_id: true,
           },
         },
       },
     });
 
-    if (!candidate) {
+    if (!candidate || !jobBelongsToUser(candidate.job, user)) {
       return Response.json(
         { error: 'Not Found', message: 'Candidate not found' },
         { status: 404 }
       );
     }
 
-    return Response.json(candidate);
+    // Remove user_id from response
+    const { user_id: _, ...jobWithoutUserId } = candidate.job;
+    return Response.json({ ...candidate, job: jobWithoutUserId });
   } catch (error) {
     console.error('Error fetching candidate:', error);
     return Response.json(
@@ -73,12 +76,13 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Check if candidate exists
+    // Check if candidate exists and belongs to user's job
     const existingCandidate = await prisma.candidate.findFirst({
       where: { id, deleted_at: null },
+      include: { job: { select: { user_id: true } } },
     });
 
-    if (!existingCandidate) {
+    if (!existingCandidate || !jobBelongsToUser(existingCandidate.job, user)) {
       return Response.json(
         { error: 'Not Found', message: 'Candidate not found' },
         { status: 404 }
@@ -135,12 +139,13 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     const { id } = await params;
 
-    // Check if candidate exists
+    // Check if candidate exists and belongs to user's job
     const existingCandidate = await prisma.candidate.findFirst({
       where: { id, deleted_at: null },
+      include: { job: { select: { user_id: true } } },
     });
 
-    if (!existingCandidate) {
+    if (!existingCandidate || !jobBelongsToUser(existingCandidate.job, user)) {
       return Response.json(
         { error: 'Not Found', message: 'Candidate not found' },
         { status: 404 }

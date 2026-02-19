@@ -4,9 +4,14 @@ import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
 import { CreateJobSchema, JobFiltersSchema } from '@hunter/core';
 import { Prisma } from '@prisma/client';
 
-// GET /api/jobs - List all jobs (public)
+// GET /api/jobs - List jobs (protected - only own jobs)
 export async function GET(request: NextRequest) {
   try {
+    const user = await verifyAuth(request);
+    if (!user) {
+      return unauthorizedResponse();
+    }
+
     const { searchParams } = new URL(request.url);
     
     const filters = JobFiltersSchema.safeParse({
@@ -24,6 +29,7 @@ export async function GET(request: NextRequest) {
 
     const where: Prisma.JobWhereInput = {
       deleted_at: null,
+      user_id: user.id, // Multi-tenant: apenas vagas do recrutador
     };
 
     if (filters.data.status) {
@@ -88,6 +94,7 @@ export async function POST(request: NextRequest) {
 
     const job = await prisma.job.create({
       data: {
+        user_id: user.id,
         title: validation.data.title,
         location: validation.data.location,
         employment_type: validation.data.employment_type,
@@ -98,6 +105,9 @@ export async function POST(request: NextRequest) {
         application_questions: validation.data.application_questions,
         interview_questions: validation.data.interview_questions,
         status: validation.data.status,
+        resume_weight: validation.data.resume_weight ?? 5,
+        answers_weight: validation.data.answers_weight ?? 5,
+        scoring_instructions: validation.data.scoring_instructions ?? null,
       },
       include: {
         _count: {

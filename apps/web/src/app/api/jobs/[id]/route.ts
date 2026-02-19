@@ -1,16 +1,19 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { verifyAuth, unauthorizedResponse, jobBelongsToUser } from '@/lib/auth';
 import { UpdateJobSchema } from '@hunter/core';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
-// GET /api/jobs/:id - Get job details (public)
+// GET /api/jobs/:id - Get job details
+// - Autenticado + dono: retorna qualquer status (dashboard)
+// - Não autenticado: retorna apenas se ativa (página de candidatura)
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
+    const user = await verifyAuth(request);
 
     const job = await prisma.job.findFirst({
       where: { id, deleted_at: null },
@@ -26,6 +29,24 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         { error: 'Not Found', message: 'Job not found' },
         { status: 404 }
       );
+    }
+
+    if (user) {
+      // Recrutador autenticado: só retorna se for dono
+      if (!jobBelongsToUser(job, user)) {
+        return Response.json(
+          { error: 'Not Found', message: 'Job not found' },
+          { status: 404 }
+        );
+      }
+    } else {
+      // Sem auth: retorna só se vaga ativa (candidatos aplicando)
+      if (job.status !== 'active') {
+        return Response.json(
+          { error: 'Not Found', message: 'Job not found' },
+          { status: 404 }
+        );
+      }
     }
 
     return Response.json(job);
@@ -61,12 +82,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Check if job exists
+    // Check if job exists and user owns it
     const existingJob = await prisma.job.findFirst({
       where: { id, deleted_at: null },
     });
 
-    if (!existingJob) {
+    if (!existingJob || !jobBelongsToUser(existingJob, user)) {
       return Response.json(
         { error: 'Not Found', message: 'Job not found' },
         { status: 404 }
@@ -87,6 +108,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     if (data.application_questions !== undefined) updateData.application_questions = data.application_questions;
     if (data.interview_questions !== undefined) updateData.interview_questions = data.interview_questions;
     if (data.status !== undefined) updateData.status = data.status;
+    if (data.resume_weight !== undefined) updateData.resume_weight = data.resume_weight;
+    if (data.answers_weight !== undefined) updateData.answers_weight = data.answers_weight;
+    if (data.scoring_instructions !== undefined) updateData.scoring_instructions = data.scoring_instructions;
 
     const job = await prisma.job.update({
       where: { id },
@@ -118,12 +142,12 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     const { id } = await params;
 
-    // Check if job exists
+    // Check if job exists and user owns it
     const existingJob = await prisma.job.findFirst({
       where: { id, deleted_at: null },
     });
 
-    if (!existingJob) {
+    if (!existingJob || !jobBelongsToUser(existingJob, user)) {
       return Response.json(
         { error: 'Not Found', message: 'Job not found' },
         { status: 404 }

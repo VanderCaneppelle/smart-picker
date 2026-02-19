@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { verifyAuth, unauthorizedResponse, jobBelongsToUser } from '@/lib/auth';
 import { v4 as uuidv4 } from 'uuid';
 import type { ApplicationQuestion } from '@hunter/core';
 
@@ -18,12 +18,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     const { id } = await params;
 
-    // Find the original job
+    // Find the original job and verify ownership
     const originalJob = await prisma.job.findFirst({
       where: { id, deleted_at: null },
     });
 
-    if (!originalJob) {
+    if (!originalJob || !jobBelongsToUser(originalJob, user)) {
       return Response.json(
         { error: 'Not Found', message: 'Job not found' },
         { status: 404 }
@@ -39,9 +39,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       })
     );
 
-    // Create the duplicate
+    // Create the duplicate (owned by same user)
     const duplicatedJob = await prisma.job.create({
       data: {
+        user_id: user.id,
         title: `${originalJob.title} (Copy)`,
         location: originalJob.location,
         employment_type: originalJob.employment_type,
@@ -51,6 +52,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         calendly_link: originalJob.calendly_link,
         application_questions: applicationQuestions,
         interview_questions: originalJob.interview_questions,
+        resume_weight: originalJob.resume_weight,
+        answers_weight: originalJob.answers_weight,
+        scoring_instructions: originalJob.scoring_instructions,
         status: 'active',
       },
       include: {

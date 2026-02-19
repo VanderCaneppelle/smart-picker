@@ -32,6 +32,10 @@ export async function GET(request: NextRequest) {
 
     const where: Prisma.CandidateWhereInput = {
       deleted_at: null,
+      job: {
+        user_id: user.id, // Multi-tenant: apenas candidatos das vagas do recrutador
+        deleted_at: null,
+      },
     };
 
     if (filters.data.job_id) {

@@ -13,6 +13,7 @@ datasource db {
 
 model Job {
   id                    String      @id @default(uuid())
+  user_id               String?     // Supabase user ID - owner/recruiter (null = legacy, não exibido)
   title                 String
   location              String
   employment_type       String      // full_time, part_time, contract, internship, freelance
@@ -32,6 +33,7 @@ model Job {
   
   candidates            Candidate[]
 
+  @@index([user_id])
   @@index([status])
   @@index([employment_type])
   @@index([deleted_at])

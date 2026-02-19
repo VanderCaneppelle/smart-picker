@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { verifyAuth, unauthorizedResponse, jobBelongsToUser } from '@/lib/auth';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -16,12 +16,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const { id } = await params;
 
-    // Check if job exists
+    // Check if job exists and user owns it
     const job = await prisma.job.findFirst({
       where: { id, deleted_at: null },
     });
 
-    if (!job) {
+    if (!job || !jobBelongsToUser(job, user)) {
       return Response.json(
         { error: 'Not Found', message: 'Job not found' },
         { status: 404 }

@@ -47,3 +47,8 @@ export function unauthorizedResponse(message = 'Unauthorized') {
     { status: 401 }
   );
 }
+
+/** Check if a job belongs to the given user (for multi-tenant isolation) */
+export function jobBelongsToUser(job: { user_id: string | null }, user: AuthUser): boolean {
+  return job.user_id === user.id;
+}

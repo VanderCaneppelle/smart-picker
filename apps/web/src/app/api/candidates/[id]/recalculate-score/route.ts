@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { verifyAuth, unauthorizedResponse, jobBelongsToUser } from '@/lib/auth';
 import { triggerWorkerProcess } from '@/lib/worker';
 
 interface RouteParams {
@@ -19,9 +19,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     const candidate = await prisma.candidate.findFirst({
       where: { id, deleted_at: null },
+      include: { job: { select: { user_id: true } } },
     });
 
-    if (!candidate) {
+    if (!candidate || !jobBelongsToUser(candidate.job, user)) {
       return Response.json(
         { error: 'Not Found', message: 'Candidate not found' },
         { status: 404 }

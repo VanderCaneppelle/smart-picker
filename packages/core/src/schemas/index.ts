@@ -77,6 +77,9 @@ export const CreateJobSchema = z.object({
   application_questions: z.array(ApplicationQuestionSchema).optional().default([]),
   interview_questions: z.string().nullable().optional(),
   status: JobStatusSchema.optional().default('draft'),
+  resume_weight: z.number().min(1).max(10).optional().default(5),
+  answers_weight: z.number().min(1).max(10).optional().default(5),
+  scoring_instructions: z.string().nullable().optional(),
 });
 
 export const UpdateJobSchema = z.object({
@@ -90,6 +93,9 @@ export const UpdateJobSchema = z.object({
   application_questions: z.array(ApplicationQuestionSchema).optional(),
   interview_questions: z.string().nullable().optional(),
   status: JobStatusSchema.optional(),
+  resume_weight: z.number().min(1).max(10).optional(),
+  answers_weight: z.number().min(1).max(10).optional(),
+  scoring_instructions: z.string().nullable().optional(),
 });
 
 // ============================================
