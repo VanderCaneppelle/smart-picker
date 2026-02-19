@@ -77,6 +77,7 @@ export interface ApplicationQuestion {
   required: boolean;
   type: QuestionType;
   options?: string[];
+  is_eliminatory?: boolean;
   eliminatory_criteria?: EliminatoryCriteria;
 }
 
@@ -148,6 +149,16 @@ export interface UpdateJobInput {
 // Candidate
 // ============================================
 
+export type DisqualificationSeverity = 'eliminated' | 'warning';
+
+export interface DisqualificationFlag {
+  question_id: string;
+  question_text: string;
+  candidate_answer: string;
+  severity: DisqualificationSeverity;
+  reason: string;
+}
+
 export interface Candidate {
   id: string;
   job_id: string;
@@ -164,6 +175,7 @@ export interface Candidate {
   resume_summary?: string | null;
   experience_level?: string | null;
   needs_scoring: boolean;
+  disqualification_flags?: DisqualificationFlag[] | null;
   schedule_interview_email_sent_at?: string | null;
   created_at: string;
   updated_at: string;

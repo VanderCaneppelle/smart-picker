@@ -63,6 +63,7 @@ export const ApplicationQuestionSchema = z.object({
   required: z.boolean(),
   type: QuestionTypeSchema,
   options: z.array(z.string()).optional(),
+  is_eliminatory: z.boolean().optional(),
   eliminatory_criteria: EliminatoryCriteriaSchema.optional(),
 });
 

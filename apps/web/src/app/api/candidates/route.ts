@@ -143,8 +143,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const questions = (job.application_questions || []) as ApplicationQuestion[];
-    const candidateAnswers = (validation.data.application_answers || []) as ApplicationAnswer[];
+    const questions = (job.application_questions || []) as unknown as ApplicationQuestion[];
+    const candidateAnswers = (validation.data.application_answers || []) as unknown as ApplicationAnswer[];
 
     const disqualificationFlags = evaluateEliminatoryQuestions(questions, candidateAnswers);
 
@@ -161,7 +161,8 @@ export async function POST(request: NextRequest) {
         application_answers: validation.data.application_answers,
         status: hasElimination ? 'rejected' : 'new',
         needs_scoring: !hasElimination,
-        disqualification_flags: disqualificationFlags.length > 0 ? disqualificationFlags : [],
+        disqualification_flags:
+          (disqualificationFlags.length > 0 ? disqualificationFlags : []) as unknown as Prisma.InputJsonValue,
       },
     });
 
