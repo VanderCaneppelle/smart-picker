@@ -47,3 +47,28 @@ export function triggerScheduleInterviewEmail(candidateId: string): void {
     console.error('[Worker] Failed to send schedule interview email:', err);
   });
 }
+
+/**
+ * Triggers the worker to send rejection email to the candidate.
+ * Fire-and-forget.
+ */
+export function triggerRejectionEmail(candidateId: string): void {
+  const workerUrl = process.env.WORKER_URL;
+  const workerSecret = process.env.WORKER_SECRET;
+
+  if (!workerUrl || !workerSecret) {
+    return;
+  }
+
+  const url = `${workerUrl.replace(/\/$/, '')}/send-rejection-email`;
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${workerSecret}`,
+    },
+    body: JSON.stringify({ candidateId }),
+  }).catch((err) => {
+    console.error('[Worker] Failed to send rejection email:', err);
+  });
+}

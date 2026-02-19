@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import http from 'node:http';
 import { processCandidate } from './jobs/processQueue.js';
-import { sendScheduleInterviewEmail } from './jobs/sendEmails.js';
+import { sendScheduleInterviewEmail, sendRejectionEmail } from './jobs/sendEmails.js';
 import { prisma } from './lib/db.js';
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
@@ -135,6 +135,67 @@ const server = http.createServer(async (req, res) => {
       res.end(JSON.stringify({ ok: true }));
     } catch (err) {
       console.error('Error sending schedule interview email:', err);
+      res.writeHead(500);
+      res.end(JSON.stringify({
+        error: err instanceof Error ? err.message : 'Internal server error',
+      }));
+    }
+    return;
+  }
+
+  // Send rejection email to candidate when status is set to rejected
+  if (req.method === 'POST' && req.url === '/send-rejection-email') {
+    if (!WORKER_SECRET) {
+      res.writeHead(500);
+      res.end(JSON.stringify({ error: 'WORKER_SECRET not configured' }));
+      return;
+    }
+
+    const auth = req.headers.authorization;
+    const token = auth?.startsWith('Bearer ') ? auth.slice(7) : null;
+    if (token !== WORKER_SECRET) {
+      res.writeHead(401);
+      res.end(JSON.stringify({ error: 'Unauthorized' }));
+      return;
+    }
+
+    try {
+      const body = await parseBody(req);
+      const candidateId = typeof body.candidateId === 'string' ? body.candidateId : null;
+
+      if (!candidateId) {
+        res.writeHead(400);
+        res.end(JSON.stringify({ error: 'candidateId is required' }));
+        return;
+      }
+
+      const candidate = await prisma.candidate.findFirst({
+        where: { id: candidateId, deleted_at: null },
+        include: {
+          job: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+        },
+      });
+
+      if (!candidate) {
+        res.writeHead(404);
+        res.end(JSON.stringify({ error: 'Candidate not found' }));
+        return;
+      }
+
+      await sendRejectionEmail(
+        { id: candidate.id, name: candidate.name, email: candidate.email },
+        candidate.job,
+      );
+
+      res.writeHead(200);
+      res.end(JSON.stringify({ ok: true }));
+    } catch (err) {
+      console.error('Error sending rejection email:', err);
       res.writeHead(500);
       res.end(JSON.stringify({
         error: err instanceof Error ? err.message : 'Internal server error',

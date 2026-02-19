@@ -200,3 +200,57 @@ export async function sendScheduleInterviewEmail(
     throw error;
   }
 }
+
+/** Send rejection email to candidate when status is set to rejected */
+export async function sendRejectionEmail(
+  candidate: Candidate,
+  job: Job
+): Promise<void> {
+  if (!resend) {
+    console.log('Resend not configured. Skipping rejection email.');
+    return;
+  }
+
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: candidate.email,
+      subject: `Update on your application: ${job.title}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #4b5563 0%, #374151 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">Update on your application</h1>
+          </div>
+          
+          <div style="background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+            <p style="font-size: 16px;">Hi ${candidate.name},</p>
+            
+            <p>Thank you for your interest in the <strong>${job.title}</strong> position and for taking the time to apply.</p>
+            
+            <p>After careful consideration, we have decided to move forward with other candidates whose experience more closely matches our current needs for this role.</p>
+            
+            <p>We encourage you to apply again in the future if you see a position that fits your background. We wish you the best in your job search.</p>
+            
+            <p style="margin-bottom: 0;">Best regards,<br><strong>The Hiring Team</strong></p>
+          </div>
+          
+          <div style="text-align: center; padding: 20px; color: #6b7280; font-size: 12px;">
+            <p style="margin: 0;">This email was sent by Hunter AI</p>
+          </div>
+        </body>
+        </html>
+      `,
+    });
+
+    console.log(`Rejection email sent to candidate: ${candidate.email}`);
+  } catch (error) {
+    console.error('Error sending rejection email to candidate:', error);
+    throw error;
+  }
+}
