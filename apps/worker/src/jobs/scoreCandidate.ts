@@ -41,18 +41,21 @@ export async function scoreCandidate(candidate: CandidateWithJob): Promise<Scori
   }
 
   try {
-    // Parse resume
+    // Parse resume (PDF only; image-only PDFs or failed fetch → we evaluate from answers)
     let resumeText = '';
+    let resumeUnparseable = false;
     try {
       if (candidate.resume_url.toLowerCase().endsWith('.pdf')) {
         resumeText = await fetchAndParsePdf(candidate.resume_url);
       } else {
-        // For non-PDF files, we'll just note that we couldn't parse it
         resumeText = 'Resume format not supported for parsing.';
+        resumeUnparseable = true;
       }
     } catch (error) {
       console.error('Error parsing resume:', error);
-      resumeText = 'Failed to parse resume.';
+      resumeText =
+        '[The resume could not be read automatically. Possible causes: PDF is image-only (scanned/exported as image), or the file could not be fetched. Please base your evaluation mainly on the application answers below.]';
+      resumeUnparseable = true;
     }
 
     // Prepare application answers
@@ -97,12 +100,12 @@ EVALUATION WEIGHTS:
 ${scoringInstructions ? `\nADDITIONAL INSTRUCTIONS FROM RECRUITER:\n${scoringInstructions}` : ''}
 
 Please evaluate this candidate and provide:
-1. resume_rating: A score from 1-5 rating the quality and relevance of the resume
+1. resume_rating: A score from 1-5 rating the quality and relevance of the resume (if the resume could not be read, use 3 and explain in resume_summary)
 2. answer_quality_rating: A score from 1-5 rating the quality of their application answers
-3. resume_summary: A brief 2-3 sentence summary of the candidate's background and key qualifications
-4. experience_level: One of: "Entry Level", "Junior", "Mid-Level", "Senior", "Lead", "Executive"
+3. resume_summary: A brief 2-3 sentence summary. If the resume text was not available or could not be parsed, write something like: "Currículo não pôde ser lido automaticamente (pode ser PDF só com imagem). Avaliação baseada nas respostas da candidatura." Then briefly summarize what you can infer from the application answers.
+4. experience_level: One of: "Entry Level", "Junior", "Mid-Level", "Senior", "Lead", "Executive" (if unknown, infer from answers or use "Unknown")
 
-IMPORTANT: Consider the evaluation weights when assessing the candidate. If resume weight is higher, focus more on experience and qualifications. If answers weight is higher, focus more on how well they responded to the application questions.
+IMPORTANT: Consider the evaluation weights when assessing the candidate. If the resume could not be read, base your evaluation primarily on the application answers and do not penalize the candidate for the parsing issue.
 
 Respond in JSON format only:
 {
