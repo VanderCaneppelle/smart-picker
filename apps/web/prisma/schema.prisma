@@ -11,6 +11,20 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+model Recruiter {
+  id           String    @id // Supabase Auth user ID
+  email        String    @unique
+  name         String
+  company      String?
+  phone_number String?
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  jobs Job[]
+
+  @@index([email])
+}
+
 model Job {
   id                    String      @id @default(uuid())
   user_id               String?     // Supabase user ID - owner/recruiter (null = legacy, não exibido)
@@ -30,7 +44,8 @@ model Job {
   created_at            DateTime    @default(now())
   updated_at            DateTime    @updatedAt
   deleted_at            DateTime?
-  
+
+  recruiter             Recruiter?  @relation(fields: [user_id], references: [id])
   candidates            Candidate[]
 
   @@index([user_id])

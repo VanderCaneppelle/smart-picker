@@ -1,4 +1,4 @@
-import { resend, FROM_EMAIL, RECRUITER_EMAIL } from '../lib/resend.js';
+import { resend, FROM_EMAIL } from '../lib/resend.js';
 
 interface Candidate {
   id: string;
@@ -10,6 +10,7 @@ interface Job {
   id: string;
   title: string;
   calendly_link?: string | null;
+  recruiter?: { email: string } | null;
 }
 
 export async function sendEmails(candidate: Candidate, job: Job): Promise<void> {
@@ -70,12 +71,13 @@ export async function sendEmails(candidate: Candidate, job: Job): Promise<void> 
     console.error('Error sending confirmation email to candidate:', error);
   }
 
-  // Send notification email to recruiter
-  if (RECRUITER_EMAIL) {
+  // Send notification email to recruiter (owner of the job)
+  const recruiterEmail = job.recruiter?.email;
+  if (recruiterEmail) {
     try {
       await resend.emails.send({
         from: FROM_EMAIL,
-        to: RECRUITER_EMAIL,
+        to: recruiterEmail,
         subject: `New Application: ${candidate.name} for ${job.title}`,
         html: `
           <!DOCTYPE html>
@@ -122,7 +124,7 @@ export async function sendEmails(candidate: Candidate, job: Job): Promise<void> 
         `,
       });
 
-      console.log(`Notification email sent to recruiter: ${RECRUITER_EMAIL}`);
+      console.log(`Notification email sent to recruiter: ${recruiterEmail}`);
     } catch (error) {
       console.error('Error sending notification email to recruiter:', error);
     }

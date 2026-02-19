@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { prisma } from '@/lib/db';
 import { SignUpSchema } from '@hunter/core';
 
-// POST /api/auth/signup - Create new user (recruiter)
+// POST /api/auth/signup - Create new user (recruiter) and Recruiter profile
 export async function POST(request: NextRequest) {
   try {
     if (!supabaseAdmin) {
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, password } = validation.data;
+    const { email, password, name, company, phone_number } = validation.data;
 
     const { data, error } = await supabaseAdmin.auth.signUp({
       email,
@@ -42,6 +43,26 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const userId = data.user!.id;
+
+    // Create Recruiter profile (upsert in case of email confirmation flow - user may signup again)
+    await prisma.recruiter.upsert({
+      where: { id: userId },
+      create: {
+        id: userId,
+        email,
+        name,
+        company: company || null,
+        phone_number: phone_number || null,
+      },
+      update: {
+        email,
+        name,
+        company: company || null,
+        phone_number: phone_number || null,
+      },
+    });
 
     // If email confirmation is required, session may be null
     if (data.session) {

@@ -146,7 +146,8 @@ class ApiClient {
   async signup(
     email: string,
     password: string,
-    password_confirmation: string
+    password_confirmation: string,
+    recruiterData: { name: string; company?: string; phone_number?: string }
   ): Promise<{
     user: { id: string; email: string };
     access_token?: string;
@@ -161,6 +162,9 @@ class ApiClient {
         email,
         password,
         password_confirmation,
+        name: recruiterData.name,
+        company: recruiterData.company || '',
+        phone_number: recruiterData.phone_number || '',
       }),
     });
   }

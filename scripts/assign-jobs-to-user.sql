@@ -1,11 +1,16 @@
--- Script para atribuir vagas existentes (user_id = null) a um recrutador
--- Execute após a migração multi-tenant se você tiver vagas antigas
+-- Script para associar vagas a um recrutador
+-- Execute no SQL Editor do Supabase (supabase.com/dashboard > SQL Editor)
 --
--- 1. Obtenha o ID do usuário no Supabase:
---    - Supabase Dashboard > Authentication > Users > copie o UUID do usuário
+-- 1. Cadastre um novo recrutador no app (signup)
+-- 2. Obtenha o ID do recrutador:
+--    - Supabase Dashboard > Authentication > Users > clique no usuário > copie o "User UID"
 --
--- 2. Execute no SQL Editor do Supabase, substituindo YOUR_USER_ID pelo UUID:
---
+-- Opção A: Atribuir UMA vaga específica ao recrutador
 -- UPDATE "Job"
--- SET user_id = 'YOUR_USER_ID'
+-- SET user_id = 'ID_DO_RECRUTADOR'
+-- WHERE id = 'ID_DA_VAGA';
+--
+-- Opção B: Atribuir TODAS as vagas (sem dono) ao recrutador
+-- UPDATE "Job"
+-- SET user_id = 'ID_DO_RECRUTADOR'
 -- WHERE user_id IS NULL;

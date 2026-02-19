@@ -11,7 +11,10 @@ import { TrendingUp } from 'lucide-react';
 export default function SignUpPage() {
   const router = useRouter();
   const { signup, isAuthenticated } = useAuth();
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [company, setCompany] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -30,7 +33,8 @@ export default function SignUpPage() {
       const { requires_confirmation } = await signup(
         email,
         password,
-        passwordConfirmation
+        passwordConfirmation,
+        { name, company: company || undefined, phone_number: phoneNumber || undefined }
       );
 
       if (requires_confirmation) {
@@ -69,6 +73,16 @@ export default function SignUpPage() {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <Input
+              label="Nome completo"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              autoComplete="name"
+              placeholder="Seu nome"
+            />
+
+            <Input
               label="E-mail"
               type="email"
               value={email}
@@ -76,6 +90,24 @@ export default function SignUpPage() {
               required
               autoComplete="email"
               placeholder="voce@exemplo.com"
+            />
+
+            <Input
+              label="Empresa"
+              type="text"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              autoComplete="organization"
+              placeholder="Nome da empresa (opcional)"
+            />
+
+            <Input
+              label="Telefone"
+              type="tel"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              autoComplete="tel"
+              placeholder="(00) 00000-0000"
             />
 
             <Input

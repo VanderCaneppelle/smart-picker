@@ -136,6 +136,9 @@ export const SignUpSchema = z
     email: z.string().email('Invalid email'),
     password: z.string().min(6, 'Password must be at least 6 characters'),
     password_confirmation: z.string().min(6, 'Password must be at least 6 characters'),
+    name: z.string().min(1, 'Name is required').max(200),
+    company: z.string().max(200).optional().default(''),
+    phone_number: z.string().max(50).optional().default(''),
   })
   .refine((data) => data.password === data.password_confirmation, {
     message: 'Passwords do not match',

@@ -19,6 +19,9 @@ export async function processCandidate(candidateId: string): Promise<{ ok: boole
             resume_weight: true,
             answers_weight: true,
             scoring_instructions: true,
+            recruiter: {
+              select: { email: true },
+            },
           },
         },
       },
@@ -71,6 +74,9 @@ export async function processQueue() {
           resume_weight: true,
           answers_weight: true,
           scoring_instructions: true,
+          recruiter: {
+            select: { email: true },
+          },
         },
       },
     },

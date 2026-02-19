@@ -23,7 +23,8 @@ interface AuthContextType {
   signup: (
     email: string,
     password: string,
-    password_confirmation: string
+    password_confirmation: string,
+    recruiterData: { name: string; company?: string; phone_number?: string }
   ) => Promise<{ requires_confirmation: boolean }>;
   logout: () => void;
 }
@@ -92,8 +93,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signup = useCallback(
-    async (email: string, password: string, password_confirmation: string) => {
-      const data = await apiClient.signup(email, password, password_confirmation);
+    async (
+      email: string,
+      password: string,
+      password_confirmation: string,
+      recruiterData: { name: string; company?: string; phone_number?: string }
+    ) => {
+      const data = await apiClient.signup(
+        email,
+        password,
+        password_confirmation,
+        recruiterData
+      );
 
       if (!data.requires_confirmation && data.access_token) {
         localStorage.setItem(TOKEN_KEY, data.access_token);
