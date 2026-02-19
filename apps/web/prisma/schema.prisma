@@ -20,9 +20,24 @@ model Recruiter {
   created_at   DateTime  @default(now())
   updated_at   DateTime  @updatedAt
 
-  jobs Job[]
+  jobs             Job[]
+  savedCandidates  SavedCandidate[]
 
   @@index([email])
+}
+
+model SavedCandidate {
+  id           String   @id @default(uuid())
+  recruiter_id String
+  candidate_id String
+  created_at   DateTime @default(now())
+
+  recruiter Recruiter @relation(fields: [recruiter_id], references: [id], onDelete: Cascade)
+  candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+
+  @@unique([recruiter_id, candidate_id])
+  @@index([recruiter_id])
+  @@index([candidate_id])
 }
 
 model Job {
@@ -77,6 +92,7 @@ model Candidate {
   deleted_at              DateTime?
 
   job                     Job       @relation(fields: [job_id], references: [id])
+  savedByRecruiters       SavedCandidate[]
 
   @@index([job_id])
   @@index([status])
