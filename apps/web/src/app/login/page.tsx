@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button, Input } from '@/components/ui';
-import { Briefcase } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -41,15 +41,15 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex justify-center">
-            <div className="bg-blue-600 p-3 rounded-xl">
-              <Briefcase className="h-8 w-8 text-white" />
+            <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-3 rounded-xl">
+              <TrendingUp className="h-8 w-8 text-white" />
             </div>
           </div>
           <h2 className="mt-6 text-3xl font-bold text-gray-900">
-            Hunter AI
+            Rankea
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Sign in to manage your job postings
+            Entre para gerenciar suas vagas
           </p>
         </div>
 
@@ -78,21 +78,21 @@ export default function LoginPage() {
 
           <Button
             type="submit"
-            className="w-full"
+            className="w-full bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500"
             size="lg"
             isLoading={isLoading}
           >
-            Sign in
+            Entrar
           </Button>
         </form>
 
         <p className="mt-6 text-center text-sm text-gray-600">
-          Don&apos;t have an account?{' '}
+          Não tem conta?{' '}
           <Link
             href="/signup"
-            className="font-medium text-blue-600 hover:text-blue-500"
+            className="font-medium text-emerald-600 hover:text-emerald-500"
           >
-            Create account
+            Criar conta
           </Link>
         </p>
       </div>

@@ -49,8 +49,9 @@ model Candidate {
   answer_quality_rating   Int?
   resume_summary          String?   @db.Text
   experience_level        String?
-  needs_scoring           Boolean   @default(true)
-  created_at              DateTime  @default(now())
+  needs_scoring                   Boolean   @default(true)
+  schedule_interview_email_sent_at DateTime?
+  created_at                      DateTime  @default(now())
   updated_at              DateTime  @updatedAt
   deleted_at              DateTime?
 

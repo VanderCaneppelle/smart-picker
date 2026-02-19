@@ -188,6 +188,21 @@ export default function CandidateDetailPage() {
                 className="w-48"
               />
             </div>
+
+            {/* Schedule interview email sent */}
+            {candidate.schedule_interview_email_sent_at && (
+              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-800 text-sm">
+                <span>E-mail de agendamento (Convite Calendly) enviado em{' '}
+                  {new Date(candidate.schedule_interview_email_sent_at).toLocaleString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Application Answers */}

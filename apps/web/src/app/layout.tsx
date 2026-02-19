@@ -4,8 +4,15 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Hunter AI - Job Management',
-  description: 'Manage your job postings and candidates with AI-powered insights',
+  title: 'Rankea — Seleção simples, decisão inteligente',
+  description: 'Reduza o tempo de triagem e aumente a precisão da sua seleção com ranking automatizado por IA. Feito para consultores de RH.',
+  keywords: ['recrutamento', 'seleção', 'RH', 'IA', 'ranking', 'candidatos', 'triagem'],
+  openGraph: {
+    title: 'Rankea — Seleção simples, decisão inteligente',
+    description: 'Ranking automatizado de candidatos por IA. Feito para consultores de RH independentes.',
+    type: 'website',
+    locale: 'pt_BR',
+  },
 };
 
 export default function RootLayout({

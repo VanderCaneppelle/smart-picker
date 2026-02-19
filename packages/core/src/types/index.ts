@@ -145,6 +145,7 @@ export interface Candidate {
   resume_summary?: string | null;
   experience_level?: string | null;
   needs_scoring: boolean;
+  schedule_interview_email_sent_at?: string | null;
   created_at: string;
   updated_at: string;
   deleted_at?: string | null;

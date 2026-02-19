@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button, Input } from '@/components/ui';
-import { Briefcase } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -54,68 +54,68 @@ export default function SignUpPage() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex justify-center">
-            <div className="bg-blue-600 p-3 rounded-xl">
-              <Briefcase className="h-8 w-8 text-white" />
+            <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-3 rounded-xl">
+              <TrendingUp className="h-8 w-8 text-white" />
             </div>
           </div>
           <h2 className="mt-6 text-3xl font-bold text-gray-900">
-            Hunter AI
+            Rankea
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Create your account to manage job postings
+            Crie sua conta para gerenciar vagas
           </p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <Input
-              label="Email"
+              label="E-mail"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
-              placeholder="you@example.com"
+              placeholder="voce@exemplo.com"
             />
 
             <Input
-              label="Password"
+              label="Senha"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="new-password"
-              placeholder="At least 6 characters"
+              placeholder="Mínimo 6 caracteres"
             />
 
             <Input
-              label="Confirm password"
+              label="Confirmar senha"
               type="password"
               value={passwordConfirmation}
               onChange={(e) => setPasswordConfirmation(e.target.value)}
               required
               autoComplete="new-password"
-              placeholder="Repeat your password"
+              placeholder="Repita sua senha"
             />
           </div>
 
           <Button
             type="submit"
-            className="w-full"
+            className="w-full bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500"
             size="lg"
             isLoading={isLoading}
           >
-            Create account
+            Criar conta
           </Button>
         </form>
 
         <p className="text-center text-sm text-gray-600">
-          Already have an account?{' '}
+          Já tem conta?{' '}
           <Link
             href="/login"
-            className="font-medium text-blue-600 hover:text-blue-500"
+            className="font-medium text-emerald-600 hover:text-emerald-500"
           >
-            Sign in
+            Entrar
           </Link>
         </p>
       </div>

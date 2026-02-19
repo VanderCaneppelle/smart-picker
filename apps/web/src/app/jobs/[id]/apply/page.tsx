@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import {
   Briefcase,
@@ -10,6 +11,7 @@ import {
   Upload,
   CheckCircle,
   AlertCircle,
+  TrendingUp,
 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { Button, Input, Textarea, Badge, Loading } from '@/components/ui';
@@ -88,13 +90,13 @@ export default function ApplyPage() {
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     ];
     if (!allowedTypes.includes(file.type)) {
-      toast.error('Please upload a PDF or Word document');
+      toast.error('Por favor, envie um arquivo PDF ou Word');
       return;
     }
 
     // Validate file size (10MB)
     if (file.size > 10 * 1024 * 1024) {
-      toast.error('File size must be less than 10MB');
+      toast.error('O arquivo deve ter no máximo 10MB');
       return;
     }
 
@@ -103,9 +105,9 @@ export default function ApplyPage() {
       const result = await apiClient.uploadFile(file);
       setResumeUrl(result.url);
       setResumeFileName(result.originalName);
-      toast.success('Resume uploaded successfully');
+      toast.success('Currículo enviado com sucesso');
     } catch (error) {
-      toast.error('Failed to upload resume');
+      toast.error('Falha ao enviar currículo');
       console.error(error);
     } finally {
       setIsUploading(false);
@@ -115,22 +117,22 @@ export default function ApplyPage() {
   const validate = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!name.trim()) newErrors.name = 'Name is required';
-    if (!email.trim()) newErrors.email = 'Email is required';
+    if (!name.trim()) newErrors.name = 'Nome é obrigatório';
+    if (!email.trim()) newErrors.email = 'E-mail é obrigatório';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'Please enter a valid email';
+      newErrors.email = 'Por favor, insira um e-mail válido';
     }
-    if (!resumeUrl) newErrors.resume = 'Resume is required';
+    if (!resumeUrl) newErrors.resume = 'Currículo é obrigatório';
 
     if (linkedin && !linkedin.startsWith('http')) {
-      newErrors.linkedin = 'Please enter a valid URL';
+      newErrors.linkedin = 'Por favor, insira uma URL válida';
     }
 
     // Validate required questions
     const questions = (job?.application_questions || []) as ApplicationQuestion[];
     questions.forEach((q) => {
       if (q.required && !answers[q.id]?.trim()) {
-        newErrors[`question_${q.id}`] = 'This question is required';
+        newErrors[`question_${q.id}`] = 'Esta pergunta é obrigatória';
       }
     });
 
@@ -142,7 +144,7 @@ export default function ApplyPage() {
     e.preventDefault();
 
     if (!validate()) {
-      toast.error('Please fix the errors before submitting');
+      toast.error('Por favor, corrija os erros antes de enviar');
       return;
     }
 
@@ -168,27 +170,51 @@ export default function ApplyPage() {
 
       setIsSubmitted(true);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to submit application');
+      toast.error(error instanceof Error ? error.message : 'Falha ao enviar candidatura');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Header component
+  const Header = () => (
+    <header className="bg-white border-b border-gray-100">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
+              <TrendingUp className="h-5 w-5 text-white" />
+            </div>
+            <span className="text-xl font-bold text-gray-900">Rankea</span>
+          </Link>
+        </div>
+      </div>
+    </header>
+  );
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loading text="Loading job details..." />
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center py-32">
+          <Loading text="Carregando vaga..." />
+        </div>
       </div>
     );
   }
 
   if (!job) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h1 className="text-xl font-semibold text-gray-900 mb-2">Job Not Found</h1>
-          <p className="text-gray-600">This job posting may have been removed or is no longer available.</p>
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center py-32">
+          <div className="text-center px-4">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="h-8 w-8 text-red-500" />
+            </div>
+            <h1 className="text-xl font-semibold text-gray-900 mb-2">Vaga não encontrada</h1>
+            <p className="text-gray-600">Esta vaga pode ter sido removida ou não está mais disponível.</p>
+          </div>
         </div>
       </div>
     );
@@ -196,11 +222,16 @@ export default function ApplyPage() {
 
   if (job.status !== 'active') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-          <h1 className="text-xl font-semibold text-gray-900 mb-2">Applications Closed</h1>
-          <p className="text-gray-600">This job is no longer accepting applications.</p>
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center py-32">
+          <div className="text-center px-4">
+            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="h-8 w-8 text-yellow-500" />
+            </div>
+            <h1 className="text-xl font-semibold text-gray-900 mb-2">Candidaturas encerradas</h1>
+            <p className="text-gray-600">Esta vaga não está mais aceitando candidaturas.</p>
+          </div>
         </div>
       </div>
     );
@@ -208,17 +239,22 @@ export default function ApplyPage() {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center max-w-md px-4">
-          <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Application Submitted!</h1>
-          <p className="text-gray-600 mb-4">
-            Thank you for applying for the <strong>{job.title}</strong> position.
-            We&apos;ll review your application and get back to you soon.
-          </p>
-          <p className="text-sm text-gray-500">
-            A confirmation email has been sent to {email}
-          </p>
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center py-32">
+          <div className="text-center max-w-md px-4">
+            <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="h-10 w-10 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">Candidatura enviada!</h1>
+            <p className="text-gray-600 mb-4">
+              Obrigado por se candidatar para a vaga de <strong>{job.title}</strong>.
+              Analisaremos sua candidatura e entraremos em contato em breve.
+            </p>
+            <p className="text-sm text-gray-500 bg-gray-100 rounded-lg px-4 py-3">
+              Um e-mail de confirmação foi enviado para <strong>{email}</strong>
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -227,179 +263,211 @@ export default function ApplyPage() {
   const questions = (job.application_questions || []) as ApplicationQuestion[];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-2xl mx-auto">
-        {/* Job Header */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{job.title}</h1>
-              <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-gray-600">
-                <span className="flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  {job.location}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Briefcase className="h-4 w-4" />
-                  {formatEmploymentType(job.employment_type)}
-                </span>
-                {job.salary_range && (
-                  <span className="flex items-center gap-1">
-                    <DollarSign className="h-4 w-4" />
-                    {job.salary_range} {job.currency_code}
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      
+      <main className="py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-2xl mx-auto">
+          {/* Job Header */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 mb-6 shadow-sm">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">{job.title}</h1>
+                <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                  <span className="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-full">
+                    <MapPin className="h-4 w-4 text-gray-500" />
+                    {job.location}
                   </span>
-                )}
+                  <span className="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-full">
+                    <Briefcase className="h-4 w-4 text-gray-500" />
+                    {formatEmploymentType(job.employment_type)}
+                  </span>
+                  {job.salary_range && (
+                    <span className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full">
+                      <DollarSign className="h-4 w-4" />
+                      {job.salary_range} {job.currency_code}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-            <Badge variant={getStatusBadgeVariant(job.status)}>
-              {job.status}
-            </Badge>
+
+            {/* Job Description */}
+            <div className="border-t border-gray-100 pt-6 mt-6">
+              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Sobre a vaga</h2>
+              <div
+                className="prose prose-sm max-w-none text-gray-600 prose-headings:text-gray-900 prose-a:text-emerald-600"
+                dangerouslySetInnerHTML={{ __html: job.description }}
+              />
+            </div>
           </div>
 
-          {/* Job Description */}
-          <div
-            className="prose prose-sm max-w-none text-gray-600"
-            dangerouslySetInnerHTML={{ __html: job.description }}
-          />
-        </div>
-
-        {/* Application Form */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-6">Apply for this position</h2>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Personal Info */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Input
-                label="Full Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                error={errors.name}
-                required
-                placeholder="John Doe"
-              />
-              <Input
-                label="Email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                error={errors.email}
-                required
-                placeholder="john@example.com"
-              />
-              <Input
-                label="Phone Number"
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+1 (555) 000-0000"
-              />
-              <Input
-                label="LinkedIn URL"
-                type="url"
-                value={linkedin}
-                onChange={(e) => setLinkedin(e.target.value)}
-                error={errors.linkedin}
-                placeholder="https://linkedin.com/in/johndoe"
-              />
+          {/* Application Form */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
+                <Briefcase className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Candidate-se</h2>
+                <p className="text-sm text-gray-500">Preencha os dados abaixo</p>
+              </div>
             </div>
 
-            {/* Resume Upload */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Resume <span className="text-red-500">*</span>
-              </label>
-              <div
-                className={`border-2 border-dashed rounded-lg p-6 text-center ${
-                  errors.resume ? 'border-red-300' : 'border-gray-300'
-                }`}
-              >
-                {resumeUrl ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                    <span className="text-gray-900">{resumeFileName}</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setResumeUrl('');
-                        setResumeFileName('');
-                      }}
-                      className="text-red-500 hover:text-red-700 text-sm"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ) : (
-                  <label className="cursor-pointer">
-                    <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <span className="text-gray-600">
-                      {isUploading ? 'Uploading...' : 'Click to upload your resume'}
-                    </span>
-                    <p className="text-xs text-gray-500 mt-1">PDF or Word, max 10MB</p>
-                    <input
-                      type="file"
-                      accept=".pdf,.doc,.docx"
-                      onChange={handleFileUpload}
-                      disabled={isUploading}
-                      className="hidden"
-                    />
-                  </label>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Personal Info */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Input
+                  label="Nome completo"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  error={errors.name}
+                  required
+                  placeholder="Seu nome"
+                />
+                <Input
+                  label="E-mail"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  error={errors.email}
+                  required
+                  placeholder="seu@email.com"
+                />
+                <Input
+                  label="Telefone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="(11) 99999-9999"
+                />
+                <Input
+                  label="LinkedIn"
+                  type="url"
+                  value={linkedin}
+                  onChange={(e) => setLinkedin(e.target.value)}
+                  error={errors.linkedin}
+                  placeholder="https://linkedin.com/in/seu-perfil"
+                />
+              </div>
+
+              {/* Resume Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Currículo <span className="text-red-500">*</span>
+                </label>
+                <div
+                  className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
+                    errors.resume 
+                      ? 'border-red-300 bg-red-50' 
+                      : resumeUrl 
+                        ? 'border-emerald-300 bg-emerald-50' 
+                        : 'border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/50'
+                  }`}
+                >
+                  {resumeUrl ? (
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                        <CheckCircle className="h-5 w-5 text-emerald-600" />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-gray-900 font-medium">{resumeFileName}</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setResumeUrl('');
+                            setResumeFileName('');
+                          }}
+                          className="text-red-500 hover:text-red-700 text-sm"
+                        >
+                          Remover arquivo
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <label className="cursor-pointer block">
+                      <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <Upload className="h-6 w-6 text-gray-400" />
+                      </div>
+                      <span className="text-gray-700 font-medium">
+                        {isUploading ? 'Enviando...' : 'Clique para enviar seu currículo'}
+                      </span>
+                      <p className="text-xs text-gray-500 mt-1">PDF ou Word, máximo 10MB</p>
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleFileUpload}
+                        disabled={isUploading}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
+                {errors.resume && (
+                  <p className="mt-2 text-sm text-red-500">{errors.resume}</p>
                 )}
               </div>
-              {errors.resume && (
-                <p className="mt-1 text-sm text-red-500">{errors.resume}</p>
+
+              {/* Application Questions */}
+              {questions.length > 0 && (
+                <div className="space-y-4 pt-4 border-t border-gray-100">
+                  <h3 className="font-semibold text-gray-900">Perguntas adicionais</h3>
+                  {questions.map((question) => (
+                    <div key={question.id}>
+                      {question.type === 'textarea' ? (
+                        <Textarea
+                          label={question.question}
+                          value={answers[question.id] || ''}
+                          onChange={(e) =>
+                            setAnswers({ ...answers, [question.id]: e.target.value })
+                          }
+                          error={errors[`question_${question.id}`]}
+                          required={question.required}
+                          rows={4}
+                        />
+                      ) : (
+                        <Input
+                          label={question.question}
+                          value={answers[question.id] || ''}
+                          onChange={(e) =>
+                            setAnswers({ ...answers, [question.id]: e.target.value })
+                          }
+                          error={errors[`question_${question.id}`]}
+                          required={question.required}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
-            </div>
 
-            {/* Application Questions */}
-            {questions.length > 0 && (
-              <div className="space-y-4">
-                <h3 className="font-medium text-gray-900">Additional Questions</h3>
-                {questions.map((question) => (
-                  <div key={question.id}>
-                    {question.type === 'textarea' ? (
-                      <Textarea
-                        label={question.question}
-                        value={answers[question.id] || ''}
-                        onChange={(e) =>
-                          setAnswers({ ...answers, [question.id]: e.target.value })
-                        }
-                        error={errors[`question_${question.id}`]}
-                        required={question.required}
-                        rows={4}
-                      />
-                    ) : (
-                      <Input
-                        label={question.question}
-                        value={answers[question.id] || ''}
-                        onChange={(e) =>
-                          setAnswers({ ...answers, [question.id]: e.target.value })
-                        }
-                        error={errors[`question_${question.id}`]}
-                        required={question.required}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+              {/* Submit */}
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 focus:ring-emerald-500"
+                size="lg"
+                isLoading={isSubmitting}
+              >
+                Enviar candidatura
+              </Button>
 
-            {/* Submit */}
-            <Button
-              type="submit"
-              className="w-full"
-              size="lg"
-              isLoading={isSubmitting}
-            >
-              Submit Application
-            </Button>
+              <p className="text-xs text-gray-500 text-center">
+                Ao enviar, você concorda com nossa política de privacidade e termos de uso.
+              </p>
+            </form>
+          </div>
 
-            <p className="text-xs text-gray-500 text-center">
-              By submitting this application, you agree to our privacy policy and terms of service.
+          {/* Footer */}
+          <div className="mt-8 text-center">
+            <p className="text-sm text-gray-400">
+              Powered by{' '}
+              <Link href="/" className="text-emerald-600 hover:text-emerald-700 font-medium">
+                Rankea
+              </Link>
             </p>
-          </form>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

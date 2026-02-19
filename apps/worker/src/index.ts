@@ -1,6 +1,8 @@
 import 'dotenv/config';
 import http from 'node:http';
 import { processCandidate } from './jobs/processQueue.js';
+import { sendScheduleInterviewEmail } from './jobs/sendEmails.js';
+import { prisma } from './lib/db.js';
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const WORKER_SECRET = process.env.WORKER_SECRET;
@@ -66,6 +68,73 @@ const server = http.createServer(async (req, res) => {
         res.end(JSON.stringify({ ok: false, error: result.error }));
       }
     } catch (err) {
+      res.writeHead(500);
+      res.end(JSON.stringify({
+        error: err instanceof Error ? err.message : 'Internal server error',
+      }));
+    }
+    return;
+  }
+
+  // Send "schedule interview" email to candidate (Calendly link from job)
+  if (req.method === 'POST' && req.url === '/send-schedule-interview') {
+    if (!WORKER_SECRET) {
+      res.writeHead(500);
+      res.end(JSON.stringify({ error: 'WORKER_SECRET not configured' }));
+      return;
+    }
+
+    const auth = req.headers.authorization;
+    const token = auth?.startsWith('Bearer ') ? auth.slice(7) : null;
+    if (token !== WORKER_SECRET) {
+      res.writeHead(401);
+      res.end(JSON.stringify({ error: 'Unauthorized' }));
+      return;
+    }
+
+    try {
+      const body = await parseBody(req);
+      const candidateId = typeof body.candidateId === 'string' ? body.candidateId : null;
+
+      if (!candidateId) {
+        res.writeHead(400);
+        res.end(JSON.stringify({ error: 'candidateId is required' }));
+        return;
+      }
+
+      const candidate = await prisma.candidate.findFirst({
+        where: { id: candidateId, deleted_at: null },
+        include: {
+          job: {
+            select: {
+              id: true,
+              title: true,
+              calendly_link: true,
+            },
+          },
+        },
+      });
+
+      if (!candidate) {
+        res.writeHead(404);
+        res.end(JSON.stringify({ error: 'Candidate not found' }));
+        return;
+      }
+
+      await sendScheduleInterviewEmail(
+        { id: candidate.id, name: candidate.name, email: candidate.email },
+        candidate.job,
+      );
+
+      await prisma.candidate.update({
+        where: { id: candidateId },
+        data: { schedule_interview_email_sent_at: new Date() },
+      });
+
+      res.writeHead(200);
+      res.end(JSON.stringify({ ok: true }));
+    } catch (err) {
+      console.error('Error sending schedule interview email:', err);
       res.writeHead(500);
       res.end(JSON.stringify({
         error: err instanceof Error ? err.message : 'Internal server error',

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { ExternalLink, Mail, Eye } from 'lucide-react';
+import { ExternalLink, Mail, Eye, CheckCircle2 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { Button, Badge, Select, Loading, EmptyState, SortIcon } from '@/components/ui';
 import type { Candidate, CandidateStatus } from '@hunter/core';
@@ -85,6 +85,10 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
         prev.map((c) => (c.id === candidateId ? { ...c, status: newStatus } : c))
       );
       toast.success('Status updated');
+      // Refetch after a delay when moving to schedule_interview so "Convite" column updates after worker sends email
+      if (newStatus === 'schedule_interview') {
+        setTimeout(() => fetchCandidates(), 3000);
+      }
     } catch (error) {
       toast.error('Failed to update status');
       console.error(error);
@@ -231,6 +235,9 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
                   Status
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Convite (e-mail)
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Action
                 </th>
               </tr>
@@ -321,6 +328,23 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
                         </option>
                       ))}
                     </select>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {candidate.schedule_interview_email_sent_at ? (
+                      <span
+                        className="inline-flex items-center gap-1 text-green-600 text-sm"
+                        title={`Enviado em ${new Date(candidate.schedule_interview_email_sent_at).toLocaleString('pt-BR')}`}
+                      >
+                        <CheckCircle2 className="h-4 w-4 shrink-0" />
+                        {new Date(candidate.schedule_interview_email_sent_at).toLocaleDateString('pt-BR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                        })}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <Button
