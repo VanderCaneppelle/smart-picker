@@ -13,6 +13,7 @@ import {
   Briefcase,
   DollarSign,
   Plus,
+  Brain,
 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { apiClient } from '@/lib/api-client';
@@ -101,6 +102,9 @@ export default function JobDetailPage() {
   const [interviewQuestions, setInterviewQuestions] = useState('');
   const [status, setStatus] = useState('draft');
   const [applicationQuestions, setApplicationQuestions] = useState<ApplicationQuestion[]>([]);
+  const [resumeWeight, setResumeWeight] = useState(5);
+  const [answersWeight, setAnswersWeight] = useState(5);
+  const [scoringInstructions, setScoringInstructions] = useState('');
 
   const fetchJob = useCallback(async () => {
     try {
@@ -119,6 +123,9 @@ export default function JobDetailPage() {
       setInterviewQuestions(data.interview_questions || '');
       setStatus(data.status);
       setApplicationQuestions(data.application_questions || []);
+      setResumeWeight(data.resume_weight ?? 5);
+      setAnswersWeight(data.answers_weight ?? 5);
+      setScoringInstructions(data.scoring_instructions || '');
     } catch (error) {
       toast.error('Failed to load job');
       console.error(error);
@@ -182,6 +189,9 @@ export default function JobDetailPage() {
         interview_questions: interviewQuestions.trim() || null,
         status: status as 'draft' | 'active' | 'closed' | 'on_hold',
         application_questions: applicationQuestions.filter((q) => q.question.trim()),
+        resume_weight: resumeWeight,
+        answers_weight: answersWeight,
+        scoring_instructions: scoringInstructions.trim() || null,
       });
       setJob(updated);
       toast.success('Job updated successfully!');
@@ -533,21 +543,104 @@ export default function JobDetailPage() {
             )}
           </div>
 
+          {/* AI Scoring Settings */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Brain className="h-5 w-5 text-emerald-600" />
+              <h2 className="text-lg font-semibold text-gray-900">Configuração da Avaliação por IA</h2>
+            </div>
+            <p className="text-sm text-gray-500 mb-6">
+              Defina como a IA deve ponderar cada aspecto na avaliação dos candidatos.
+            </p>
+            
+            <div className="space-y-6">
+              {/* Resume Weight */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Peso do Currículo
+                  </label>
+                  <span className="text-sm font-semibold text-emerald-600">{resumeWeight}/10</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={resumeWeight}
+                  onChange={(e) => setResumeWeight(Number(e.target.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Experiência, formação e habilidades do currículo
+                </p>
+              </div>
+
+              {/* Answers Weight */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Peso das Respostas
+                  </label>
+                  <span className="text-sm font-semibold text-emerald-600">{answersWeight}/10</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={answersWeight}
+                  onChange={(e) => setAnswersWeight(Number(e.target.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Qualidade das respostas às perguntas da aplicação
+                </p>
+              </div>
+
+              {/* Weight Distribution Preview */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-sm font-medium text-gray-700 mb-3">Distribuição dos pesos:</p>
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="h-3 bg-emerald-500 rounded-l-full transition-all"
+                    style={{ width: `${(resumeWeight / (resumeWeight + answersWeight)) * 100}%` }}
+                  />
+                  <div 
+                    className="h-3 bg-teal-400 rounded-r-full transition-all"
+                    style={{ width: `${(answersWeight / (resumeWeight + answersWeight)) * 100}%` }}
+                  />
+                </div>
+                <div className="flex justify-between mt-2 text-xs text-gray-600">
+                  <span>Currículo: {Math.round((resumeWeight / (resumeWeight + answersWeight)) * 100)}%</span>
+                  <span>Respostas: {Math.round((answersWeight / (resumeWeight + answersWeight)) * 100)}%</span>
+                </div>
+              </div>
+
+              {/* Scoring Instructions */}
+              <Textarea
+                label="Instruções adicionais para a IA (opcional)"
+                value={scoringInstructions}
+                onChange={(e) => setScoringInstructions(e.target.value)}
+                placeholder="Ex: Priorize candidatos com experiência em React. Valorize certificações AWS. Candidatos com inglês fluente devem ter pontuação maior..."
+                rows={3}
+              />
+            </div>
+          </div>
+
           {/* Additional Settings */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Additional Settings</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Configurações Adicionais</h2>
             <div className="space-y-4">
               <Input
-                label="Calendly Link"
+                label="Link do Calendly"
                 value={calendlyLink}
                 onChange={(e) => setCalendlyLink(e.target.value)}
                 placeholder="https://calendly.com/your-link"
               />
               <Textarea
-                label="Interview Questions (Internal)"
+                label="Perguntas da Entrevista (Interno)"
                 value={interviewQuestions}
                 onChange={(e) => setInterviewQuestions(e.target.value)}
-                placeholder="Questions to ask during the interview..."
+                placeholder="Perguntas para fazer durante a entrevista..."
                 rows={4}
               />
             </div>

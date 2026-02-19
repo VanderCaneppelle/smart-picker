@@ -296,7 +296,7 @@ export default function ApplyPage() {
             <div className="border-t border-gray-100 pt-6 mt-6">
               <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Sobre a vaga</h2>
               <div
-                className="prose prose-sm max-w-none text-gray-600 prose-headings:text-gray-900 prose-a:text-emerald-600"
+                className="prose prose-sm max-w-none text-gray-700 rich-content"
                 dangerouslySetInnerHTML={{ __html: job.description }}
               />
             </div>

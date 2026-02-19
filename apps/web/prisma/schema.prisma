@@ -23,6 +23,9 @@ model Job {
   application_questions Json        @default("[]")
   interview_questions   String?     @db.Text
   status                String      @default("draft")
+  resume_weight         Int         @default(5)  // Peso do currículo na avaliação (1-10)
+  answers_weight        Int         @default(5)  // Peso das respostas na avaliação (1-10)
+  scoring_instructions  String?     @db.Text     // Instruções extras para a IA
   created_at            DateTime    @default(now())
   updated_at            DateTime    @updatedAt
   deleted_at            DateTime?

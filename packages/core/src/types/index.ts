@@ -92,6 +92,9 @@ export interface Job {
   application_questions: ApplicationQuestion[];
   interview_questions?: string | null;
   status: JobStatus;
+  resume_weight: number;
+  answers_weight: number;
+  scoring_instructions?: string | null;
   created_at: string;
   updated_at: string;
   deleted_at?: string | null;
@@ -111,6 +114,9 @@ export interface CreateJobInput {
   application_questions?: ApplicationQuestion[];
   interview_questions?: string | null;
   status?: JobStatus;
+  resume_weight?: number;
+  answers_weight?: number;
+  scoring_instructions?: string | null;
 }
 
 export interface UpdateJobInput {
@@ -124,6 +130,9 @@ export interface UpdateJobInput {
   application_questions?: ApplicationQuestion[];
   interview_questions?: string | null;
   status?: JobStatus;
+  resume_weight?: number;
+  answers_weight?: number;
+  scoring_instructions?: string | null;
 }
 
 // ============================================

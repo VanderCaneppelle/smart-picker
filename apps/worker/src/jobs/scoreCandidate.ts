@@ -13,6 +13,9 @@ interface CandidateWithJob {
     title: string;
     description: string;
     application_questions: unknown;
+    resume_weight: number;
+    answers_weight: number;
+    scoring_instructions: string | null;
   };
 }
 
@@ -63,6 +66,15 @@ export async function scoreCandidate(candidate: CandidateWithJob): Promise<Scori
       })
       .join('\n\n');
 
+    // Get weights from job settings (default to 5 if not set)
+    const resumeWeight = candidate.job.resume_weight ?? 5;
+    const answersWeight = candidate.job.answers_weight ?? 5;
+    const scoringInstructions = candidate.job.scoring_instructions;
+    
+    const totalWeight = resumeWeight + answersWeight;
+    const resumePercent = Math.round((resumeWeight / totalWeight) * 100);
+    const answersPercent = Math.round((answersWeight / totalWeight) * 100);
+
     // Create the prompt
     const prompt = `You are an expert recruiter evaluating a job candidate. Analyze the following information and provide a detailed evaluation.
 
@@ -79,18 +91,23 @@ ${resumeText.substring(0, 5000)} ${resumeText.length > 5000 ? '...(truncated)' :
 APPLICATION ANSWERS:
 ${answersText || 'No application questions.'}
 
+EVALUATION WEIGHTS:
+- Resume evaluation weight: ${resumePercent}%
+- Application answers weight: ${answersPercent}%
+${scoringInstructions ? `\nADDITIONAL INSTRUCTIONS FROM RECRUITER:\n${scoringInstructions}` : ''}
+
 Please evaluate this candidate and provide:
-1. fit_score: A score from 0-100 indicating how well the candidate fits the job requirements
-2. resume_rating: A score from 1-5 rating the quality and relevance of the resume
-3. answer_quality_rating: A score from 1-5 rating the quality of their application answers
-4. resume_summary: A brief 2-3 sentence summary of the candidate's background and key qualifications
-5. experience_level: One of: "Entry Level", "Junior", "Mid-Level", "Senior", "Lead", "Executive"
+1. resume_rating: A score from 1-5 rating the quality and relevance of the resume
+2. answer_quality_rating: A score from 1-5 rating the quality of their application answers
+3. resume_summary: A brief 2-3 sentence summary of the candidate's background and key qualifications
+4. experience_level: One of: "Entry Level", "Junior", "Mid-Level", "Senior", "Lead", "Executive"
+
+IMPORTANT: Consider the evaluation weights when assessing the candidate. If resume weight is higher, focus more on experience and qualifications. If answers weight is higher, focus more on how well they responded to the application questions.
 
 Respond in JSON format only:
 {
-  "fit_score": <number>,
-  "resume_rating": <number>,
-  "answer_quality_rating": <number>,
+  "resume_rating": <number 1-5>,
+  "answer_quality_rating": <number 1-5>,
   "resume_summary": "<string>",
   "experience_level": "<string>"
 }`;
@@ -119,11 +136,22 @@ Respond in JSON format only:
     // Parse the JSON response
     const result = JSON.parse(content);
 
-    // Validate and clamp values
+    // Validate and clamp individual ratings
+    const resumeRating = Math.min(5, Math.max(1, Math.round(result.resume_rating || 3)));
+    const answerRating = Math.min(5, Math.max(1, Math.round(result.answer_quality_rating || 3)));
+    
+    // Calculate weighted fit_score based on job settings
+    // Convert 1-5 ratings to 0-100 scale and apply weights
+    const resumeScore = (resumeRating / 5) * 100;
+    const answerScore = (answerRating / 5) * 100;
+    const weightedFitScore = Math.round(
+      (resumeScore * resumeWeight + answerScore * answersWeight) / totalWeight
+    );
+
     return {
-      fit_score: Math.min(100, Math.max(0, Math.round(result.fit_score || 50))),
-      resume_rating: Math.min(5, Math.max(1, Math.round(result.resume_rating || 3))),
-      answer_quality_rating: Math.min(5, Math.max(1, Math.round(result.answer_quality_rating || 3))),
+      fit_score: Math.min(100, Math.max(0, weightedFitScore)),
+      resume_rating: resumeRating,
+      answer_quality_rating: answerRating,
       resume_summary: result.resume_summary || 'No summary available.',
       experience_level: result.experience_level || 'Unknown',
     };

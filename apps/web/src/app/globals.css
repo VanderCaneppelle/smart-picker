@@ -8,39 +8,47 @@
 }
 
 .tiptap p {
-  @apply mb-2;
+  @apply mb-3 leading-relaxed;
 }
 
 .tiptap h1 {
-  @apply text-2xl font-bold mb-3;
+  @apply text-2xl font-bold mb-4 mt-6 first:mt-0 text-gray-900;
 }
 
 .tiptap h2 {
-  @apply text-xl font-bold mb-2;
+  @apply text-xl font-semibold mb-3 mt-5 first:mt-0 text-gray-900;
 }
 
 .tiptap h3 {
-  @apply text-lg font-bold mb-2;
+  @apply text-lg font-semibold mb-2 mt-4 first:mt-0 text-gray-900;
 }
 
 .tiptap ul {
-  @apply list-disc list-inside mb-2;
+  @apply list-disc pl-6 mb-3 space-y-1;
 }
 
 .tiptap ol {
-  @apply list-decimal list-inside mb-2;
+  @apply list-decimal pl-6 mb-3 space-y-1;
+}
+
+.tiptap li {
+  @apply leading-relaxed;
+}
+
+.tiptap li p {
+  @apply mb-0;
 }
 
 .tiptap blockquote {
-  @apply border-l-4 border-gray-300 pl-4 italic my-2;
+  @apply border-l-4 border-gray-300 pl-4 italic my-4 text-gray-600;
 }
 
 .tiptap code {
-  @apply bg-gray-100 px-1 py-0.5 rounded text-sm font-mono;
+  @apply bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono text-gray-800;
 }
 
 .tiptap pre {
-  @apply bg-gray-900 text-gray-100 p-4 rounded-lg my-2 overflow-x-auto;
+  @apply bg-gray-900 text-gray-100 p-4 rounded-lg my-4 overflow-x-auto;
 }
 
 .tiptap pre code {
@@ -50,6 +58,63 @@
 .tiptap p.is-editor-empty:first-child::before {
   @apply text-gray-400 float-left h-0 pointer-events-none;
   content: attr(data-placeholder);
+}
+
+.tiptap strong {
+  @apply font-semibold text-gray-900;
+}
+
+.tiptap em {
+  @apply italic;
+}
+
+.tiptap hr {
+  @apply border-t border-gray-300 my-6;
+}
+
+/* Rich content display (outside editor) */
+.rich-content p {
+  @apply mb-3 leading-relaxed;
+}
+
+.rich-content h1 {
+  @apply text-2xl font-bold mb-4 mt-6 first:mt-0 text-gray-900;
+}
+
+.rich-content h2 {
+  @apply text-xl font-semibold mb-3 mt-5 first:mt-0 text-gray-900;
+}
+
+.rich-content h3 {
+  @apply text-lg font-semibold mb-2 mt-4 first:mt-0 text-gray-900;
+}
+
+.rich-content ul {
+  @apply list-disc pl-6 mb-3 space-y-1;
+}
+
+.rich-content ol {
+  @apply list-decimal pl-6 mb-3 space-y-1;
+}
+
+.rich-content li {
+  @apply leading-relaxed;
+}
+
+.rich-content blockquote {
+  @apply border-l-4 border-gray-300 pl-4 italic my-4 text-gray-600;
+}
+
+.rich-content strong {
+  @apply font-semibold text-gray-900;
+}
+
+.rich-content a {
+  @apply text-emerald-600 hover:text-emerald-700 underline;
+}
+
+.rich-content hr {
+  @apply border-t border-gray-300 my-6;
 }
 
 /* Custom scrollbar */

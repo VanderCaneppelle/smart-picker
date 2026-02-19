@@ -14,6 +14,7 @@ import {
   Heading3,
   Undo,
   Redo,
+  Minus,
 } from 'lucide-react';
 import { useEffect } from 'react';
 
@@ -44,8 +45,8 @@ const MenuButton = ({
     onClick={onClick}
     disabled={disabled}
     title={title}
-    className={`p-2 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed ${
-      isActive ? 'bg-gray-200 text-blue-600' : 'text-gray-600'
+    className={`p-2 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+      isActive ? 'bg-emerald-100 text-emerald-700' : 'text-gray-600'
     }`}
   >
     {children}
@@ -55,14 +56,26 @@ const MenuButton = ({
 const RichTextEditor = ({
   value,
   onChange,
-  placeholder = 'Start writing...',
+  placeholder = 'Comece a escrever...',
   label,
   error,
   required,
 }: RichTextEditorProps) => {
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        heading: {
+          levels: [1, 2, 3],
+        },
+        bulletList: {
+          keepMarks: true,
+          keepAttributes: false,
+        },
+        orderedList: {
+          keepMarks: true,
+          keepAttributes: false,
+        },
+      }),
       Placeholder.configure({
         placeholder,
       }),
@@ -73,7 +86,7 @@ const RichTextEditor = ({
     },
     editorProps: {
       attributes: {
-        class: 'tiptap prose prose-sm max-w-none focus:outline-none min-h-[200px] p-4',
+        class: 'tiptap focus:outline-none min-h-[200px] p-4',
       },
     },
   });
@@ -178,7 +191,7 @@ const RichTextEditor = ({
           <MenuButton
             onClick={() => editor.chain().focus().toggleBlockquote().run()}
             isActive={editor.isActive('blockquote')}
-            title="Quote"
+            title="Citação"
           >
             <Quote className="h-4 w-4" />
           </MenuButton>
@@ -186,16 +199,25 @@ const RichTextEditor = ({
           <div className="w-px h-6 bg-gray-300 mx-1" />
 
           <MenuButton
+            onClick={() => editor.chain().focus().setHorizontalRule().run()}
+            title="Linha horizontal"
+          >
+            <Minus className="h-4 w-4" />
+          </MenuButton>
+
+          <div className="w-px h-6 bg-gray-300 mx-1" />
+
+          <MenuButton
             onClick={() => editor.chain().focus().undo().run()}
             disabled={!editor.can().undo()}
-            title="Undo"
+            title="Desfazer"
           >
             <Undo className="h-4 w-4" />
           </MenuButton>
           <MenuButton
             onClick={() => editor.chain().focus().redo().run()}
             disabled={!editor.can().redo()}
-            title="Redo"
+            title="Refazer"
           >
             <Redo className="h-4 w-4" />
           </MenuButton>
