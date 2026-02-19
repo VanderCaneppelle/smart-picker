@@ -4,7 +4,7 @@ import { sendEmails } from './sendEmails.js';
 
 const BATCH_SIZE = parseInt(process.env.BATCH_SIZE || '5', 10);
 
-/** Process a single candidate by ID (event-driven) */
+/** Process a single candidate by ID (event-driven)  upda*/
 export async function processCandidate(candidateId: string): Promise<{ ok: boolean; error?: string }> {
   try {
     const candidate = await prisma.candidate.findFirst({
