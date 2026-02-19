@@ -63,12 +63,21 @@ export type QuestionType = (typeof QuestionType)[keyof typeof QuestionType];
 // Application Questions
 // ============================================
 
+export interface EliminatoryCriteria {
+  expected_answer?: string;
+  accepted_values?: string[];
+  range_min?: number;
+  range_max?: number;
+  tolerance_percent?: number;
+}
+
 export interface ApplicationQuestion {
   id: string;
   question: string;
   required: boolean;
   type: QuestionType;
   options?: string[];
+  eliminatory_criteria?: EliminatoryCriteria;
 }
 
 export interface ApplicationAnswer {
