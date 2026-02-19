@@ -12,6 +12,8 @@ import {
   Calendar,
   AlertTriangle,
   XCircle,
+  Bookmark,
+  BookmarkCheck,
 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { Badge, Select, Loading, EmptyState, SortIcon } from '@/components/ui';
@@ -65,13 +67,21 @@ type SortDirection = 'asc' | 'desc';
 function ActionsMenu({
   candidateId,
   recalculatingId,
+  isSaved,
+  savingId,
   onView,
   onRecalculate,
+  onSave,
+  onUnsave,
 }: {
   candidateId: string;
   recalculatingId: string | null;
+  isSaved: boolean;
+  savingId: string | null;
   onView: () => void;
   onRecalculate: () => void;
+  onSave: () => void;
+  onUnsave: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -97,7 +107,7 @@ function ActionsMenu({
         <MoreVertical className="h-4 w-4" />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 z-20 w-44 bg-white rounded-lg border border-gray-200 shadow-lg py-1">
+        <div className="absolute right-0 top-full mt-1 z-20 w-48 bg-white rounded-lg border border-gray-200 shadow-lg py-1">
           <button
             onClick={() => {
               onView();
@@ -108,6 +118,31 @@ function ActionsMenu({
             <Eye className="h-4 w-4 text-gray-400" />
             Ver candidato
           </button>
+          {isSaved ? (
+            <button
+              onClick={() => {
+                onUnsave();
+                setOpen(false);
+              }}
+              disabled={savingId === candidateId}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <BookmarkCheck className="h-4 w-4 text-gray-400" />
+              {savingId === candidateId ? 'Removendo...' : 'Remover dos salvos'}
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                onSave();
+                setOpen(false);
+              }}
+              disabled={savingId === candidateId}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Bookmark className="h-4 w-4 text-gray-400" />
+              {savingId === candidateId ? 'Salvando...' : 'Salvar candidato'}
+            </button>
+          )}
           <button
             onClick={() => {
               onRecalculate();
@@ -187,6 +222,8 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
   const [sortField, setSortField] = useState<SortField>('fit_score');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [recalculatingId, setRecalculatingId] = useState<string | null>(null);
+  const [savedCandidateIds, setSavedCandidateIds] = useState<Set<string>>(new Set());
+  const [savingId, setSavingId] = useState<string | null>(null);
 
   const fetchCandidates = useCallback(async () => {
     try {
@@ -201,9 +238,22 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
     }
   }, [jobId]);
 
+  const fetchSavedIds = useCallback(async () => {
+    try {
+      const { candidateIds } = await apiClient.getSavedCandidateIds();
+      setSavedCandidateIds(new Set(candidateIds));
+    } catch {
+      setSavedCandidateIds(new Set());
+    }
+  }, []);
+
   useEffect(() => {
     fetchCandidates();
   }, [fetchCandidates]);
+
+  useEffect(() => {
+    fetchSavedIds();
+  }, [fetchSavedIds]);
 
   const handleStatusChange = async (candidateId: string, newStatus: CandidateStatus) => {
     try {
@@ -232,6 +282,38 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
       console.error(error);
     } finally {
       setRecalculatingId(null);
+    }
+  };
+
+  const handleSaveCandidate = async (candidateId: string) => {
+    try {
+      setSavingId(candidateId);
+      await apiClient.saveCandidate(candidateId);
+      setSavedCandidateIds((prev) => new Set(prev).add(candidateId));
+      toast.success('Candidato salvo');
+    } catch (error) {
+      toast.error('Falha ao salvar candidato');
+      console.error(error);
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const handleUnsaveCandidate = async (candidateId: string) => {
+    try {
+      setSavingId(candidateId);
+      await apiClient.unsaveCandidate(candidateId);
+      setSavedCandidateIds((prev) => {
+        const next = new Set(prev);
+        next.delete(candidateId);
+        return next;
+      });
+      toast.success('Removido dos salvos');
+    } catch (error) {
+      toast.error('Falha ao remover dos salvos');
+      console.error(error);
+    } finally {
+      setSavingId(null);
     }
   };
 
@@ -555,8 +637,12 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
                     <ActionsMenu
                       candidateId={candidate.id}
                       recalculatingId={recalculatingId}
+                      isSaved={savedCandidateIds.has(candidate.id)}
+                      savingId={savingId}
                       onView={() => router.push(`/candidates/${candidate.id}`)}
                       onRecalculate={() => handleRecalculate(candidate.id)}
+                      onSave={() => handleSaveCandidate(candidate.id)}
+                      onUnsave={() => handleUnsaveCandidate(candidate.id)}
                     />
                   </td>
                 </tr>

@@ -89,6 +89,46 @@ class ApiClient {
     return this.request<CandidatesListResponse>(`/jobs/${jobId}/candidates`);
   }
 
+  async getDashboardStats(): Promise<{
+    openJobs: number;
+    totalJobs: number;
+    totalCandidates: number;
+    avgCandidatesPerJob: number;
+    avgDaysJobOpen: number;
+    shortlistedCount: number;
+    jobsWithCandidates: number;
+  }> {
+    return this.request('/dashboard/stats');
+  }
+
+  async getRecruiterProfile(): Promise<{
+    id: string;
+    email: string;
+    name: string;
+    company: string | null;
+    phone_number: string | null;
+    created_at: string;
+    updated_at: string;
+  }> {
+    return this.request('/recruiter/me');
+  }
+
+  async updateRecruiterProfile(data: {
+    name?: string;
+    company?: string | null;
+    phone_number?: string | null;
+  }): Promise<{
+    id: string;
+    email: string;
+    name: string;
+    company: string | null;
+    phone_number: string | null;
+    created_at: string;
+    updated_at: string;
+  }> {
+    return this.request('/recruiter/me', { method: 'PATCH', body: JSON.stringify(data) });
+  }
+
   // Candidates
   async getCandidates(filters?: CandidateFilters): Promise<CandidatesListResponse> {
     const params = new URLSearchParams();
@@ -127,6 +167,31 @@ class ApiClient {
   async recalculateCandidateScore(id: string): Promise<{ message: string }> {
     return this.request<{ message: string }>(`/candidates/${id}/recalculate-score`, {
       method: 'POST',
+    });
+  }
+
+  // Saved candidates
+  async getSavedCandidateIds(): Promise<{ candidateIds: string[] }> {
+    return this.request<{ candidateIds: string[] }>('/saved-candidates?ids=true');
+  }
+
+  async getSavedCandidates(): Promise<{
+    savedCandidates: Array<{ id: string; created_at: string; candidate: Candidate & { job: { id: string; title: string } } }>;
+    candidates: Array<Candidate & { job: { id: string; title: string } }>;
+  }> {
+    return this.request('/saved-candidates');
+  }
+
+  async saveCandidate(candidateId: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/saved-candidates', {
+      method: 'POST',
+      body: JSON.stringify({ candidate_id: candidateId }),
+    });
+  }
+
+  async unsaveCandidate(candidateId: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/saved-candidates/${candidateId}`, {
+      method: 'DELETE',
     });
   }
 

@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyAuth, unauthorizedResponse, jobBelongsToUser } from '@/lib/auth';
 import { UpdateCandidateSchema } from '@hunter/core';
-import { triggerScheduleInterviewEmail } from '@/lib/worker';
+import { triggerScheduleInterviewEmail, triggerRejectionEmail } from '@/lib/worker';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -117,6 +117,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     // When status changes to schedule_interview, send email with Calendly link
     if (data.status === 'schedule_interview') {
       triggerScheduleInterviewEmail(candidate.id);
+    }
+    // When status changes to rejected, send rejection email to candidate
+    if (data.status === 'rejected') {
+      triggerRejectionEmail(candidate.id);
     }
 
     return Response.json(candidate);
