@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loading, Button } from '@/components/ui';
-import { Briefcase, LogOut, User } from 'lucide-react';
+import { TrendingUp, LogOut, User } from 'lucide-react';
 
 export default function DashboardLayout({
   children,
@@ -42,10 +42,10 @@ export default function DashboardLayout({
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <Link href="/jobs" className="flex items-center gap-2">
-              <div className="bg-blue-600 p-2 rounded-lg">
-                <Briefcase className="h-5 w-5 text-white" />
+              <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
+                <TrendingUp className="h-5 w-5 text-white" />
               </div>
-              <span className="font-semibold text-gray-900">Hunter AI</span>
+              <span className="text-xl font-bold text-gray-900">Rankea</span>
             </Link>
 
             {/* User menu */}
@@ -60,7 +60,7 @@ export default function DashboardLayout({
                 onClick={handleLogout}
                 leftIcon={<LogOut className="h-4 w-4" />}
               >
-                Logout
+                Sair
               </Button>
             </div>
           </div>

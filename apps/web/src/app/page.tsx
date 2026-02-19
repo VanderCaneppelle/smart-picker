@@ -38,10 +38,6 @@ export default function LandingPage() {
       <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
-              <Sparkles className="h-4 w-4" />
-              Powered by AI
-            </div>
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 leading-tight mb-6">
               Seleção simples,{' '}
               <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
@@ -51,21 +47,7 @@ export default function LandingPage() {
             <p className="text-xl sm:text-2xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
               Reduza o tempo de triagem e aumente a precisão da sua seleção com ranking automatizado por IA.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                href="/signup"
-                className="w-full sm:w-auto bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-emerald-700 transition-all hover:shadow-lg hover:shadow-emerald-500/25 flex items-center justify-center gap-2"
-              >
-                Começar agora
-                <ArrowRight className="h-5 w-5" />
-              </Link>
-              <Link
-                href="/login"
-                className="w-full sm:w-auto bg-gray-100 text-gray-900 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-200 transition-colors flex items-center justify-center"
-              >
-                Já tenho conta
-              </Link>
-            </div>
+            {/* CTAs removidos temporariamente */}
           </div>
 
           {/* Hero Visual */}
@@ -287,20 +269,11 @@ export default function LandingPage() {
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
             Pronto para ranquear com inteligência?
           </h2>
-          <p className="text-xl text-gray-600 mb-10">
-            Crie sua conta gratuita e comece a usar o Rankea agora mesmo.
+          <p className="text-xl text-gray-600 mb-4">
+            Em breve você poderá criar sua conta e começar a usar o Rankea.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/signup"
-              className="w-full sm:w-auto bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-emerald-700 transition-all hover:shadow-lg hover:shadow-emerald-500/25 flex items-center justify-center gap-2"
-            >
-              Criar conta grátis
-              <ArrowRight className="h-5 w-5" />
-            </Link>
-          </div>
-          <p className="mt-6 text-sm text-gray-500">
-            Sem cartão de crédito. Comece em menos de 2 minutos.
+          <p className="text-gray-500">
+            Estamos preparando tudo para você. Fique ligado!
           </p>
         </div>
       </section>
@@ -318,14 +291,7 @@ export default function LandingPage() {
             <p className="text-gray-500 text-sm">
               © {new Date().getFullYear()} Rankea. Todos os direitos reservados.
             </p>
-            <div className="flex items-center gap-6">
-              <Link href="/login" className="text-gray-600 hover:text-gray-900 text-sm">
-                Entrar
-              </Link>
-              <Link href="/signup" className="text-gray-600 hover:text-gray-900 text-sm">
-                Criar conta
-              </Link>
-            </div>
+            {/* Links removidos temporariamente */}
           </div>
         </div>
       </footer>

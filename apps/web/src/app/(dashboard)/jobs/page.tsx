@@ -9,19 +9,19 @@ import { Button, Badge, SearchFilter, Select, Loading, EmptyState } from '@/comp
 import type { Job, JobStatus, EmploymentType } from '@hunter/core';
 
 const statusOptions = [
-  { value: '', label: 'All Status' },
-  { value: 'draft', label: 'Draft' },
-  { value: 'active', label: 'Active' },
-  { value: 'closed', label: 'Closed' },
-  { value: 'on_hold', label: 'On Hold' },
+  { value: '', label: 'Todos os status' },
+  { value: 'draft', label: 'Rascunho' },
+  { value: 'active', label: 'Ativa' },
+  { value: 'closed', label: 'Fechada' },
+  { value: 'on_hold', label: 'Pausada' },
 ];
 
 const employmentTypeOptions = [
-  { value: '', label: 'All Types' },
-  { value: 'full_time', label: 'Full Time' },
-  { value: 'part_time', label: 'Part Time' },
-  { value: 'contract', label: 'Contract' },
-  { value: 'internship', label: 'Internship' },
+  { value: '', label: 'Todos os tipos' },
+  { value: 'full_time', label: 'Tempo integral' },
+  { value: 'part_time', label: 'Meio período' },
+  { value: 'contract', label: 'Contrato' },
+  { value: 'internship', label: 'Estágio' },
   { value: 'freelance', label: 'Freelance' },
 ];
 
@@ -77,19 +77,19 @@ export default function JobsPage() {
     const url = `${window.location.origin}/jobs/${job.id}/apply`;
     try {
       await navigator.clipboard.writeText(url);
-      toast.success('Link copied to clipboard!');
+      toast.success('Link copiado!');
     } catch {
-      toast.error('Failed to copy link');
+      toast.error('Falha ao copiar link');
     }
   }, []);
 
   const handleDuplicate = useCallback(async (job: Job) => {
     try {
       const duplicated = await apiClient.duplicateJob(job.id);
-      toast.success('Job duplicated successfully!');
+      toast.success('Vaga duplicada com sucesso!');
       router.push(`/jobs/${duplicated.id}`);
     } catch (error) {
-      toast.error('Failed to duplicate job');
+      toast.error('Falha ao duplicar vaga');
       console.error(error);
     }
   }, [router]);
@@ -101,14 +101,15 @@ export default function JobsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Jobs</h1>
-          <p className="text-gray-600 mt-1">Manage your job postings</p>
+          <h1 className="text-2xl font-bold text-gray-900">Vagas</h1>
+          <p className="text-gray-600 mt-1">Gerencie suas vagas de emprego</p>
         </div>
         <Button
           onClick={() => router.push('/jobs/new')}
           leftIcon={<Plus className="h-4 w-4" />}
+          className="bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500"
         >
-          Create Job
+          Criar Vaga
         </Button>
       </div>
 
@@ -117,7 +118,7 @@ export default function JobsPage() {
         <SearchFilter
           value={search}
           onChange={setSearch}
-          placeholder="Search jobs..."
+          placeholder="Buscar vagas..."
           className="flex-1"
         />
         <Select
@@ -136,19 +137,19 @@ export default function JobsPage() {
 
       {/* Jobs List */}
       {isLoading ? (
-        <Loading text="Loading jobs..." />
+        <Loading text="Carregando vagas..." />
       ) : filteredJobs.length === 0 ? (
         <EmptyState
-          title="No jobs found"
+          title="Nenhuma vaga encontrada"
           description={
             search || statusFilter || typeFilter
-              ? 'Try adjusting your filters'
-              : 'Create your first job posting to get started'
+              ? 'Tente ajustar seus filtros'
+              : 'Crie sua primeira vaga para começar'
           }
           action={
             !search && !statusFilter && !typeFilter
               ? {
-                  label: 'Create Job',
+                  label: 'Criar Vaga',
                   onClick: () => router.push('/jobs/new'),
                 }
               : undefined
@@ -178,7 +179,7 @@ export default function JobsPage() {
               </div>
 
               {/* Card Info */}
-              <div className="space-y-2 mb-4">
+                <div className="space-y-2 mb-4">
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Briefcase className="h-4 w-4" />
                   <span>{formatEmploymentType(job.employment_type)}</span>
@@ -194,7 +195,7 @@ export default function JobsPage() {
                 )}
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Users className="h-4 w-4" />
-                  <span>{job._count?.candidates || 0} candidates</span>
+                  <span>{job._count?.candidates || 0} candidatos</span>
                 </div>
               </div>
 
@@ -204,7 +205,7 @@ export default function JobsPage() {
                   variant="ghost"
                   size="sm"
                   onClick={() => handleShare(job)}
-                  title="Share"
+                  title="Compartilhar"
                 >
                   <Share2 className="h-4 w-4" />
                 </Button>
@@ -212,7 +213,7 @@ export default function JobsPage() {
                   variant="ghost"
                   size="sm"
                   onClick={() => handleDuplicate(job)}
-                  title="Duplicate"
+                  title="Duplicar"
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
@@ -223,7 +224,7 @@ export default function JobsPage() {
                   leftIcon={<Eye className="h-4 w-4" />}
                   className="ml-auto"
                 >
-                  View
+                  Ver
                 </Button>
               </div>
             </div>
