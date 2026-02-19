@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { ExternalLink, Mail, Eye, CheckCircle2 } from 'lucide-react';
+import { ExternalLink, Mail, Eye, CheckCircle2, RefreshCw } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { Button, Badge, Select, Loading, EmptyState, SortIcon } from '@/components/ui';
 import type { Candidate, CandidateStatus } from '@hunter/core';
@@ -60,6 +60,7 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
   const [statusFilter, setStatusFilter] = useState('');
   const [sortField, setSortField] = useState<SortField>('fit_score');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [recalculatingId, setRecalculatingId] = useState<string | null>(null);
 
   const fetchCandidates = useCallback(async () => {
     try {
@@ -92,6 +93,21 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
     } catch (error) {
       toast.error('Failed to update status');
       console.error(error);
+    }
+  };
+
+  const handleRecalculate = async (candidateId: string) => {
+    try {
+      setRecalculatingId(candidateId);
+      await apiClient.recalculateCandidateScore(candidateId);
+      toast.success('Recalculation started. The score will be updated shortly.');
+      // Refetch after a few seconds to show updated scores
+      setTimeout(() => fetchCandidates(), 5000);
+    } catch (error) {
+      toast.error('Failed to trigger recalculation');
+      console.error(error);
+    } finally {
+      setRecalculatingId(null);
     }
   };
 
@@ -347,14 +363,27 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
                     )}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => router.push(`/candidates/${candidate.id}`)}
-                      leftIcon={<Eye className="h-4 w-4" />}
-                    >
-                      View
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => router.push(`/candidates/${candidate.id}`)}
+                        leftIcon={<Eye className="h-4 w-4" />}
+                      >
+                        View
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRecalculate(candidate.id)}
+                        disabled={recalculatingId === candidate.id}
+                        isLoading={recalculatingId === candidate.id}
+                        leftIcon={<RefreshCw className="h-4 w-4" />}
+                        title="Recalcular nota com a descrição e pesos atuais da vaga"
+                      >
+                        Recalcular
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}

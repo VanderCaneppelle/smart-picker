@@ -124,6 +124,12 @@ class ApiClient {
     await this.request(`/candidates/${id}`, { method: 'DELETE' });
   }
 
+  async recalculateCandidateScore(id: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/candidates/${id}/recalculate-score`, {
+      method: 'POST',
+    });
+  }
+
   // Auth
   async login(email: string, password: string): Promise<{
     user: { id: string; email: string };
