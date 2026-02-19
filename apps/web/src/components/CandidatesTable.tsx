@@ -1,12 +1,21 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { ExternalLink, Mail, Eye, CheckCircle2, RefreshCw } from 'lucide-react';
+import {
+  ExternalLink,
+  Eye,
+  CheckCircle2,
+  RefreshCw,
+  MoreVertical,
+  Calendar,
+  AlertTriangle,
+  XCircle,
+} from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
-import { Button, Badge, Select, Loading, EmptyState, SortIcon } from '@/components/ui';
-import type { Candidate, CandidateStatus } from '@hunter/core';
+import { Badge, Select, Loading, EmptyState, SortIcon } from '@/components/ui';
+import type { Candidate, CandidateStatus, DisqualificationFlag } from '@hunter/core';
 
 interface CandidatesTableProps {
   jobId: string;
@@ -50,8 +59,125 @@ const getStatusBadgeVariant = (status: string) => {
   }
 };
 
-type SortField = 'fit_score' | 'resume_rating' | 'answer_quality_rating';
+type SortField = 'fit_score' | 'resume_rating' | 'answer_quality_rating' | 'created_at';
 type SortDirection = 'asc' | 'desc';
+
+function ActionsMenu({
+  candidateId,
+  recalculatingId,
+  onView,
+  onRecalculate,
+}: {
+  candidateId: string;
+  recalculatingId: string | null;
+  onView: () => void;
+  onRecalculate: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    if (open) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [open]);
+
+  return (
+    <div className="relative" ref={menuRef}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="p-1.5 rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
+      >
+        <MoreVertical className="h-4 w-4" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 z-20 w-44 bg-white rounded-lg border border-gray-200 shadow-lg py-1">
+          <button
+            onClick={() => {
+              onView();
+              setOpen(false);
+            }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            <Eye className="h-4 w-4 text-gray-400" />
+            Ver candidato
+          </button>
+          <button
+            onClick={() => {
+              onRecalculate();
+              setOpen(false);
+            }}
+            disabled={recalculatingId === candidateId}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <RefreshCw
+              className={`h-4 w-4 text-gray-400 ${recalculatingId === candidateId ? 'animate-spin' : ''}`}
+            />
+            {recalculatingId === candidateId ? 'Recalculando...' : 'Recalcular nota'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DisqualificationIndicator({ flags }: { flags?: DisqualificationFlag[] | null }) {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  if (!flags || flags.length === 0) return null;
+
+  const hasElimination = flags.some((f) => f.severity === 'eliminated');
+  const hasWarning = flags.some((f) => f.severity === 'warning');
+
+  return (
+    <div className="relative inline-flex" ref={ref}>
+      <button
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+        onClick={() => setShowTooltip(!showTooltip)}
+        className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${
+          hasElimination
+            ? 'bg-red-50 text-red-700'
+            : 'bg-amber-50 text-amber-700'
+        }`}
+      >
+        {hasElimination ? (
+          <XCircle className="h-3 w-3" />
+        ) : (
+          <AlertTriangle className="h-3 w-3" />
+        )}
+        {hasElimination ? 'Eliminado' : 'Atenção'}
+      </button>
+      {showTooltip && (
+        <div className="absolute z-30 bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl">
+          <div className="space-y-2">
+            {flags.map((flag, i) => (
+              <div key={i} className="space-y-0.5">
+                <p className="font-medium flex items-center gap-1">
+                  {flag.severity === 'eliminated' ? (
+                    <XCircle className="h-3 w-3 text-red-400 shrink-0" />
+                  ) : (
+                    <AlertTriangle className="h-3 w-3 text-amber-400 shrink-0" />
+                  )}
+                  {flag.question_text}
+                </p>
+                <p className="text-gray-300 pl-4">{flag.reason}</p>
+              </div>
+            ))}
+          </div>
+          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function CandidatesTable({ jobId }: CandidatesTableProps) {
   const router = useRouter();
@@ -86,7 +212,6 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
         prev.map((c) => (c.id === candidateId ? { ...c, status: newStatus } : c))
       );
       toast.success('Status updated');
-      // Refetch after a delay when moving to schedule_interview so "Convite" column updates after worker sends email
       if (newStatus === 'schedule_interview') {
         setTimeout(() => fetchCandidates(), 3000);
       }
@@ -101,7 +226,6 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
       setRecalculatingId(candidateId);
       await apiClient.recalculateCandidateScore(candidateId);
       toast.success('Recalculation started. The score will be updated shortly.');
-      // Refetch after a few seconds to show updated scores
       setTimeout(() => fetchCandidates(), 5000);
     } catch (error) {
       toast.error('Failed to trigger recalculation');
@@ -123,16 +247,19 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
   const filteredAndSortedCandidates = useMemo(() => {
     let result = [...candidates];
 
-    // Filter by status
     if (statusFilter) {
       result = result.filter((c) => c.status === statusFilter);
     } else {
-      // Exclude rejected by default
       result = result.filter((c) => c.status !== 'rejected');
     }
 
-    // Sort
     result.sort((a, b) => {
+      if (sortField === 'created_at') {
+        const aDate = new Date(a.created_at).getTime();
+        const bDate = new Date(b.created_at).getTime();
+        return sortDirection === 'asc' ? aDate - bDate : bDate - aDate;
+      }
+
       const aValue = a[sortField] ?? -1;
       const bValue = b[sortField] ?? -1;
 
@@ -140,13 +267,14 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
       if (aValue === -1) return 1;
       if (bValue === -1) return -1;
 
-      return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+      return sortDirection === 'asc'
+        ? (aValue as number) - (bValue as number)
+        : (bValue as number) - (aValue as number);
     });
 
     return result;
   }, [candidates, statusFilter, sortField, sortDirection]);
 
-  // Status counts
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = {
       all: candidates.filter((c) => c.status !== 'rejected').length,
@@ -178,10 +306,14 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
     );
   }
 
+  const thClass =
+    'px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+  const thSortClass = `${thClass} cursor-pointer select-none hover:bg-gray-100 transition-colors`;
+
   return (
     <div>
       {/* Filters */}
-      <div className="flex items-center gap-4 mb-4">
+      <div className="flex items-center justify-between gap-4 mb-4">
         <Select
           options={statusOptions.map((opt) => ({
             ...opt,
@@ -192,151 +324,205 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
           className="w-64"
         />
         <span className="text-sm text-gray-500">
-          {filteredAndSortedCandidates.length} candidates
+          {filteredAndSortedCandidates.length} candidatos
         </span>
       </div>
 
       {/* Table */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  LinkedIn
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Resume
-                </th>
-                <th
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleSort('resume_rating')}
+        <table className="w-full table-fixed">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className={thClass} style={{ width: '19%' }}>
+                Candidato
+              </th>
+              <th
+                className={thSortClass}
+                style={{ width: '9%' }}
+                onClick={() => handleSort('created_at')}
+              >
+                <div className="flex items-center gap-1">
+                  Aplicação
+                  <SortIcon direction={sortField === 'created_at' ? sortDirection : null} />
+                </div>
+              </th>
+              <th className={thClass} style={{ width: '6%' }}>
+                LinkedIn
+              </th>
+              <th className={thClass} style={{ width: '6%' }}>
+                Currículo
+              </th>
+              <th
+                className={thSortClass}
+                style={{ width: '8%' }}
+                onClick={() => handleSort('resume_rating')}
+              >
+                <div className="flex items-center gap-1">
+                  Nota CV
+                  <SortIcon direction={sortField === 'resume_rating' ? sortDirection : null} />
+                </div>
+              </th>
+              <th
+                className={thSortClass}
+                style={{ width: '9%' }}
+                onClick={() => handleSort('answer_quality_rating')}
+              >
+                <div className="flex items-center gap-1">
+                  Respostas
+                  <SortIcon
+                    direction={sortField === 'answer_quality_rating' ? sortDirection : null}
+                  />
+                </div>
+              </th>
+              <th
+                className={thSortClass}
+                style={{ width: '8%' }}
+                onClick={() => handleSort('fit_score')}
+              >
+                <div className="flex items-center gap-1">
+                  Fit Score
+                  <SortIcon direction={sortField === 'fit_score' ? sortDirection : null} />
+                </div>
+              </th>
+              <th className={thClass} style={{ width: '8%' }}>
+                Elegibilidade
+              </th>
+              <th className={thClass} style={{ width: '12%' }}>
+                Status
+              </th>
+              <th className={thClass} style={{ width: '9%' }}>
+                Convite
+              </th>
+              <th className={thClass} style={{ width: '3%' }}>
+                <span className="sr-only">Ações</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {filteredAndSortedCandidates.map((candidate) => {
+              const flags = (candidate.disqualification_flags || []) as DisqualificationFlag[];
+              const hasFlags = flags.length > 0;
+
+              return (
+                <tr
+                  key={candidate.id}
+                  className={`transition-colors ${
+                    hasFlags && flags.some((f) => f.severity === 'eliminated')
+                      ? 'bg-red-50/40 hover:bg-red-50/70'
+                      : hasFlags
+                      ? 'bg-amber-50/30 hover:bg-amber-50/50'
+                      : 'hover:bg-gray-50/70'
+                  }`}
                 >
-                  <div className="flex items-center gap-1">
-                    Resume Rating
-                    <SortIcon
-                      direction={sortField === 'resume_rating' ? sortDirection : null}
-                    />
-                  </div>
-                </th>
-                <th
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleSort('answer_quality_rating')}
-                >
-                  <div className="flex items-center gap-1">
-                    Answer Quality
-                    <SortIcon
-                      direction={sortField === 'answer_quality_rating' ? sortDirection : null}
-                    />
-                  </div>
-                </th>
-                <th
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleSort('fit_score')}
-                >
-                  <div className="flex items-center gap-1">
-                    Fit Score
-                    <SortIcon
-                      direction={sortField === 'fit_score' ? sortDirection : null}
-                    />
-                  </div>
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Convite (e-mail)
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredAndSortedCandidates.map((candidate) => (
-                <tr key={candidate.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <span className="font-medium text-gray-900">{candidate.name}</span>
+                  {/* Candidato: nome + email */}
+                  <td className="px-4 py-3">
+                    <div className="min-w-0">
+                      <p className="font-medium text-gray-900 truncate">{candidate.name}</p>
+                      <p className="text-xs text-gray-400 truncate">{candidate.email}</p>
+                    </div>
                   </td>
+
+                  {/* Data de Aplicação */}
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <a
-                      href={`mailto:${candidate.email}`}
-                      className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                    >
-                      <Mail className="h-3.5 w-3.5" />
-                      {candidate.email}
-                    </a>
+                    <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                      <Calendar className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                      {new Date(candidate.created_at).toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: '2-digit',
+                      })}
+                    </div>
                   </td>
+
+                  {/* LinkedIn */}
                   <td className="px-4 py-3 whitespace-nowrap">
                     {candidate.linkedin_url ? (
                       <a
                         href={candidate.linkedin_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                        className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 transition-colors"
                       >
                         <ExternalLink className="h-3.5 w-3.5" />
-                        View
+                        Ver
                       </a>
                     ) : (
-                      <span className="text-gray-400">-</span>
+                      <span className="text-gray-300">—</span>
                     )}
                   </td>
+
+                  {/* Currículo */}
                   <td className="px-4 py-3 whitespace-nowrap">
                     <a
                       href={candidate.resume_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                      className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 transition-colors"
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
-                      View
+                      Ver
                     </a>
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    {candidate.resume_rating !== null && candidate.resume_rating !== undefined ? (
-                      <span className="font-medium">{candidate.resume_rating}/5</span>
+
+                  {/* Nota CV */}
+                  <td className="px-4 py-3 whitespace-nowrap text-center">
+                    {candidate.resume_rating != null ? (
+                      <span className="font-medium text-sm">{candidate.resume_rating}/5</span>
                     ) : (
-                      <span className="text-gray-400">-</span>
+                      <span className="text-gray-300">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    {candidate.answer_quality_rating !== null && candidate.answer_quality_rating !== undefined ? (
-                      <span className="font-medium">{candidate.answer_quality_rating}/5</span>
+
+                  {/* Respostas */}
+                  <td className="px-4 py-3 whitespace-nowrap text-center">
+                    {candidate.answer_quality_rating != null ? (
+                      <span className="font-medium text-sm">
+                        {candidate.answer_quality_rating}/5
+                      </span>
                     ) : (
-                      <span className="text-gray-400">-</span>
+                      <span className="text-gray-300">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    {candidate.fit_score !== null && candidate.fit_score !== undefined ? (
+
+                  {/* Fit Score */}
+                  <td className="px-4 py-3 whitespace-nowrap text-center">
+                    {candidate.fit_score != null ? (
                       <span
-                        className={`font-medium ${
+                        className={`inline-flex items-center justify-center font-semibold text-sm px-2 py-0.5 rounded-full ${
                           candidate.fit_score >= 80
-                            ? 'text-green-600'
+                            ? 'bg-green-50 text-green-700'
                             : candidate.fit_score >= 60
-                            ? 'text-yellow-600'
-                            : 'text-red-600'
+                            ? 'bg-yellow-50 text-yellow-700'
+                            : 'bg-red-50 text-red-700'
                         }`}
                       >
                         {candidate.fit_score}%
                       </span>
                     ) : (
-                      <span className="text-gray-400">-</span>
+                      <span className="text-gray-300">—</span>
                     )}
                   </td>
+
+                  {/* Elegibilidade */}
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {flags.length > 0 ? (
+                      <DisqualificationIndicator flags={flags} />
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-xs text-green-600">
+                        <CheckCircle2 className="h-3 w-3" />
+                        OK
+                      </span>
+                    )}
+                  </td>
+
+                  {/* Status */}
                   <td className="px-4 py-3 whitespace-nowrap">
                     <select
                       value={candidate.status}
                       onChange={(e) =>
                         handleStatusChange(candidate.id, e.target.value as CandidateStatus)
                       }
-                      className="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                     >
                       {statusUpdateOptions.map((opt) => (
                         <option key={opt.value} value={opt.value}>
@@ -345,51 +531,39 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
                       ))}
                     </select>
                   </td>
+
+                  {/* Convite */}
                   <td className="px-4 py-3 whitespace-nowrap">
                     {candidate.schedule_interview_email_sent_at ? (
                       <span
-                        className="inline-flex items-center gap-1 text-green-600 text-sm"
+                        className="inline-flex items-center gap-1 text-green-600 text-xs"
                         title={`Enviado em ${new Date(candidate.schedule_interview_email_sent_at).toLocaleString('pt-BR')}`}
                       >
-                        <CheckCircle2 className="h-4 w-4 shrink-0" />
-                        {new Date(candidate.schedule_interview_email_sent_at).toLocaleDateString('pt-BR', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                        })}
+                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                        {new Date(candidate.schedule_interview_email_sent_at).toLocaleDateString(
+                          'pt-BR',
+                          { day: '2-digit', month: '2-digit', year: '2-digit' }
+                        )}
                       </span>
                     ) : (
-                      <span className="text-gray-400">-</span>
+                      <span className="text-gray-300">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => router.push(`/candidates/${candidate.id}`)}
-                        leftIcon={<Eye className="h-4 w-4" />}
-                      >
-                        View
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRecalculate(candidate.id)}
-                        disabled={recalculatingId === candidate.id}
-                        isLoading={recalculatingId === candidate.id}
-                        leftIcon={<RefreshCw className="h-4 w-4" />}
-                        title="Recalcular nota com a descrição e pesos atuais da vaga"
-                      >
-                        Recalcular
-                      </Button>
-                    </div>
+
+                  {/* Actions */}
+                  <td className="px-2 py-3 whitespace-nowrap">
+                    <ActionsMenu
+                      candidateId={candidate.id}
+                      recalculatingId={recalculatingId}
+                      onView={() => router.push(`/candidates/${candidate.id}`)}
+                      onRecalculate={() => handleRecalculate(candidate.id)}
+                    />
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );

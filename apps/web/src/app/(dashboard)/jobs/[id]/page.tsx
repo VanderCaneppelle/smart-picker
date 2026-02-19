@@ -14,6 +14,7 @@ import {
   DollarSign,
   Plus,
   Brain,
+  ShieldAlert,
 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { apiClient } from '@/lib/api-client';
@@ -28,7 +29,7 @@ import {
   Loading,
 } from '@/components/ui';
 import CandidatesTable from '@/components/CandidatesTable';
-import type { Job, ApplicationQuestion, QuestionType } from '@hunter/core';
+import type { Job, ApplicationQuestion, QuestionType, EliminatoryCriteria } from '@hunter/core';
 
 const employmentTypeOptions = [
   { value: 'full_time', label: 'Full Time' },
@@ -452,7 +453,14 @@ export default function JobDetailPage() {
             ) : (
               <div className="space-y-4">
                 {applicationQuestions.map((question, index) => (
-                  <div key={question.id} className="border border-gray-200 rounded-lg p-4">
+                  <div
+                    key={question.id}
+                    className={`border rounded-lg p-4 transition-colors ${
+                      question.is_eliminatory
+                        ? 'border-amber-300 bg-amber-50/30'
+                        : 'border-gray-200'
+                    }`}
+                  >
                     <div className="flex items-start gap-4">
                       <div className="flex-1 space-y-3">
                         <Input
@@ -461,7 +469,7 @@ export default function JobDetailPage() {
                           onChange={(e) => updateQuestion(index, { question: e.target.value })}
                           placeholder="Digite sua pergunta"
                         />
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4 flex-wrap">
                           <Select
                             options={questionTypeOptions}
                             value={question.type}
@@ -476,6 +484,38 @@ export default function JobDetailPage() {
                               className="rounded border-gray-300"
                             />
                             Obrigatória
+                          </label>
+                          <label className="flex items-center gap-2 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={question.is_eliminatory || false}
+                              onChange={(e) => {
+                                const isElim = e.target.checked;
+                                const updates: Partial<ApplicationQuestion> = { is_eliminatory: isElim };
+                                if (isElim && !question.eliminatory_criteria) {
+                                  const criteria: EliminatoryCriteria = {};
+                                  if (question.type === 'yes_no') {
+                                    criteria.expected_answer = 'Sim';
+                                  }
+                                  if (question.type === 'select' || question.type === 'multiselect') {
+                                    criteria.accepted_values = [...(question.options || [])];
+                                  }
+                                  if (question.type === 'text' || question.type === 'textarea') {
+                                    criteria.tolerance_percent = 15;
+                                  }
+                                  updates.eliminatory_criteria = criteria;
+                                }
+                                if (!isElim) {
+                                  updates.eliminatory_criteria = undefined;
+                                }
+                                updateQuestion(index, updates);
+                              }}
+                              className="rounded border-amber-400 text-amber-600 focus:ring-amber-500"
+                            />
+                            <span className="flex items-center gap-1 text-amber-700">
+                              <ShieldAlert className="h-3.5 w-3.5" />
+                              Eliminatória
+                            </span>
                           </label>
                         </div>
 
@@ -524,6 +564,142 @@ export default function JobDetailPage() {
                             <p className="text-sm text-gray-500">
                               Opções: <span className="font-medium">Sim</span> / <span className="font-medium">Não</span>
                             </p>
+                          </div>
+                        )}
+
+                        {/* Configuração Eliminatória */}
+                        {question.is_eliminatory && (
+                          <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg space-y-3">
+                            <p className="text-xs font-semibold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
+                              <ShieldAlert className="h-3.5 w-3.5" />
+                              Critérios eliminatórios
+                            </p>
+
+                            {/* yes_no: resposta esperada */}
+                            {question.type === 'yes_no' && (
+                              <div>
+                                <label className="block text-sm text-gray-700 mb-1">
+                                  Resposta esperada (resposta diferente elimina o candidato):
+                                </label>
+                                <select
+                                  value={question.eliminatory_criteria?.expected_answer || 'Sim'}
+                                  onChange={(e) =>
+                                    updateQuestion(index, {
+                                      eliminatory_criteria: {
+                                        ...question.eliminatory_criteria,
+                                        expected_answer: e.target.value,
+                                      },
+                                    })
+                                  }
+                                  className="text-sm border border-amber-300 rounded-md px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                >
+                                  <option value="Sim">Sim</option>
+                                  <option value="Não">Não</option>
+                                </select>
+                              </div>
+                            )}
+
+                            {/* select / multiselect: valores aceitos */}
+                            {(question.type === 'select' || question.type === 'multiselect') && (
+                              <div>
+                                <label className="block text-sm text-gray-700 mb-2">
+                                  Respostas aceitas (outras opções eliminam):
+                                </label>
+                                <div className="space-y-1.5">
+                                  {(question.options || []).map((option, optIdx) => (
+                                    <label key={optIdx} className="flex items-center gap-2 text-sm">
+                                      <input
+                                        type="checkbox"
+                                        checked={
+                                          question.eliminatory_criteria?.accepted_values?.includes(option) ?? true
+                                        }
+                                        onChange={(e) => {
+                                          const current = question.eliminatory_criteria?.accepted_values || [...(question.options || [])];
+                                          const updated = e.target.checked
+                                            ? [...current, option]
+                                            : current.filter((v) => v !== option);
+                                          updateQuestion(index, {
+                                            eliminatory_criteria: {
+                                              ...question.eliminatory_criteria,
+                                              accepted_values: updated,
+                                            },
+                                          });
+                                        }}
+                                        className="rounded border-amber-400 text-amber-600 focus:ring-amber-500"
+                                      />
+                                      <span className="text-gray-700">{option}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* text / textarea: range numérico (para faixa salarial, etc.) */}
+                            {(question.type === 'text' || question.type === 'textarea') && (
+                              <div className="space-y-3">
+                                <p className="text-xs text-gray-600">
+                                  Para respostas numéricas (ex: pretensão salarial). Se a resposta do candidato 
+                                  estiver fora do intervalo, será flagueado ou eliminado.
+                                </p>
+                                <div className="grid grid-cols-3 gap-3">
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">Mínimo</label>
+                                    <input
+                                      type="number"
+                                      value={question.eliminatory_criteria?.range_min ?? ''}
+                                      onChange={(e) =>
+                                        updateQuestion(index, {
+                                          eliminatory_criteria: {
+                                            ...question.eliminatory_criteria,
+                                            range_min: e.target.value ? Number(e.target.value) : undefined,
+                                          },
+                                        })
+                                      }
+                                      placeholder="Ex: 3000"
+                                      className="w-full text-sm border border-amber-300 rounded-md px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">Máximo</label>
+                                    <input
+                                      type="number"
+                                      value={question.eliminatory_criteria?.range_max ?? ''}
+                                      onChange={(e) =>
+                                        updateQuestion(index, {
+                                          eliminatory_criteria: {
+                                            ...question.eliminatory_criteria,
+                                            range_max: e.target.value ? Number(e.target.value) : undefined,
+                                          },
+                                        })
+                                      }
+                                      placeholder="Ex: 8000"
+                                      className="w-full text-sm border border-amber-300 rounded-md px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">Tolerância %</label>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      max="100"
+                                      value={question.eliminatory_criteria?.tolerance_percent ?? 15}
+                                      onChange={(e) =>
+                                        updateQuestion(index, {
+                                          eliminatory_criteria: {
+                                            ...question.eliminatory_criteria,
+                                            tolerance_percent: Number(e.target.value),
+                                          },
+                                        })
+                                      }
+                                      className="w-full text-sm border border-amber-300 rounded-md px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                    />
+                                  </div>
+                                </div>
+                                <p className="text-xs text-gray-500">
+                                  Dentro da tolerância = aviso (negociável). Fora da tolerância = eliminado.
+                                </p>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>

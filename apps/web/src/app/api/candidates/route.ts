@@ -3,7 +3,9 @@ import { prisma } from '@/lib/db';
 import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
 import { triggerWorkerProcess } from '@/lib/worker';
 import { CreateCandidateSchema, CandidateFiltersSchema } from '@hunter/core';
+import type { ApplicationQuestion, ApplicationAnswer } from '@hunter/core';
 import { Prisma } from '@prisma/client';
+import { evaluateEliminatoryQuestions } from '@/lib/evaluate-eliminatory';
 
 // GET /api/candidates - List all candidates (protected)
 export async function GET(request: NextRequest) {
@@ -141,6 +143,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const questions = (job.application_questions || []) as ApplicationQuestion[];
+    const candidateAnswers = (validation.data.application_answers || []) as ApplicationAnswer[];
+
+    const disqualificationFlags = evaluateEliminatoryQuestions(questions, candidateAnswers);
+
+    const hasElimination = disqualificationFlags.some((f) => f.severity === 'eliminated');
+
     const candidate = await prisma.candidate.create({
       data: {
         job_id: validation.data.job_id,
@@ -150,13 +159,15 @@ export async function POST(request: NextRequest) {
         linkedin_url: validation.data.linkedin_url || null,
         resume_url: validation.data.resume_url,
         application_answers: validation.data.application_answers,
-        status: 'new',
-        needs_scoring: true,
+        status: hasElimination ? 'rejected' : 'new',
+        needs_scoring: !hasElimination,
+        disqualification_flags: disqualificationFlags.length > 0 ? disqualificationFlags : [],
       },
     });
 
-    // Event-driven: trigger worker to process candidate
-    triggerWorkerProcess(candidate.id);
+    if (!hasElimination) {
+      triggerWorkerProcess(candidate.id);
+    }
 
     return Response.json(candidate, { status: 201 });
   } catch (error) {

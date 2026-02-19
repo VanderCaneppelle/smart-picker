@@ -70,6 +70,7 @@ model Candidate {
   resume_summary          String?   @db.Text
   experience_level        String?
   needs_scoring                   Boolean   @default(true)
+  disqualification_flags          Json      @default("[]")
   schedule_interview_email_sent_at DateTime?
   created_at                      DateTime  @default(now())
   updated_at              DateTime  @updatedAt
