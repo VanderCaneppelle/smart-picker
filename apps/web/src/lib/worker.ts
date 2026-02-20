@@ -1,33 +1,43 @@
+const WORKER_TRIGGER_TIMEOUT_MS = 12_000;
+
 /**
  * Triggers the worker to process a candidate (event-driven).
- * Fire-and-forget - does not block the response.
+ * Returns a Promise so the caller can await and ensure the request is sent (important in serverless).
  */
-export function triggerWorkerProcess(candidateId: string): void {
+export function triggerWorkerProcess(candidateId: string): Promise<void> {
   const workerUrl = process.env.WORKER_URL;
   const workerSecret = process.env.WORKER_SECRET;
 
   if (!workerUrl || !workerSecret) {
     console.warn('[Worker] WORKER_URL or WORKER_SECRET not configured. Skipping process trigger.');
-    return;
+    return Promise.resolve();
   }
 
   const url = `${workerUrl.replace(/\/$/, '')}/process`;
-  fetch(url, {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), WORKER_TRIGGER_TIMEOUT_MS);
+
+  return fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${workerSecret}`,
     },
     body: JSON.stringify({ candidateId }),
+    signal: controller.signal,
   })
     .then(async (res) => {
+      clearTimeout(timeoutId);
       if (!res.ok) {
         const body = await res.text().catch(() => '');
         console.error(`[Worker] Process trigger failed: ${res.status} ${body}`);
       }
     })
     .catch((err) => {
-      console.error('[Worker] Failed to trigger process:', err);
+      clearTimeout(timeoutId);
+      if (err.name !== 'AbortError') {
+        console.error('[Worker] Failed to trigger process:', err);
+      }
     });
 }
 

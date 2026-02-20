@@ -174,7 +174,8 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    triggerWorkerProcess(candidate.id);
+    // Await trigger so serverless doesn't kill the request before the worker is called
+    await triggerWorkerProcess(candidate.id);
 
     return Response.json(candidate, { status: 201 });
   } catch (error) {
