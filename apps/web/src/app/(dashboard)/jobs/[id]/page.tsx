@@ -60,10 +60,13 @@ const currencyOptions = [
 const questionTypeOptions = [
   { value: 'text', label: 'Texto curto' },
   { value: 'textarea', label: 'Texto longo' },
+  { value: 'number', label: 'Número' },
   { value: 'yes_no', label: 'Sim / Não' },
   { value: 'select', label: 'Escolha única' },
   { value: 'multiselect', label: 'Múltipla escolha' },
 ];
+
+const ELIMINATORY_ALLOWED_TYPES = ['yes_no', 'select', 'multiselect', 'number'];
 
 const getStatusBadgeVariant = (status: string) => {
   switch (status) {
@@ -220,17 +223,19 @@ export default function JobDetailPage() {
     const newQuestions = [...applicationQuestions];
     newQuestions[index] = { ...newQuestions[index], ...updates };
     
-    // Se mudou para yes_no, define as opções automaticamente
     if (updates.type === 'yes_no') {
       newQuestions[index].options = ['Sim', 'Não'];
     }
-    // Se mudou para text ou textarea, limpa as opções
-    if (updates.type === 'text' || updates.type === 'textarea') {
+    if (updates.type === 'text' || updates.type === 'textarea' || updates.type === 'number') {
       newQuestions[index].options = [];
     }
-    // Se mudou para select ou multiselect e não tem opções, inicializa vazio
     if ((updates.type === 'select' || updates.type === 'multiselect') && !newQuestions[index].options?.length) {
       newQuestions[index].options = [''];
+    }
+
+    if (updates.type && !ELIMINATORY_ALLOWED_TYPES.includes(updates.type)) {
+      newQuestions[index].is_eliminatory = false;
+      newQuestions[index].eliminatory_criteria = undefined;
     }
     
     setApplicationQuestions(newQuestions);
@@ -485,38 +490,40 @@ export default function JobDetailPage() {
                             />
                             Obrigatória
                           </label>
-                          <label className="flex items-center gap-2 text-sm">
-                            <input
-                              type="checkbox"
-                              checked={question.is_eliminatory || false}
-                              onChange={(e) => {
-                                const isElim = e.target.checked;
-                                const updates: Partial<ApplicationQuestion> = { is_eliminatory: isElim };
-                                if (isElim && !question.eliminatory_criteria) {
-                                  const criteria: EliminatoryCriteria = {};
-                                  if (question.type === 'yes_no') {
-                                    criteria.expected_answer = 'Sim';
+                          {ELIMINATORY_ALLOWED_TYPES.includes(question.type) && (
+                            <label className="flex items-center gap-2 text-sm">
+                              <input
+                                type="checkbox"
+                                checked={question.is_eliminatory || false}
+                                onChange={(e) => {
+                                  const isElim = e.target.checked;
+                                  const updates: Partial<ApplicationQuestion> = { is_eliminatory: isElim };
+                                  if (isElim && !question.eliminatory_criteria) {
+                                    const criteria: EliminatoryCriteria = {};
+                                    if (question.type === 'yes_no') {
+                                      criteria.expected_answer = 'Sim';
+                                    }
+                                    if (question.type === 'select' || question.type === 'multiselect') {
+                                      criteria.accepted_values = [...(question.options || [])];
+                                    }
+                                    if (question.type === 'number') {
+                                      criteria.tolerance_percent = 15;
+                                    }
+                                    updates.eliminatory_criteria = criteria;
                                   }
-                                  if (question.type === 'select' || question.type === 'multiselect') {
-                                    criteria.accepted_values = [...(question.options || [])];
+                                  if (!isElim) {
+                                    updates.eliminatory_criteria = undefined;
                                   }
-                                  if (question.type === 'text' || question.type === 'textarea') {
-                                    criteria.tolerance_percent = 15;
-                                  }
-                                  updates.eliminatory_criteria = criteria;
-                                }
-                                if (!isElim) {
-                                  updates.eliminatory_criteria = undefined;
-                                }
-                                updateQuestion(index, updates);
-                              }}
-                              className="rounded border-amber-400 text-amber-600 focus:ring-amber-500"
-                            />
-                            <span className="flex items-center gap-1 text-amber-700">
-                              <ShieldAlert className="h-3.5 w-3.5" />
-                              Eliminatória
-                            </span>
-                          </label>
+                                  updateQuestion(index, updates);
+                                }}
+                                className="rounded border-amber-400 text-amber-600 focus:ring-amber-500"
+                              />
+                              <span className="flex items-center gap-1 text-amber-700">
+                                <ShieldAlert className="h-3.5 w-3.5" />
+                                Eliminatória
+                              </span>
+                            </label>
+                          )}
                         </div>
 
                         {/* Opções para select e multiselect */}
@@ -634,12 +641,10 @@ export default function JobDetailPage() {
                               </div>
                             )}
 
-                            {/* text / textarea: range numérico (para faixa salarial, etc.) */}
-                            {(question.type === 'text' || question.type === 'textarea') && (
+                            {question.type === 'number' && (
                               <div className="space-y-3">
                                 <p className="text-xs text-gray-600">
-                                  Para respostas numéricas (ex: pretensão salarial). Se a resposta do candidato 
-                                  estiver fora do intervalo, será flagueado ou eliminado.
+                                  Se a resposta numérica estiver fora do intervalo, o candidato será flagueado ou eliminado.
                                 </p>
                                 <div className="grid grid-cols-3 gap-3">
                                   <div>

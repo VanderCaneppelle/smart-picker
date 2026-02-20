@@ -150,6 +150,13 @@ export async function POST(request: NextRequest) {
 
     const hasElimination = disqualificationFlags.some((f) => f.severity === 'eliminated');
 
+    const eliminationReasons = hasElimination
+      ? disqualificationFlags
+          .filter((f) => f.severity === 'eliminated')
+          .map((f) => `${f.question_text}: ${f.reason}`)
+          .join(' | ')
+      : null;
+
     const candidate = await prisma.candidate.create({
       data: {
         job_id: validation.data.job_id,
@@ -159,8 +166,9 @@ export async function POST(request: NextRequest) {
         linkedin_url: validation.data.linkedin_url || null,
         resume_url: validation.data.resume_url,
         application_answers: validation.data.application_answers,
-        status: hasElimination ? 'rejected' : 'new',
+        status: hasElimination ? 'flagged' : 'new',
         needs_scoring: !hasElimination,
+        flagged_reason: eliminationReasons,
         disqualification_flags:
           (disqualificationFlags.length > 0 ? disqualificationFlags : []) as unknown as Prisma.InputJsonValue,
       },

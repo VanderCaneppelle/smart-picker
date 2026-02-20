@@ -100,6 +100,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     if (data.resume_summary !== undefined) updateData.resume_summary = data.resume_summary;
     if (data.experience_level !== undefined) updateData.experience_level = data.experience_level;
     if (data.needs_scoring !== undefined) updateData.needs_scoring = data.needs_scoring;
+    if (data.flagged_reason !== undefined) updateData.flagged_reason = data.flagged_reason;
+
+    // Clear flagged_reason when moving away from flagged status
+    if (data.status && data.status !== 'flagged' && existingCandidate.status === 'flagged') {
+      updateData.flagged_reason = null;
+    }
 
     const candidate = await prisma.candidate.update({
       where: { id },

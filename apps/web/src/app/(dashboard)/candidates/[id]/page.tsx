@@ -14,18 +14,20 @@ import {
   Star,
   Target,
   MessageSquare,
+  Flag,
 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { Button, Badge, Select, Loading } from '@/components/ui';
 import type { Candidate, CandidateStatus, ApplicationQuestion, ApplicationAnswer } from '@hunter/core';
 
 const statusOptions = [
-  { value: 'new', label: 'New' },
-  { value: 'reviewing', label: 'Reviewing' },
-  { value: 'schedule_interview', label: 'Schedule Interview' },
-  { value: 'shortlisted', label: 'Shortlisted' },
-  { value: 'rejected', label: 'Rejected' },
-  { value: 'hired', label: 'Hired' },
+  { value: 'new', label: 'Novo' },
+  { value: 'reviewing', label: 'Em análise' },
+  { value: 'schedule_interview', label: 'Agendar entrevista' },
+  { value: 'shortlisted', label: 'Pré-selecionado' },
+  { value: 'flagged', label: 'Flagged' },
+  { value: 'rejected', label: 'Rejeitado' },
+  { value: 'hired', label: 'Contratado' },
 ];
 
 const getStatusBadgeVariant = (status: string) => {
@@ -38,6 +40,8 @@ const getStatusBadgeVariant = (status: string) => {
       return 'purple';
     case 'shortlisted':
       return 'success';
+    case 'flagged':
+      return 'danger';
     case 'rejected':
       return 'danger';
     case 'hired':
@@ -188,6 +192,17 @@ export default function CandidateDetailPage() {
                 className="w-48"
               />
             </div>
+
+            {/* Flagged reason */}
+            {candidate.status === 'flagged' && candidate.flagged_reason && (
+              <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg flex items-start gap-2 text-orange-800 text-sm">
+                <Flag className="h-4 w-4 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium">Candidato flagueado automaticamente</p>
+                  <p className="text-orange-700 mt-1">{candidate.flagged_reason}</p>
+                </div>
+              </div>
+            )}
 
             {/* Schedule interview email sent */}
             {candidate.schedule_interview_email_sent_at && (

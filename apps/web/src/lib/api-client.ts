@@ -164,6 +164,13 @@ class ApiClient {
     await this.request(`/candidates/${id}`, { method: 'DELETE' });
   }
 
+  async bulkUpdateCandidates(candidateIds: string[], status: string): Promise<{ message: string; updated_count: number }> {
+    return this.request<{ message: string; updated_count: number }>('/candidates/bulk-update', {
+      method: 'POST',
+      body: JSON.stringify({ candidate_ids: candidateIds, status }),
+    });
+  }
+
   async recalculateCandidateScore(id: string): Promise<{ message: string }> {
     return this.request<{ message: string }>(`/candidates/${id}/recalculate-score`, {
       method: 'POST',

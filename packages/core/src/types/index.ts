@@ -26,6 +26,7 @@ export const CandidateStatus = {
   REVIEWING: 'reviewing',
   SCHEDULE_INTERVIEW: 'schedule_interview',
   SHORTLISTED: 'shortlisted',
+  FLAGGED: 'flagged',
   REJECTED: 'rejected',
   HIRED: 'hired',
 } as const;
@@ -51,6 +52,7 @@ export type Currency = (typeof Currency)[keyof typeof Currency];
 export const QuestionType = {
   TEXT: 'text',
   TEXTAREA: 'textarea',
+  NUMBER: 'number',
   SELECT: 'select',
   MULTISELECT: 'multiselect',
   YES_NO: 'yes_no',
@@ -176,6 +178,7 @@ export interface Candidate {
   experience_level?: string | null;
   needs_scoring: boolean;
   disqualification_flags?: DisqualificationFlag[] | null;
+  flagged_reason?: string | null;
   schedule_interview_email_sent_at?: string | null;
   created_at: string;
   updated_at: string;
@@ -201,6 +204,7 @@ export interface UpdateCandidateInput {
   resume_summary?: string | null;
   experience_level?: string | null;
   needs_scoring?: boolean;
+  flagged_reason?: string | null;
 }
 
 // ============================================

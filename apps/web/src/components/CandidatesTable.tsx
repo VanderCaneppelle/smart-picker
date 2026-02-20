@@ -14,6 +14,7 @@ import {
   XCircle,
   Bookmark,
   BookmarkCheck,
+  Flag,
 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { Badge, Select, Loading, EmptyState, SortIcon } from '@/components/ui';
@@ -24,22 +25,34 @@ interface CandidatesTableProps {
 }
 
 const statusOptions = [
-  { value: '', label: 'All (excl. rejected)' },
-  { value: 'new', label: 'New' },
-  { value: 'reviewing', label: 'Reviewing' },
-  { value: 'schedule_interview', label: 'Schedule Interview' },
-  { value: 'shortlisted', label: 'Shortlisted' },
-  { value: 'rejected', label: 'Rejected' },
-  { value: 'hired', label: 'Hired' },
+  { value: '', label: 'Todos (excl. rejeitados)' },
+  { value: 'new', label: 'Novos' },
+  { value: 'reviewing', label: 'Em análise' },
+  { value: 'schedule_interview', label: 'Agendar entrevista' },
+  { value: 'shortlisted', label: 'Pré-selecionados' },
+  { value: 'flagged', label: 'Flagged' },
+  { value: 'rejected', label: 'Rejeitados' },
+  { value: 'hired', label: 'Contratados' },
 ];
 
 const statusUpdateOptions = [
-  { value: 'new', label: 'New' },
-  { value: 'reviewing', label: 'Reviewing' },
-  { value: 'schedule_interview', label: 'Schedule Interview' },
-  { value: 'shortlisted', label: 'Shortlisted' },
-  { value: 'rejected', label: 'Rejected' },
-  { value: 'hired', label: 'Hired' },
+  { value: 'new', label: 'Novo' },
+  { value: 'reviewing', label: 'Em análise' },
+  { value: 'schedule_interview', label: 'Agendar entrevista' },
+  { value: 'shortlisted', label: 'Pré-selecionado' },
+  { value: 'flagged', label: 'Flagged' },
+  { value: 'rejected', label: 'Rejeitado' },
+  { value: 'hired', label: 'Contratado' },
+];
+
+const bulkStatusOptions = [
+  { value: '', label: 'Mover para...' },
+  { value: 'new', label: 'Novo' },
+  { value: 'reviewing', label: 'Em análise' },
+  { value: 'schedule_interview', label: 'Agendar entrevista' },
+  { value: 'shortlisted', label: 'Pré-selecionado' },
+  { value: 'rejected', label: 'Rejeitado' },
+  { value: 'hired', label: 'Contratado' },
 ];
 
 const getStatusBadgeVariant = (status: string) => {
@@ -52,6 +65,8 @@ const getStatusBadgeVariant = (status: string) => {
       return 'purple';
     case 'shortlisted':
       return 'success';
+    case 'flagged':
+      return 'danger';
     case 'rejected':
       return 'danger';
     case 'hired':
@@ -169,7 +184,6 @@ function DisqualificationIndicator({ flags }: { flags?: DisqualificationFlag[] |
   if (!flags || flags.length === 0) return null;
 
   const hasElimination = flags.some((f) => f.severity === 'eliminated');
-  const hasWarning = flags.some((f) => f.severity === 'warning');
 
   return (
     <div className="relative inline-flex" ref={ref}>
@@ -224,6 +238,8 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
   const [recalculatingId, setRecalculatingId] = useState<string | null>(null);
   const [savedCandidateIds, setSavedCandidateIds] = useState<Set<string>>(new Set());
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
   const fetchCandidates = useCallback(async () => {
     try {
@@ -261,13 +277,33 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
       setCandidates((prev) =>
         prev.map((c) => (c.id === candidateId ? { ...c, status: newStatus } : c))
       );
-      toast.success('Status updated');
+      toast.success('Status atualizado');
       if (newStatus === 'schedule_interview') {
         setTimeout(() => fetchCandidates(), 3000);
       }
     } catch (error) {
-      toast.error('Failed to update status');
+      toast.error('Falha ao atualizar status');
       console.error(error);
+    }
+  };
+
+  const handleBulkStatusChange = async (newStatus: string) => {
+    if (!newStatus || selectedIds.size === 0) return;
+
+    setIsBulkUpdating(true);
+    try {
+      const result = await apiClient.bulkUpdateCandidates(
+        Array.from(selectedIds),
+        newStatus
+      );
+      toast.success(result.message);
+      setSelectedIds(new Set());
+      await fetchCandidates();
+    } catch (error) {
+      toast.error('Falha ao atualizar candidatos');
+      console.error(error);
+    } finally {
+      setIsBulkUpdating(false);
     }
   };
 
@@ -275,10 +311,10 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
     try {
       setRecalculatingId(candidateId);
       await apiClient.recalculateCandidateScore(candidateId);
-      toast.success('Recalculation started. The score will be updated shortly.');
+      toast.success('Recálculo iniciado. A nota será atualizada em breve.');
       setTimeout(() => fetchCandidates(), 5000);
     } catch (error) {
-      toast.error('Failed to trigger recalculation');
+      toast.error('Falha ao recalcular');
       console.error(error);
     } finally {
       setRecalculatingId(null);
@@ -326,6 +362,18 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
     }
   };
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
   const filteredAndSortedCandidates = useMemo(() => {
     let result = [...candidates];
 
@@ -364,6 +412,7 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
       reviewing: 0,
       schedule_interview: 0,
       shortlisted: 0,
+      flagged: 0,
       rejected: 0,
       hired: 0,
     };
@@ -375,15 +424,27 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
     return counts;
   }, [candidates]);
 
+  const allVisibleSelected =
+    filteredAndSortedCandidates.length > 0 &&
+    filteredAndSortedCandidates.every((c) => selectedIds.has(c.id));
+
+  const toggleSelectAll = () => {
+    if (allVisibleSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredAndSortedCandidates.map((c) => c.id)));
+    }
+  };
+
   if (isLoading) {
-    return <Loading text="Loading candidates..." />;
+    return <Loading text="Carregando candidatos..." />;
   }
 
   if (candidates.length === 0) {
     return (
       <EmptyState
-        title="No candidates yet"
-        description="Share your job posting to start receiving applications"
+        title="Nenhum candidato ainda"
+        description="Compartilhe a vaga para começar a receber candidaturas"
       />
     );
   }
@@ -394,38 +455,89 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
 
   return (
     <div>
-      {/* Filters */}
+      {/* Filters & Bulk Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-        <Select
-          options={statusOptions.map((opt) => ({
-            ...opt,
-            label: `${opt.label} (${opt.value ? statusCounts[opt.value] || 0 : statusCounts.all})`,
-          }))}
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="w-full sm:w-64"
-        />
-        <span className="text-sm text-gray-500 sm:shrink-0">
-          {filteredAndSortedCandidates.length} candidatos
-        </span>
+        <div className="flex items-center gap-3">
+          <Select
+            options={statusOptions.map((opt) => ({
+              ...opt,
+              label: `${opt.label} (${opt.value ? statusCounts[opt.value] || 0 : statusCounts.all})`,
+            }))}
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setSelectedIds(new Set());
+            }}
+            className="w-full sm:w-64"
+          />
+        </div>
+        <div className="flex items-center gap-3">
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600 font-medium">
+                {selectedIds.size} selecionado(s)
+              </span>
+              <select
+                value=""
+                onChange={(e) => handleBulkStatusChange(e.target.value)}
+                disabled={isBulkUpdating}
+                className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50"
+              >
+                {bulkStatusOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={() => setSelectedIds(new Set())}
+                className="text-xs text-gray-500 hover:text-gray-700 underline"
+              >
+                Limpar
+              </button>
+            </div>
+          )}
+          <span className="text-sm text-gray-500 sm:shrink-0">
+            {filteredAndSortedCandidates.length} candidatos
+          </span>
+        </div>
       </div>
 
-      {/* Mobile: card list (menos informação, clean) */}
+      {/* Mobile: card list */}
       <div className="md:hidden space-y-3">
         {filteredAndSortedCandidates.map((candidate) => {
           const flags = (candidate.disqualification_flags || []) as DisqualificationFlag[];
           const hasElimination = flags.some((f) => f.severity === 'eliminated');
+          const isFlagged = candidate.status === 'flagged';
           return (
             <div
               key={candidate.id}
               className={`bg-white rounded-xl border p-4 shadow-sm ${
-                hasElimination ? 'border-red-200' : 'border-gray-200'
+                isFlagged
+                  ? 'border-orange-300 bg-orange-50/30'
+                  : hasElimination
+                  ? 'border-red-200'
+                  : 'border-gray-200'
               }`}
             >
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-gray-900 truncate">{candidate.name}</p>
-                  <p className="text-sm text-gray-500 truncate mt-0.5">{candidate.email}</p>
+                <div className="flex items-start gap-3 min-w-0 flex-1">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(candidate.id)}
+                    onChange={() => toggleSelect(candidate.id)}
+                    className="mt-1 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  <div className="min-w-0">
+                    <p className="font-semibold text-gray-900 truncate">{candidate.name}</p>
+                    <p className="text-sm text-gray-500 truncate mt-0.5">{candidate.email}</p>
+                    {isFlagged && candidate.flagged_reason && (
+                      <p className="text-xs text-orange-700 mt-1 flex items-center gap-1">
+                        <Flag className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{candidate.flagged_reason}</span>
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {candidate.fit_score != null ? (
@@ -487,7 +599,15 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
         <table className="w-full table-fixed">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className={thClass} style={{ width: '19%' }}>
+              <th className={thClass} style={{ width: '3%' }}>
+                <input
+                  type="checkbox"
+                  checked={allVisibleSelected}
+                  onChange={toggleSelectAll}
+                  className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                />
+              </th>
+              <th className={thClass} style={{ width: '17%' }}>
                 Candidato
               </th>
               <th
@@ -508,7 +628,7 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
               </th>
               <th
                 className={thSortClass}
-                style={{ width: '8%' }}
+                style={{ width: '7%' }}
                 onClick={() => handleSort('resume_rating')}
               >
                 <div className="flex items-center gap-1">
@@ -518,7 +638,7 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
               </th>
               <th
                 className={thSortClass}
-                style={{ width: '9%' }}
+                style={{ width: '8%' }}
                 onClick={() => handleSort('answer_quality_rating')}
               >
                 <div className="flex items-center gap-1">
@@ -556,23 +676,42 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
             {filteredAndSortedCandidates.map((candidate) => {
               const flags = (candidate.disqualification_flags || []) as DisqualificationFlag[];
               const hasFlags = flags.length > 0;
+              const isFlagged = candidate.status === 'flagged';
 
               return (
                 <tr
                   key={candidate.id}
                   className={`transition-colors ${
-                    hasFlags && flags.some((f) => f.severity === 'eliminated')
+                    isFlagged
+                      ? 'bg-orange-50/40 hover:bg-orange-50/70'
+                      : hasFlags && flags.some((f) => f.severity === 'eliminated')
                       ? 'bg-red-50/40 hover:bg-red-50/70'
                       : hasFlags
                       ? 'bg-amber-50/30 hover:bg-amber-50/50'
                       : 'hover:bg-gray-50/70'
                   }`}
                 >
-                  {/* Candidato: nome + email */}
+                  {/* Checkbox */}
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(candidate.id)}
+                      onChange={() => toggleSelect(candidate.id)}
+                      className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                    />
+                  </td>
+
+                  {/* Candidato: nome + email + flagged reason */}
                   <td className="px-4 py-3">
                     <div className="min-w-0">
                       <p className="font-medium text-gray-900 truncate">{candidate.name}</p>
                       <p className="text-xs text-gray-400 truncate">{candidate.email}</p>
+                      {isFlagged && candidate.flagged_reason && (
+                        <p className="text-xs text-orange-600 mt-0.5 truncate flex items-center gap-1" title={candidate.flagged_reason}>
+                          <Flag className="h-3 w-3 shrink-0" />
+                          {candidate.flagged_reason}
+                        </p>
+                      )}
                     </div>
                   </td>
 
@@ -676,7 +815,9 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
                       onChange={(e) =>
                         handleStatusChange(candidate.id, e.target.value as CandidateStatus)
                       }
-                      className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                      className={`text-xs border rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors ${
+                        isFlagged ? 'border-orange-300 text-orange-700' : 'border-gray-200'
+                      }`}
                     >
                       {statusUpdateOptions.map((opt) => (
                         <option key={opt.value} value={opt.value}>
