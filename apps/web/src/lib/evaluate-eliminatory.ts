@@ -60,7 +60,7 @@ export function evaluateEliminatoryQuestions(
       }
     }
 
-    if (question.type === 'text' || question.type === 'textarea') {
+    if (question.type === 'number' || question.type === 'text' || question.type === 'textarea') {
       const numericValue = parseNumericAnswer(answerValue);
 
       if (numericValue === null) continue;

@@ -19,6 +19,7 @@ export const CandidateStatusSchema = z.enum([
   'reviewing',
   'schedule_interview',
   'shortlisted',
+  'flagged',
   'rejected',
   'hired',
 ]);
@@ -40,8 +41,10 @@ export const CurrencySchema = z.enum([
 export const QuestionTypeSchema = z.enum([
   'text',
   'textarea',
+  'number',
   'select',
   'multiselect',
+  'yes_no',
   'file',
 ]);
 
@@ -130,6 +133,7 @@ export const UpdateCandidateSchema = z.object({
   resume_summary: z.string().nullable().optional(),
   experience_level: z.string().nullable().optional(),
   needs_scoring: z.boolean().optional(),
+  flagged_reason: z.string().nullable().optional(),
 });
 
 // ============================================
