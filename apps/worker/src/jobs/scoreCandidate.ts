@@ -41,20 +41,19 @@ export async function scoreCandidate(candidate: CandidateWithJob): Promise<Scori
   }
 
   try {
-    // Parse resume (PDF only; image-only PDFs or failed fetch → we evaluate from answers)
+    // Parse resume (PDF only; malformed/image-only/failed fetch → we evaluate from answers)
+    const resumeFallbackMessage =
+      '[The resume could not be read automatically. Possible causes: PDF is image-only (scanned/exported as image), malformed PDF, or the file could not be fetched. Please base your evaluation mainly on the application answers below.]';
     let resumeText = '';
     let resumeUnparseable = false;
-    try {
-      if (candidate.resume_url.toLowerCase().endsWith('.pdf')) {
-        resumeText = await fetchAndParsePdf(candidate.resume_url);
-      } else {
-        resumeText = 'Resume format not supported for parsing.';
+    if (candidate.resume_url.toLowerCase().endsWith('.pdf')) {
+      resumeText = await fetchAndParsePdf(candidate.resume_url);
+      if (!resumeText || resumeText.length < 50) {
+        resumeText = resumeFallbackMessage;
         resumeUnparseable = true;
       }
-    } catch (error) {
-      console.error('Error parsing resume:', error);
-      resumeText =
-        '[The resume could not be read automatically. Possible causes: PDF is image-only (scanned/exported as image), or the file could not be fetched. Please base your evaluation mainly on the application answers below.]';
+    } else {
+      resumeText = 'Resume format not supported for parsing.';
       resumeUnparseable = true;
     }
 

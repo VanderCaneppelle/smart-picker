@@ -1,29 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState, useEffect, useCallback, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { Plus, Share2, Copy, Eye, MapPin, Briefcase, Users, DollarSign } from 'lucide-react';
+import { Share2, Copy, Eye, MapPin, Briefcase, Users, DollarSign } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
-import { Button, Badge, SearchFilter, Select, Loading, EmptyState } from '@/components/ui';
+import { Button, Badge, SearchFilter, Loading, EmptyState } from '@/components/ui';
 import type { Job, JobStatus, EmploymentType } from '@hunter/core';
-
-const statusOptions = [
-  { value: '', label: 'Todos os status' },
-  { value: 'draft', label: 'Rascunho' },
-  { value: 'active', label: 'Ativa' },
-  { value: 'closed', label: 'Fechada' },
-  { value: 'on_hold', label: 'Pausada' },
-];
-
-const employmentTypeOptions = [
-  { value: '', label: 'Todos os tipos' },
-  { value: 'full_time', label: 'Tempo integral' },
-  { value: 'part_time', label: 'Meio período' },
-  { value: 'contract', label: 'Contrato' },
-  { value: 'internship', label: 'Estágio' },
-  { value: 'freelance', label: 'Freelance' },
-];
 
 const getStatusBadgeVariant = (status: string) => {
   switch (status) {
@@ -44,13 +27,14 @@ const formatEmploymentType = (type: string) => {
   return type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
 };
 
-export default function JobsPage() {
+function JobsPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
+  const statusFilter = searchParams.get('status') ?? '';
+  const typeFilter = searchParams.get('employment_type') ?? '';
 
   const fetchJobs = useCallback(async () => {
     try {
@@ -99,39 +83,18 @@ export default function JobsPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Vagas</h1>
-          <p className="text-gray-600 mt-1">Gerencie suas vagas de emprego</p>
-        </div>
-        <Button
-          onClick={() => router.push('/jobs/new')}
-          leftIcon={<Plus className="h-4 w-4" />}
-          className="bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500"
-        >
-          Criar Vaga
-        </Button>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Vagas</h1>
+        <p className="text-gray-600 mt-1">Gerencie suas vagas de emprego</p>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      {/* Busca (filtros de status e tipo ficam no menu Vagas na sidebar) */}
+      <div className="mb-6">
         <SearchFilter
           value={search}
           onChange={setSearch}
           placeholder="Buscar vagas..."
-          className="flex-1"
-        />
-        <Select
-          options={statusOptions}
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="w-full sm:w-40"
-        />
-        <Select
-          options={employmentTypeOptions}
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          className="w-full sm:w-44"
+          className="max-w-md"
         />
       </div>
 
@@ -232,5 +195,13 @@ export default function JobsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function JobsPage() {
+  return (
+    <Suspense fallback={<Loading text="Carregando..." />}>
+      <JobsPageContent />
+    </Suspense>
   );
 }

@@ -1,11 +1,28 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { Suspense, useEffect, useState, useRef } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loading } from '@/components/ui';
-import { TrendingUp, LogOut, Briefcase, PlusCircle, LayoutDashboard, Users, User } from 'lucide-react';
+import { TrendingUp, LogOut, Briefcase, PlusCircle, LayoutDashboard, Users, User, ChevronDown, Menu, X } from 'lucide-react';
+
+const statusFilterOptions = [
+  { value: '', label: 'Todos os status' },
+  { value: 'draft', label: 'Rascunho' },
+  { value: 'active', label: 'Ativa' },
+  { value: 'closed', label: 'Fechada' },
+  { value: 'on_hold', label: 'Pausada' },
+];
+
+const typeFilterOptions = [
+  { value: '', label: 'Todos os tipos' },
+  { value: 'full_time', label: 'Tempo integral' },
+  { value: 'part_time', label: 'Meio período' },
+  { value: 'contract', label: 'Contrato' },
+  { value: 'internship', label: 'Estágio' },
+  { value: 'freelance', label: 'Freelance' },
+];
 
 const mainNavItems = [
   { href: '/jobs/new', label: 'Criar vaga', icon: PlusCircle, primary: true },
@@ -37,8 +54,66 @@ export default function DashboardLayout({
     return null;
   }
 
+  return (
+    <Suspense fallback={<Loading fullScreen text="Loading..." />}>
+      <DashboardLayoutContent pathname={pathname} user={user} onLogout={logout}>
+        {children}
+      </DashboardLayoutContent>
+    </Suspense>
+  );
+}
+
+function DashboardLayoutContent({
+  pathname,
+  user,
+  onLogout,
+  children,
+}: {
+  pathname: string | null;
+  user: { email?: string } | null;
+  onLogout: () => void;
+  children: React.ReactNode;
+}) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [vagasExpanded, setVagasExpanded] = useState(() => pathname === '/jobs' || (pathname?.startsWith('/jobs/') && pathname !== '/jobs/new'));
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+
+  const currentStatus = searchParams.get('status') ?? '';
+  const currentType = searchParams.get('employment_type') ?? '';
+  const isJobsPage = pathname === '/jobs' || (pathname?.startsWith('/jobs/') && pathname !== '/jobs/new');
+
+  const jobsHref = (status?: string, employmentType?: string) => {
+    const p = new URLSearchParams(searchParams?.toString() ?? '');
+    if (status !== undefined) (status ? p.set('status', status) : p.delete('status'));
+    if (employmentType !== undefined) (employmentType ? p.set('employment_type', employmentType) : p.delete('employment_type'));
+    const q = p.toString();
+    return `/jobs${q ? `?${q}` : ''}`;
+  };
+
+  useEffect(() => {
+    if (isJobsPage) setVagasExpanded(true);
+  }, [isJobsPage]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target as Node)) {
+        setMobileMenuOpen(false);
+      }
+    }
+    if (mobileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
+
   const handleLogout = () => {
-    logout();
+    onLogout();
     router.push('/login');
   };
 
@@ -92,6 +167,72 @@ export default function DashboardLayout({
           </div>
           <div className="space-y-0.5">
             {mainNavItems.slice(1).map(({ href, label, icon: Icon, primary }) => {
+              if (href === '/jobs') {
+                const active = isActive(href);
+                return (
+                  <div key={href}>
+                    <button
+                      type="button"
+                      onClick={() => setVagasExpanded((v) => !v)}
+                      className={`relative flex items-center justify-between w-full gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors active:scale-[0.98] ${
+                        active
+                          ? 'bg-emerald-600 text-white border-l-2 border-l-emerald-700 -ml-px pl-[11px]'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      }`}
+                    >
+                      <span className="flex items-center gap-3">
+                        <Briefcase className={`h-5 w-5 flex-shrink-0 ${active ? 'text-white' : 'text-gray-500'}`} />
+                        {label}
+                      </span>
+                      <span
+                        className={`inline-flex flex-shrink-0 transition-transform duration-200 ease-out ${
+                          vagasExpanded ? 'rotate-0' : '-rotate-90'
+                        }`}
+                      >
+                        <ChevronDown className={`h-4 w-4 ${active ? 'text-white' : 'text-gray-500'}`} />
+                      </span>
+                    </button>
+                    <div
+                      className={`grid transition-[grid-template-rows] duration-200 ease-out ${
+                        vagasExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+                      }`}
+                    >
+                      <div className="min-h-0 overflow-hidden">
+                        <div className="mt-0.5 ml-2 pl-4 border-l border-gray-200 space-y-0.5">
+                        <p className="px-2 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</p>
+                        {statusFilterOptions.map(({ value, label: optLabel }) => (
+                          <Link
+                            key={value || 'status-all'}
+                            href={jobsHref(value, currentType)}
+                            className={`block px-2 py-1.5 rounded-md text-sm transition-colors ${
+                              currentStatus === value
+                                ? 'bg-emerald-50 text-emerald-700 font-medium'
+                                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                            }`}
+                          >
+                            {optLabel}
+                          </Link>
+                        ))}
+                        <p className="px-2 pt-2 pb-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Tipo</p>
+                        {typeFilterOptions.map(({ value, label: optLabel }) => (
+                          <Link
+                            key={value || 'type-all'}
+                            href={jobsHref(currentStatus, value)}
+                            className={`block px-2 py-1.5 rounded-md text-sm transition-colors ${
+                              currentType === value
+                                ? 'bg-emerald-50 text-emerald-700 font-medium'
+                                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                            }`}
+                          >
+                            {optLabel}
+                          </Link>
+                        ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
               const active = isActive(href);
               return (
                 <Link
@@ -143,16 +284,113 @@ export default function DashboardLayout({
 
       {/* Main area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top bar: user info (mobile shows logo + user) */}
-        <header className="lg:hidden bg-white border-b border-gray-200 px-4 h-14 flex items-center justify-between">
-          <Link href="/jobs" className="flex items-center gap-2">
+        {/* Top bar: logo + hamburger (mobile) */}
+        <header className="lg:hidden bg-white border-b border-gray-200 px-4 h-14 flex items-center justify-between shrink-0">
+          <Link href="/dashboard" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
               <TrendingUp className="h-5 w-5 text-white" />
             </div>
             <span className="text-lg font-bold text-gray-900">Rankea</span>
           </Link>
-          <div className="flex items-center gap-2 text-sm text-gray-600 truncate max-w-[180px]">
-            {user?.email}
+          <div className="relative" ref={mobileMenuRef}>
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen((o) => !o)}
+              className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+              aria-label="Abrir menu"
+            >
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+
+            {/* Mobile menu panel */}
+            {mobileMenuOpen && (
+              <>
+                <button
+                  type="button"
+                  className="fixed inset-0 bg-black/20 z-40 lg:hidden"
+                  aria-label="Fechar menu"
+                  onClick={() => setMobileMenuOpen(false)}
+                />
+                <div className="fixed top-0 right-0 bottom-0 w-full max-w-sm bg-white shadow-xl z-50 flex flex-col lg:hidden transform transition-transform duration-200 ease-out translate-x-0">
+                  <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+                    <span className="font-semibold text-gray-900">Menu</span>
+                    <button
+                      type="button"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="p-2 rounded-lg text-gray-500 hover:bg-gray-100"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                  <div className="p-3 text-sm text-gray-500 truncate border-b border-gray-100">
+                    {user?.email}
+                  </div>
+                  <nav className="flex-1 overflow-auto py-4 px-3 space-y-1">
+                    <Link
+                      href="/jobs/new"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-3 py-3 rounded-lg text-emerald-600 bg-emerald-50 border border-emerald-200 font-medium"
+                    >
+                      <PlusCircle className="h-5 w-5" />
+                      + Criar vaga
+                    </Link>
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg ${
+                        isActive('/dashboard') ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <LayoutDashboard className="h-5 w-5" />
+                      Dashboard
+                    </Link>
+                    <Link
+                      href="/jobs"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg ${
+                        isActive('/jobs') ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Briefcase className="h-5 w-5" />
+                      Vagas
+                    </Link>
+                    <Link
+                      href="/candidatos-salvos"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg ${
+                        isActive('/candidatos-salvos') ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Users className="h-5 w-5" />
+                      Candidatos Salvos
+                    </Link>
+                    <div className="pt-4 mt-4 border-t border-gray-200 space-y-1">
+                      <Link
+                        href="/perfil"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 px-3 py-3 rounded-lg ${
+                          isActive('/perfil') ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        <User className="h-5 w-5" />
+                        Perfil
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMobileMenuOpen(false);
+                          handleLogout();
+                        }}
+                        className="flex items-center gap-3 w-full px-3 py-3 rounded-lg text-gray-700 hover:bg-red-50 hover:text-red-700"
+                      >
+                        <LogOut className="h-5 w-5" />
+                        Sair
+                      </button>
+                    </div>
+                  </nav>
+                </div>
+              </>
+            )}
           </div>
         </header>
 
