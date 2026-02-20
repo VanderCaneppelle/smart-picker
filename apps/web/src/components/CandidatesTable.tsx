@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
@@ -17,11 +18,14 @@ import {
   Flag,
 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
-import { Badge, Select, Loading, EmptyState, SortIcon } from '@/components/ui';
+import { Badge, Select, SortIcon } from '@/components/ui';
 import type { Candidate, CandidateStatus, DisqualificationFlag } from '@hunter/core';
 
 interface CandidatesTableProps {
   jobId: string;
+  candidates: Candidate[];
+  setCandidates: React.Dispatch<React.SetStateAction<Candidate[]>>;
+  onRefetch: () => Promise<void>;
 }
 
 const statusOptions = [
@@ -99,11 +103,19 @@ function ActionsMenu({
   onUnsave: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        open &&
+        triggerRef.current &&
+        !triggerRef.current.contains(target) &&
+        menuRef.current &&
+        !menuRef.current.contains(target)
+      ) {
         setOpen(false);
       }
     }
@@ -113,81 +125,131 @@ function ActionsMenu({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [open]);
 
-  return (
-    <div className="relative" ref={menuRef}>
+  const rect = open && triggerRef.current ? triggerRef.current.getBoundingClientRect() : null;
+  const spaceBelow = rect ? typeof window !== 'undefined' ? window.innerHeight - rect.bottom : 0 : 0;
+  const spaceAbove = rect ? rect.top : 0;
+  const openUp = rect ? spaceBelow < 200 && spaceAbove > spaceBelow : false;
+  const menuLeft = rect ? Math.min(rect.right - 192, (typeof window !== 'undefined' ? window.innerWidth : 0) - 200) : 0;
+  const menuTop = rect ? (openUp ? rect.top - 4 : rect.bottom + 4) : 0;
+
+  const menuContent = open && typeof document !== 'undefined' && rect && (
+    <div
+      ref={menuRef}
+      className="fixed z-[100] w-48 bg-white rounded-lg border border-gray-200 shadow-xl py-1"
+      style={{
+        left: Math.max(8, menuLeft),
+        top: openUp ? undefined : menuTop,
+        bottom: openUp && typeof window !== 'undefined' ? window.innerHeight - rect.top + 4 : undefined,
+      }}
+    >
       <button
+        onClick={() => {
+          onView();
+          setOpen(false);
+        }}
+        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
+      >
+        <Eye className="h-4 w-4 text-gray-400" />
+        Ver candidato
+      </button>
+      {isSaved ? (
+        <button
+          onClick={() => {
+            onUnsave();
+            setOpen(false);
+          }}
+          disabled={savingId === candidateId}
+          className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
+        >
+          <BookmarkCheck className="h-4 w-4 text-gray-400" />
+          {savingId === candidateId ? 'Removendo...' : 'Remover dos salvos'}
+        </button>
+      ) : (
+        <button
+          onClick={() => {
+            onSave();
+            setOpen(false);
+          }}
+          disabled={savingId === candidateId}
+          className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
+        >
+          <Bookmark className="h-4 w-4 text-gray-400" />
+          {savingId === candidateId ? 'Salvando...' : 'Salvar candidato'}
+        </button>
+      )}
+      <button
+        onClick={() => {
+          onRecalculate();
+          setOpen(false);
+        }}
+        disabled={recalculatingId === candidateId}
+        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
+      >
+        <RefreshCw
+          className={`h-4 w-4 text-gray-400 ${recalculatingId === candidateId ? 'animate-spin' : ''}`}
+        />
+        {recalculatingId === candidateId ? 'Recalculando...' : 'Recalcular nota'}
+      </button>
+    </div>
+  );
+
+  return (
+    <div className="relative">
+      <button
+        ref={triggerRef}
         onClick={() => setOpen(!open)}
         className="p-1.5 rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
       >
         <MoreVertical className="h-4 w-4" />
       </button>
-      {open && (
-        <div className="absolute right-0 top-full mt-1 z-20 w-48 bg-white rounded-lg border border-gray-200 shadow-lg py-1">
-          <button
-            onClick={() => {
-              onView();
-              setOpen(false);
-            }}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            <Eye className="h-4 w-4 text-gray-400" />
-            Ver candidato
-          </button>
-          {isSaved ? (
-            <button
-              onClick={() => {
-                onUnsave();
-                setOpen(false);
-              }}
-              disabled={savingId === candidateId}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <BookmarkCheck className="h-4 w-4 text-gray-400" />
-              {savingId === candidateId ? 'Removendo...' : 'Remover dos salvos'}
-            </button>
-          ) : (
-            <button
-              onClick={() => {
-                onSave();
-                setOpen(false);
-              }}
-              disabled={savingId === candidateId}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Bookmark className="h-4 w-4 text-gray-400" />
-              {savingId === candidateId ? 'Salvando...' : 'Salvar candidato'}
-            </button>
-          )}
-          <button
-            onClick={() => {
-              onRecalculate();
-              setOpen(false);
-            }}
-            disabled={recalculatingId === candidateId}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <RefreshCw
-              className={`h-4 w-4 text-gray-400 ${recalculatingId === candidateId ? 'animate-spin' : ''}`}
-            />
-            {recalculatingId === candidateId ? 'Recalculando...' : 'Recalcular nota'}
-          </button>
-        </div>
-      )}
+      {menuContent && createPortal(menuContent, document.body)}
     </div>
   );
 }
 
 function DisqualificationIndicator({ flags }: { flags?: DisqualificationFlag[] | null }) {
   const [showTooltip, setShowTooltip] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   if (!flags || flags.length === 0) return null;
 
   const hasElimination = flags.some((f) => f.severity === 'eliminated');
 
+  const rect = showTooltip && triggerRef.current ? triggerRef.current.getBoundingClientRect() : null;
+  const tooltipLeft = rect ? rect.left + rect.width / 2 - 144 : 0;
+  const tooltipBottom = rect && typeof window !== 'undefined' ? window.innerHeight - rect.top + 8 : 0;
+
+  const tooltipContent = showTooltip && typeof document !== 'undefined' && rect && (
+    <div
+      className="fixed z-[100] w-72 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl"
+      style={{
+        left: Math.max(8, Math.min(tooltipLeft, (typeof window !== 'undefined' ? window.innerWidth : 0) - 296)),
+        bottom: tooltipBottom,
+      }}
+    >
+      <div className="space-y-2">
+        {flags.map((flag, i) => (
+          <div key={i} className="space-y-0.5">
+            <p className="font-medium flex items-center gap-1">
+              {flag.severity === 'eliminated' ? (
+                <XCircle className="h-3 w-3 text-red-400 shrink-0" />
+              ) : (
+                <AlertTriangle className="h-3 w-3 text-amber-400 shrink-0" />
+              )}
+              {flag.question_text}
+            </p>
+            <p className="text-gray-300 pl-4 break-words">{flag.reason}</p>
+          </div>
+        ))}
+      </div>
+      <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+    </div>
+  );
+
   return (
-    <div className="relative inline-flex" ref={ref}>
+    <div className="relative inline-flex">
       <button
+        ref={triggerRef}
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
         onClick={() => setShowTooltip(!showTooltip)}
@@ -204,34 +266,18 @@ function DisqualificationIndicator({ flags }: { flags?: DisqualificationFlag[] |
         )}
         {hasElimination ? 'Eliminado' : 'Atenção'}
       </button>
-      {showTooltip && (
-        <div className="absolute z-30 bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl">
-          <div className="space-y-2">
-            {flags.map((flag, i) => (
-              <div key={i} className="space-y-0.5">
-                <p className="font-medium flex items-center gap-1">
-                  {flag.severity === 'eliminated' ? (
-                    <XCircle className="h-3 w-3 text-red-400 shrink-0" />
-                  ) : (
-                    <AlertTriangle className="h-3 w-3 text-amber-400 shrink-0" />
-                  )}
-                  {flag.question_text}
-                </p>
-                <p className="text-gray-300 pl-4">{flag.reason}</p>
-              </div>
-            ))}
-          </div>
-          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
-        </div>
-      )}
+      {tooltipContent && createPortal(tooltipContent, document.body)}
     </div>
   );
 }
 
-export default function CandidatesTable({ jobId }: CandidatesTableProps) {
+export default function CandidatesTable({
+  jobId,
+  candidates,
+  setCandidates,
+  onRefetch,
+}: CandidatesTableProps) {
   const router = useRouter();
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
   const [sortField, setSortField] = useState<SortField>('fit_score');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
@@ -241,19 +287,6 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
-  const fetchCandidates = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const data = await apiClient.getJobCandidates(jobId);
-      setCandidates(data.candidates);
-    } catch (error) {
-      toast.error('Failed to load candidates');
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [jobId]);
-
   const fetchSavedIds = useCallback(async () => {
     try {
       const { candidateIds } = await apiClient.getSavedCandidateIds();
@@ -262,10 +295,6 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
       setSavedCandidateIds(new Set());
     }
   }, []);
-
-  useEffect(() => {
-    fetchCandidates();
-  }, [fetchCandidates]);
 
   useEffect(() => {
     fetchSavedIds();
@@ -279,7 +308,7 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
       );
       toast.success('Status atualizado');
       if (newStatus === 'schedule_interview') {
-        setTimeout(() => fetchCandidates(), 3000);
+        setTimeout(onRefetch, 3000);
       }
     } catch (error) {
       toast.error('Falha ao atualizar status');
@@ -298,7 +327,7 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
       );
       toast.success(result.message);
       setSelectedIds(new Set());
-      await fetchCandidates();
+      await onRefetch();
     } catch (error) {
       toast.error('Falha ao atualizar candidatos');
       console.error(error);
@@ -312,7 +341,7 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
       setRecalculatingId(candidateId);
       await apiClient.recalculateCandidateScore(candidateId);
       toast.success('Recálculo iniciado. A nota será atualizada em breve.');
-      setTimeout(() => fetchCandidates(), 5000);
+      setTimeout(onRefetch, 5000);
     } catch (error) {
       toast.error('Falha ao recalcular');
       console.error(error);
@@ -436,19 +465,6 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
     }
   };
 
-  if (isLoading) {
-    return <Loading text="Carregando candidatos..." />;
-  }
-
-  if (candidates.length === 0) {
-    return (
-      <EmptyState
-        title="Nenhum candidato ainda"
-        description="Compartilhe a vaga para começar a receber candidaturas"
-      />
-    );
-  }
-
   const thClass =
     'px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
   const thSortClass = `${thClass} cursor-pointer select-none hover:bg-gray-100 transition-colors`;
@@ -532,9 +548,9 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
                     <p className="font-semibold text-gray-900 truncate">{candidate.name}</p>
                     <p className="text-sm text-gray-500 truncate mt-0.5">{candidate.email}</p>
                     {isFlagged && candidate.flagged_reason && (
-                      <p className="text-xs text-orange-700 mt-1 flex items-center gap-1">
-                        <Flag className="h-3 w-3 shrink-0" />
-                        <span className="truncate">{candidate.flagged_reason}</span>
+                      <p className="text-xs text-orange-700 mt-1 flex items-start gap-1 break-words">
+                        <Flag className="h-3 w-3 shrink-0 mt-0.5" />
+                        <span className="min-w-0">{candidate.flagged_reason}</span>
                       </p>
                     )}
                   </div>
@@ -707,9 +723,9 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
                       <p className="font-medium text-gray-900 truncate">{candidate.name}</p>
                       <p className="text-xs text-gray-400 truncate">{candidate.email}</p>
                       {isFlagged && candidate.flagged_reason && (
-                        <p className="text-xs text-orange-600 mt-0.5 truncate flex items-center gap-1" title={candidate.flagged_reason}>
-                          <Flag className="h-3 w-3 shrink-0" />
-                          {candidate.flagged_reason}
+                        <p className="text-xs text-orange-600 mt-0.5 flex items-start gap-1 break-words">
+                          <Flag className="h-3 w-3 shrink-0 mt-0.5" />
+                          <span className="min-w-0">{candidate.flagged_reason}</span>
                         </p>
                       )}
                     </div>

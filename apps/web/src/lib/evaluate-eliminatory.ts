@@ -43,20 +43,36 @@ export function evaluateEliminatoryQuestions(
       criteria.accepted_values.length > 0
     ) {
       const candidateValues =
-        question.type === 'multiselect' ? answerValue.split('|||') : [answerValue];
+        question.type === 'multiselect'
+          ? answerValue.split('|||').map((v) => v.trim()).filter(Boolean)
+          : [answerValue.trim()];
 
-      const unaccepted = candidateValues.filter(
-        (v) => !criteria.accepted_values!.includes(v)
-      );
-
-      if (unaccepted.length > 0) {
-        flags.push({
-          question_id: question.id,
-          question_text: question.question,
-          candidate_answer: answerValue.replace(/\|\|\|/g, ', '),
-          severity: 'eliminated',
-          reason: `Resposta fora das opções aceitas: ${unaccepted.join(', ')}`,
-        });
+      if (question.type === 'select') {
+        // Escolha única: eliminado se a resposta não estiver na lista aceita
+        if (!criteria.accepted_values!.includes(candidateValues[0] || '')) {
+          flags.push({
+            question_id: question.id,
+            question_text: question.question,
+            candidate_answer: answerValue,
+            severity: 'eliminated',
+            reason: `Resposta "${answerValue}" não está entre as opções aceitas`,
+          });
+        }
+      } else {
+        // Múltipla escolha: eliminado só se NÃO marcou algo obrigatório (aceito).
+        // O candidato deve ter marcado pelo menos todos os valores em accepted_values.
+        const missingRequired = criteria.accepted_values!.filter(
+          (required) => !candidateValues.includes(required)
+        );
+        if (missingRequired.length > 0) {
+          flags.push({
+            question_id: question.id,
+            question_text: question.question,
+            candidate_answer: answerValue.replace(/\|\|\|/g, ', '),
+            severity: 'eliminated',
+            reason: `Resposta não inclui o(s) obrigatório(s): ${missingRequired.join(', ')}`,
+          });
+        }
       }
     }
 

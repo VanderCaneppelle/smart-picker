@@ -28,7 +28,7 @@ import {
   Modal,
   Loading,
 } from '@/components/ui';
-import CandidatesTable from '@/components/CandidatesTable';
+import CandidatesSection from '@/components/CandidatesSection';
 import type { Job, ApplicationQuestion, QuestionType, EliminatoryCriteria } from '@hunter/core';
 
 const employmentTypeOptions = [
@@ -368,7 +368,7 @@ export default function JobDetailPage() {
 
       {/* Tab Content */}
       {activeTab === 'candidates' ? (
-        <CandidatesTable jobId={jobId} />
+        <CandidatesSection jobId={jobId} />
       ) : (
         <div className="space-y-8">
           {/* Basic Info */}
