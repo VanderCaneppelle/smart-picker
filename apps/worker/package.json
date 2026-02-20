@@ -15,7 +15,7 @@
     "@supabase/supabase-js": "^2.49.1",
     "dotenv": "^17.3.1",
     "openai": "^4.80.1",
-    "pdf-parse": "^1.1.1",
+    "@cyber2024/pdf-parse-fixed": "^1.2.5",
     "resend": "^4.1.2"
   },
   "devDependencies": {
