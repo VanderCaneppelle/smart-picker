@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loading } from '@/components/ui';
-import { TrendingUp, LogOut, Briefcase, PlusCircle, LayoutDashboard, Users, User, ChevronDown } from 'lucide-react';
+import { TrendingUp, LogOut, Briefcase, PlusCircle, LayoutDashboard, Users, User, ChevronDown, Menu, X } from 'lucide-react';
 
 const statusFilterOptions = [
   { value: '', label: 'Todos os status' },
@@ -40,6 +40,8 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [vagasExpanded, setVagasExpanded] = useState(() => pathname === '/jobs' || (pathname?.startsWith('/jobs/') && pathname !== '/jobs/new'));
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
   const { user, isLoading, isAuthenticated, logout } = useAuth();
 
   const currentStatus = searchParams.get('status') ?? '';
@@ -63,6 +65,22 @@ export default function DashboardLayout({
   useEffect(() => {
     if (isJobsPage) setVagasExpanded(true);
   }, [isJobsPage]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target as Node)) {
+        setMobileMenuOpen(false);
+      }
+    }
+    if (mobileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
 
   if (isLoading) {
     return <Loading fullScreen text="Loading..." />;
@@ -244,16 +262,113 @@ export default function DashboardLayout({
 
       {/* Main area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top bar: user info (mobile shows logo + user) */}
-        <header className="lg:hidden bg-white border-b border-gray-200 px-4 h-14 flex items-center justify-between">
-          <Link href="/jobs" className="flex items-center gap-2">
+        {/* Top bar: logo + hamburger (mobile) */}
+        <header className="lg:hidden bg-white border-b border-gray-200 px-4 h-14 flex items-center justify-between shrink-0">
+          <Link href="/dashboard" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
               <TrendingUp className="h-5 w-5 text-white" />
             </div>
             <span className="text-lg font-bold text-gray-900">Rankea</span>
           </Link>
-          <div className="flex items-center gap-2 text-sm text-gray-600 truncate max-w-[180px]">
-            {user?.email}
+          <div className="relative" ref={mobileMenuRef}>
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen((o) => !o)}
+              className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+              aria-label="Abrir menu"
+            >
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+
+            {/* Mobile menu panel */}
+            {mobileMenuOpen && (
+              <>
+                <button
+                  type="button"
+                  className="fixed inset-0 bg-black/20 z-40 lg:hidden"
+                  aria-label="Fechar menu"
+                  onClick={() => setMobileMenuOpen(false)}
+                />
+                <div className="fixed top-0 right-0 bottom-0 w-full max-w-sm bg-white shadow-xl z-50 flex flex-col lg:hidden transform transition-transform duration-200 ease-out translate-x-0">
+                  <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+                    <span className="font-semibold text-gray-900">Menu</span>
+                    <button
+                      type="button"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="p-2 rounded-lg text-gray-500 hover:bg-gray-100"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                  <div className="p-3 text-sm text-gray-500 truncate border-b border-gray-100">
+                    {user?.email}
+                  </div>
+                  <nav className="flex-1 overflow-auto py-4 px-3 space-y-1">
+                    <Link
+                      href="/jobs/new"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-3 py-3 rounded-lg text-emerald-600 bg-emerald-50 border border-emerald-200 font-medium"
+                    >
+                      <PlusCircle className="h-5 w-5" />
+                      + Criar vaga
+                    </Link>
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg ${
+                        isActive('/dashboard') ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <LayoutDashboard className="h-5 w-5" />
+                      Dashboard
+                    </Link>
+                    <Link
+                      href="/jobs"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg ${
+                        isActive('/jobs') ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Briefcase className="h-5 w-5" />
+                      Vagas
+                    </Link>
+                    <Link
+                      href="/candidatos-salvos"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg ${
+                        isActive('/candidatos-salvos') ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Users className="h-5 w-5" />
+                      Candidatos Salvos
+                    </Link>
+                    <div className="pt-4 mt-4 border-t border-gray-200 space-y-1">
+                      <Link
+                        href="/perfil"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 px-3 py-3 rounded-lg ${
+                          isActive('/perfil') ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        <User className="h-5 w-5" />
+                        Perfil
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMobileMenuOpen(false);
+                          handleLogout();
+                        }}
+                        className="flex items-center gap-3 w-full px-3 py-3 rounded-lg text-gray-700 hover:bg-red-50 hover:text-red-700"
+                      >
+                        <LogOut className="h-5 w-5" />
+                        Sair
+                      </button>
+                    </div>
+                  </nav>
+                </div>
+              </>
+            )}
           </div>
         </header>
 

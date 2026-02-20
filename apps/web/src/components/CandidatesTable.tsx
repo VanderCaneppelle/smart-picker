@@ -395,7 +395,7 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
   return (
     <div>
       {/* Filters */}
-      <div className="flex items-center justify-between gap-4 mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <Select
           options={statusOptions.map((opt) => ({
             ...opt,
@@ -403,15 +403,87 @@ export default function CandidatesTable({ jobId }: CandidatesTableProps) {
           }))}
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="w-64"
+          className="w-full sm:w-64"
         />
-        <span className="text-sm text-gray-500">
+        <span className="text-sm text-gray-500 sm:shrink-0">
           {filteredAndSortedCandidates.length} candidatos
         </span>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      {/* Mobile: card list (menos informação, clean) */}
+      <div className="md:hidden space-y-3">
+        {filteredAndSortedCandidates.map((candidate) => {
+          const flags = (candidate.disqualification_flags || []) as DisqualificationFlag[];
+          const hasElimination = flags.some((f) => f.severity === 'eliminated');
+          return (
+            <div
+              key={candidate.id}
+              className={`bg-white rounded-xl border p-4 shadow-sm ${
+                hasElimination ? 'border-red-200' : 'border-gray-200'
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-gray-900 truncate">{candidate.name}</p>
+                  <p className="text-sm text-gray-500 truncate mt-0.5">{candidate.email}</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {candidate.fit_score != null ? (
+                    <span
+                      className={`font-semibold text-sm px-2 py-1 rounded-lg ${
+                        candidate.fit_score >= 80
+                          ? 'bg-green-100 text-green-800'
+                          : candidate.fit_score >= 60
+                          ? 'bg-amber-100 text-amber-800'
+                          : 'bg-gray-100 text-gray-700'
+                      }`}
+                    >
+                      {candidate.fit_score}%
+                    </span>
+                  ) : (
+                    <span className="text-gray-400 text-sm">—</span>
+                  )}
+                  <ActionsMenu
+                    candidateId={candidate.id}
+                    recalculatingId={recalculatingId}
+                    isSaved={savedCandidateIds.has(candidate.id)}
+                    savingId={savingId}
+                    onView={() => router.push(`/candidates/${candidate.id}`)}
+                    onRecalculate={() => handleRecalculate(candidate.id)}
+                    onSave={() => handleSaveCandidate(candidate.id)}
+                    onUnsave={() => handleUnsaveCandidate(candidate.id)}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                <select
+                  value={candidate.status}
+                  onChange={(e) =>
+                    handleStatusChange(candidate.id, e.target.value as CandidateStatus)
+                  }
+                  className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  {statusUpdateOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => router.push(`/candidates/${candidate.id}`)}
+                  className="text-sm font-medium text-emerald-600 hover:text-emerald-700"
+                >
+                  Ver candidato →
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop: table */}
+      <div className="hidden md:block bg-white rounded-lg border border-gray-200 overflow-hidden">
         <table className="w-full table-fixed">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
