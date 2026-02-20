@@ -7,7 +7,8 @@ export function triggerWorkerProcess(candidateId: string): void {
   const workerSecret = process.env.WORKER_SECRET;
 
   if (!workerUrl || !workerSecret) {
-    return; // Worker not configured - candidate will stay in needs_scoring
+    console.warn('[Worker] WORKER_URL or WORKER_SECRET not configured. Skipping process trigger.');
+    return;
   }
 
   const url = `${workerUrl.replace(/\/$/, '')}/process`;
@@ -18,9 +19,16 @@ export function triggerWorkerProcess(candidateId: string): void {
       Authorization: `Bearer ${workerSecret}`,
     },
     body: JSON.stringify({ candidateId }),
-  }).catch((err) => {
-    console.error('[Worker] Failed to trigger process:', err);
-  });
+  })
+    .then(async (res) => {
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        console.error(`[Worker] Process trigger failed: ${res.status} ${body}`);
+      }
+    })
+    .catch((err) => {
+      console.error('[Worker] Failed to trigger process:', err);
+    });
 }
 
 /**
@@ -32,6 +40,7 @@ export function triggerScheduleInterviewEmail(candidateId: string): void {
   const workerSecret = process.env.WORKER_SECRET;
 
   if (!workerUrl || !workerSecret) {
+    console.warn('[Worker] WORKER_URL or WORKER_SECRET not configured. Skipping schedule interview email.');
     return;
   }
 
@@ -43,9 +52,16 @@ export function triggerScheduleInterviewEmail(candidateId: string): void {
       Authorization: `Bearer ${workerSecret}`,
     },
     body: JSON.stringify({ candidateId }),
-  }).catch((err) => {
-    console.error('[Worker] Failed to send schedule interview email:', err);
-  });
+  })
+    .then(async (res) => {
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        console.error(`[Worker] Schedule interview email trigger failed: ${res.status} ${body}`);
+      }
+    })
+    .catch((err) => {
+      console.error('[Worker] Failed to send schedule interview email:', err);
+    });
 }
 
 /**
@@ -57,6 +73,7 @@ export function triggerRejectionEmail(candidateId: string): void {
   const workerSecret = process.env.WORKER_SECRET;
 
   if (!workerUrl || !workerSecret) {
+    console.warn('[Worker] WORKER_URL or WORKER_SECRET not configured. Skipping rejection email.');
     return;
   }
 
@@ -68,7 +85,14 @@ export function triggerRejectionEmail(candidateId: string): void {
       Authorization: `Bearer ${workerSecret}`,
     },
     body: JSON.stringify({ candidateId }),
-  }).catch((err) => {
-    console.error('[Worker] Failed to send rejection email:', err);
-  });
+  })
+    .then(async (res) => {
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        console.error(`[Worker] Rejection email trigger failed: ${res.status} ${body}`);
+      }
+    })
+    .catch((err) => {
+      console.error('[Worker] Failed to send rejection email:', err);
+    });
 }

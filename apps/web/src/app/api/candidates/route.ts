@@ -166,17 +166,15 @@ export async function POST(request: NextRequest) {
         linkedin_url: validation.data.linkedin_url || null,
         resume_url: validation.data.resume_url,
         application_answers: validation.data.application_answers,
-        status: hasElimination ? 'flagged' : 'new',
-        needs_scoring: !hasElimination,
+        status: 'new',
+        needs_scoring: true,
         flagged_reason: eliminationReasons,
         disqualification_flags:
           (disqualificationFlags.length > 0 ? disqualificationFlags : []) as unknown as Prisma.InputJsonValue,
       },
     });
 
-    if (!hasElimination) {
-      triggerWorkerProcess(candidate.id);
-    }
+    triggerWorkerProcess(candidate.id);
 
     return Response.json(candidate, { status: 201 });
   } catch (error) {

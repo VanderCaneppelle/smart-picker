@@ -15,15 +15,18 @@ interface Job {
 
 export async function sendEmails(candidate: Candidate, job: Job): Promise<void> {
   if (!resend) {
-    console.log('Resend not configured. Skipping email sending.');
+    console.log('[Email] Resend not configured (RESEND_API_KEY missing). Skipping all emails.');
     return;
   }
+
+  console.log(`[Email] Sending emails for candidate ${candidate.name} (${candidate.email}), job: ${job.title}`);
+  console.log(`[Email] FROM_EMAIL: ${FROM_EMAIL}`);
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
   // Send confirmation email to candidate
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: FROM_EMAIL,
       to: candidate.email,
       subject: `Application Received: ${job.title}`,
@@ -66,16 +69,16 @@ export async function sendEmails(candidate: Candidate, job: Job): Promise<void> 
       `,
     });
 
-    console.log(`Confirmation email sent to candidate: ${candidate.email}`);
+    console.log(`[Email] Confirmation email sent to candidate: ${candidate.email}`, JSON.stringify(result));
   } catch (error) {
-    console.error('Error sending confirmation email to candidate:', error);
+    console.error(`[Email] FAILED to send confirmation to ${candidate.email}:`, error);
   }
 
   // Send notification email to recruiter (owner of the job)
   const recruiterEmail = job.recruiter?.email;
   if (recruiterEmail) {
     try {
-      await resend.emails.send({
+      const result = await resend.emails.send({
         from: FROM_EMAIL,
         to: recruiterEmail,
         subject: `New Application: ${candidate.name} for ${job.title}`,
@@ -124,9 +127,9 @@ export async function sendEmails(candidate: Candidate, job: Job): Promise<void> 
         `,
       });
 
-      console.log(`Notification email sent to recruiter: ${recruiterEmail}`);
+      console.log(`[Email] Notification sent to recruiter: ${recruiterEmail}`, JSON.stringify(result));
     } catch (error) {
-      console.error('Error sending notification email to recruiter:', error);
+      console.error(`[Email] FAILED to send notification to recruiter ${recruiterEmail}:`, error);
     }
   }
 }
@@ -137,9 +140,10 @@ export async function sendScheduleInterviewEmail(
   job: Job & { calendly_link?: string | null }
 ): Promise<void> {
   if (!resend) {
-    console.log('Resend not configured. Skipping schedule interview email.');
+    console.log('[Email] Resend not configured. Skipping schedule interview email.');
     return;
   }
+  console.log(`[Email] Sending schedule interview email to ${candidate.email}, FROM: ${FROM_EMAIL}`);
 
   const calendlyLink = job.calendly_link?.trim() || null;
   const hasCalendly = !!calendlyLink;
@@ -157,7 +161,7 @@ export async function sendScheduleInterviewEmail(
     `;
 
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: FROM_EMAIL,
       to: candidate.email,
       subject: `You're selected! Schedule your interview – ${job.title}`,
@@ -194,9 +198,9 @@ export async function sendScheduleInterviewEmail(
       `,
     });
 
-    console.log(`Schedule interview email sent to candidate: ${candidate.email}`);
+    console.log(`[Email] Schedule interview email sent to ${candidate.email}`, JSON.stringify(result));
   } catch (error) {
-    console.error('Error sending schedule interview email to candidate:', error);
+    console.error(`[Email] FAILED schedule interview email to ${candidate.email}:`, error);
     throw error;
   }
 }
@@ -207,12 +211,14 @@ export async function sendRejectionEmail(
   job: Job
 ): Promise<void> {
   if (!resend) {
-    console.log('Resend not configured. Skipping rejection email.');
+    console.log('[Email] Resend not configured. Skipping rejection email.');
     return;
   }
 
+  console.log(`[Email] Sending rejection email to ${candidate.email}, FROM: ${FROM_EMAIL}`);
+
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: FROM_EMAIL,
       to: candidate.email,
       subject: `Update on your application: ${job.title}`,
@@ -248,9 +254,9 @@ export async function sendRejectionEmail(
       `,
     });
 
-    console.log(`Rejection email sent to candidate: ${candidate.email}`);
+    console.log(`[Email] Rejection email sent to ${candidate.email}`, JSON.stringify(result));
   } catch (error) {
-    console.error('Error sending rejection email to candidate:', error);
+    console.error(`[Email] FAILED rejection email to ${candidate.email}:`, error);
     throw error;
   }
 }
