@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Suspense, useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { Share2, Copy, Eye, MapPin, Briefcase, Users, DollarSign } from 'lucide-react';
@@ -27,7 +27,7 @@ const formatEmploymentType = (type: string) => {
   return type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
 };
 
-export default function JobsPage() {
+function JobsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -195,5 +195,13 @@ export default function JobsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function JobsPage() {
+  return (
+    <Suspense fallback={<Loading text="Carregando..." />}>
+      <JobsPageContent />
+    </Suspense>
   );
 }

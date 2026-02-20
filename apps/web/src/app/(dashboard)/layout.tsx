@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { Suspense, useEffect, useState, useRef } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
@@ -38,11 +38,47 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { user, isLoading, isAuthenticated, logout } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  if (isLoading) {
+    return <Loading fullScreen text="Loading..." />;
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  return (
+    <Suspense fallback={<Loading fullScreen text="Loading..." />}>
+      <DashboardLayoutContent pathname={pathname} user={user} onLogout={logout}>
+        {children}
+      </DashboardLayoutContent>
+    </Suspense>
+  );
+}
+
+function DashboardLayoutContent({
+  pathname,
+  user,
+  onLogout,
+  children,
+}: {
+  pathname: string | null;
+  user: { email?: string } | null;
+  onLogout: () => void;
+  children: React.ReactNode;
+}) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [vagasExpanded, setVagasExpanded] = useState(() => pathname === '/jobs' || (pathname?.startsWith('/jobs/') && pathname !== '/jobs/new'));
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
-  const { user, isLoading, isAuthenticated, logout } = useAuth();
 
   const currentStatus = searchParams.get('status') ?? '';
   const currentType = searchParams.get('employment_type') ?? '';
@@ -55,12 +91,6 @@ export default function DashboardLayout({
     const q = p.toString();
     return `/jobs${q ? `?${q}` : ''}`;
   };
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isLoading, isAuthenticated, router]);
 
   useEffect(() => {
     if (isJobsPage) setVagasExpanded(true);
@@ -82,16 +112,8 @@ export default function DashboardLayout({
     };
   }, [mobileMenuOpen]);
 
-  if (isLoading) {
-    return <Loading fullScreen text="Loading..." />;
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
-
   const handleLogout = () => {
-    logout();
+    onLogout();
     router.push('/login');
   };
 
