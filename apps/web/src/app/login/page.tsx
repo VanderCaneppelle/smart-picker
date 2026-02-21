@@ -66,14 +66,22 @@ export default function LoginPage() {
             />
 
             <Input
-              label="Password"
+              label="Senha"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
-              placeholder="Enter your password"
+              placeholder="Sua senha"
             />
+            <div className="flex justify-end">
+              <Link
+                href="/forgot-password"
+                className="text-sm text-emerald-600 hover:text-emerald-500"
+              >
+                Esqueci minha senha
+              </Link>
+            </div>
           </div>
 
           <Button
