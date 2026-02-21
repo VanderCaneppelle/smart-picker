@@ -85,17 +85,17 @@ export async function GET(request: NextRequest) {
     interface DQFlag { severity: string; question_text?: string; reason?: string }
 
     const candidatesWithFlags = allCandidates.filter((c) => {
-      const flags = c.disqualification_flags as DQFlag[] | null;
+      const flags = c.disqualification_flags as unknown as DQFlag[] | null;
       return flags && Array.isArray(flags) && flags.length > 0;
     });
 
     const eliminatedByFlags = candidatesWithFlags.filter((c) => {
-      const flags = c.disqualification_flags as DQFlag[];
+      const flags = c.disqualification_flags as unknown as DQFlag[];
       return flags.some((f) => f.severity === 'eliminated');
     });
 
     const warningFlags = candidatesWithFlags.filter((c) => {
-      const flags = c.disqualification_flags as DQFlag[];
+      const flags = c.disqualification_flags as unknown as DQFlag[];
       return flags.every((f) => f.severity === 'warning');
     });
 
@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
 
     const criteriaCount: Record<string, number> = {};
     candidatesWithFlags.forEach((c) => {
-      const flags = c.disqualification_flags as DQFlag[];
+      const flags = c.disqualification_flags as unknown as DQFlag[];
       flags.forEach((f) => {
         const key = f.question_text || 'Desconhecido';
         criteriaCount[key] = (criteriaCount[key] || 0) + 1;
