@@ -43,7 +43,7 @@ export default function SignUpPage() {
         router.push('/login');
       } else {
         toast.success('Conta criada com sucesso!');
-        router.push('/jobs');
+        router.push('/onboarding');
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Falha ao criar conta');

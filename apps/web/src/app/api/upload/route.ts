@@ -14,7 +14,11 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
-    const bucket = formData.get('bucket') as string || 'resumes';
+    const bucketParam = (formData.get('bucket') as string) || 'resumes';
+
+    // "logos" = mesma bucket "resumes", com path prefix "logos/" (evita criar bucket novo)
+    const storageBucket = bucketParam === 'logos' ? 'resumes' : bucketParam;
+    const pathPrefix = bucketParam === 'logos' ? 'logos/' : '';
 
     if (!file) {
       return Response.json(
@@ -23,20 +27,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file type
-    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    // Validate file type based on bucket
+    const resumeTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    const imageTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/svg+xml', 'image/gif'];
+    const isImageBucket = bucketParam === 'logos';
+    const allowedTypes = isImageBucket ? imageTypes : resumeTypes;
+
     if (!allowedTypes.includes(file.type)) {
+      const msg = isImageBucket
+        ? 'Tipo de arquivo inválido. Apenas imagens (PNG, JPG, WebP, SVG, GIF) são aceitas.'
+        : 'Invalid file type. Only PDF and Word documents are allowed.';
       return Response.json(
-        { error: 'Bad Request', message: 'Invalid file type. Only PDF and Word documents are allowed.' },
+        { error: 'Bad Request', message: msg },
         { status: 400 }
       );
     }
 
-    // Validate file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024;
+    // Validate file size (images: 2MB, docs: 10MB)
+    const maxSize = isImageBucket ? 2 * 1024 * 1024 : 10 * 1024 * 1024;
     if (file.size > maxSize) {
+      const msg = isImageBucket
+        ? 'Imagem muito grande. Máximo 2MB.'
+        : 'File too large. Maximum size is 10MB.';
       return Response.json(
-        { error: 'Bad Request', message: 'File too large. Maximum size is 10MB.' },
+        { error: 'Bad Request', message: msg },
         { status: 400 }
       );
     }
@@ -44,15 +58,15 @@ export async function POST(request: NextRequest) {
     // Generate unique filename
     const fileExtension = file.name.split('.').pop();
     const fileName = `${uuidv4()}.${fileExtension}`;
-    const filePath = `${fileName}`;
+    const filePath = `${pathPrefix}${fileName}`;
 
     // Convert file to buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Upload to Supabase Storage
+    // Upload to Supabase Storage (bucket "resumes", path "logos/..." ou "...")
     const { error: uploadError } = await supabaseAdmin.storage
-      .from(bucket)
+      .from(storageBucket)
       .upload(filePath, buffer, {
         contentType: file.type,
         upsert: false,
@@ -68,7 +82,7 @@ export async function POST(request: NextRequest) {
 
     // Get public URL
     const { data: { publicUrl } } = supabaseAdmin.storage
-      .from(bucket)
+      .from(storageBucket)
       .getPublicUrl(filePath);
 
     return Response.json({
