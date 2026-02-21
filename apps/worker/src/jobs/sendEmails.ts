@@ -123,7 +123,7 @@ export async function sendEmails(
   const { from, replyTo } = buildFromAndReply(personalization);
   const vars = varsFor(candidate, job, personalization);
 
-  // ---- Candidatura recebida (para o candidato) ----
+  // ---- Candidatura recebida (para o candidato e recrutador) ----
   const appSubject = personalization?.application_received_subject?.trim() || `Candidatura recebida: ${job.title}`;
   const appBodyRaw = personalization?.application_received_body_html?.trim() || DEFAULT_APPLICATION_RECEIVED_HTML;
   const appBody = appendSignature(renderEmailTemplate(appBodyRaw, vars), personalization);
