@@ -1,5 +1,7 @@
 import { openai } from '../lib/openai.js';
 import { fetchAndParsePdf } from '../lib/pdf.js';
+import { fetchAndParseDocx } from '../lib/docx.js';
+import { debugLog } from '../lib/debugLog.js';
 import type { ApplicationQuestion, ApplicationAnswer } from '@hunter/core';
 
 interface CandidateWithJob {
@@ -41,13 +43,32 @@ export async function scoreCandidate(candidate: CandidateWithJob): Promise<Scori
   }
 
   try {
-    // Parse resume (PDF only; malformed/image-only/failed fetch → we evaluate from answers)
+    // Parse resume (PDF and Word .docx/.doc; malformed/failed fetch → we evaluate from answers)
     const resumeFallbackMessage =
       '[The resume could not be read automatically. Possible causes: PDF is image-only (scanned/exported as image), malformed PDF, or the file could not be fetched. Please base your evaluation mainly on the application answers below.]';
     let resumeText = '';
     let resumeUnparseable = false;
-    if (candidate.resume_url.toLowerCase().endsWith('.pdf')) {
+    // #region agent log
+    const resumeUrlLower = candidate.resume_url.toLowerCase();
+    const endsWithPdf = resumeUrlLower.endsWith('.pdf');
+    const endsWithDocx = resumeUrlLower.endsWith('.docx') || resumeUrlLower.endsWith('.doc');
+    const payload1 = { location: 'scoreCandidate.ts:resume-branch', message: 'Resume URL and format check', data: { resume_url: candidate.resume_url, endsWithPdf, endsWithDocx, extension: resumeUrlLower.slice(-8) }, hypothesisId: 'H1-H2' };
+    debugLog(payload1);
+    fetch('http://127.0.0.1:7243/ingest/4b01b58f-b193-4b12-b52e-e57203e7d60a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload1)}).catch(()=>{});
+    // #endregion
+    if (endsWithPdf) {
       resumeText = await fetchAndParsePdf(candidate.resume_url);
+      // #region agent log
+      const payload2 = { location: 'scoreCandidate.ts:after-fetch', message: 'After fetchAndParsePdf', data: { resumeTextLength: resumeText?.length ?? 0, resumeUnparseable: !resumeText || resumeText.length < 50 }, hypothesisId: 'H3-H4' };
+      debugLog(payload2);
+      fetch('http://127.0.0.1:7243/ingest/4b01b58f-b193-4b12-b52e-e57203e7d60a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload2)}).catch(()=>{});
+      // #endregion
+      if (!resumeText || resumeText.length < 50) {
+        resumeText = resumeFallbackMessage;
+        resumeUnparseable = true;
+      }
+    } else if (endsWithDocx) {
+      resumeText = await fetchAndParseDocx(candidate.resume_url);
       if (!resumeText || resumeText.length < 50) {
         resumeText = resumeFallbackMessage;
         resumeUnparseable = true;
