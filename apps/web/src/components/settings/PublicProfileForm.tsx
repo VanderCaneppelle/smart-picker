@@ -4,10 +4,19 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Globe, ExternalLink, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { apiClient, type RecruiterSettings } from '@/lib/api-client';
+import {
+  DEFAULT_APPLICATION_RECEIVED_SUBJECT,
+  DEFAULT_APPLICATION_RECEIVED_BODY_HTML,
+  DEFAULT_SCHEDULE_INTERVIEW_SUBJECT,
+  DEFAULT_SCHEDULE_INTERVIEW_BODY_HTML,
+  DEFAULT_REJECTION_SUBJECT,
+  DEFAULT_REJECTION_BODY_HTML,
+} from '@/lib/emailTemplateDefaults';
 import { normalizeSlug, validateSlug } from '@/lib/slug';
 import { Button, Loading } from '@/components/ui';
 import BrandingFields from './BrandingFields';
 import EmailPersonalizationFields from './EmailPersonalizationFields';
+import EmailTemplatesSection from './EmailTemplatesSection';
 
 export default function PublicProfileForm() {
   const [isLoading, setIsLoading] = useState(true);
@@ -31,6 +40,12 @@ export default function PublicProfileForm() {
   const [senderName, setSenderName] = useState('');
   const [replyToEmail, setReplyToEmail] = useState('');
   const [emailSignature, setEmailSignature] = useState('');
+  const [applicationReceivedSubject, setApplicationReceivedSubject] = useState('');
+  const [applicationReceivedBodyHtml, setApplicationReceivedBodyHtml] = useState('');
+  const [scheduleInterviewSubject, setScheduleInterviewSubject] = useState('');
+  const [scheduleInterviewBodyHtml, setScheduleInterviewBodyHtml] = useState('');
+  const [rejectionSubject, setRejectionSubject] = useState('');
+  const [rejectionBodyHtml, setRejectionBodyHtml] = useState('');
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const originalSlug = useRef<string | null>(null);
@@ -51,6 +66,12 @@ export default function PublicProfileForm() {
         setSenderName(data.email_sender_name || '');
         setReplyToEmail(data.reply_to_email || '');
         setEmailSignature(data.email_signature || '');
+        setApplicationReceivedSubject(data.application_received_subject?.trim() || DEFAULT_APPLICATION_RECEIVED_SUBJECT);
+        setApplicationReceivedBodyHtml(data.application_received_body_html?.trim() || DEFAULT_APPLICATION_RECEIVED_BODY_HTML);
+        setScheduleInterviewSubject(data.schedule_interview_subject?.trim() || DEFAULT_SCHEDULE_INTERVIEW_SUBJECT);
+        setScheduleInterviewBodyHtml(data.schedule_interview_body_html?.trim() || DEFAULT_SCHEDULE_INTERVIEW_BODY_HTML);
+        setRejectionSubject(data.rejection_subject?.trim() || DEFAULT_REJECTION_SUBJECT);
+        setRejectionBodyHtml(data.rejection_body_html?.trim() || DEFAULT_REJECTION_BODY_HTML);
 
         if (data.public_slug) setSlugAvailability('current');
       })
@@ -139,6 +160,12 @@ export default function PublicProfileForm() {
       payload.email_sender_name = senderName.trim() || null;
       payload.reply_to_email = replyToEmail.trim() || null;
       payload.email_signature = emailSignature.trim() || null;
+      payload.application_received_subject = applicationReceivedSubject.trim() || null;
+      payload.application_received_body_html = applicationReceivedBodyHtml.trim() || null;
+      payload.schedule_interview_subject = scheduleInterviewSubject.trim() || null;
+      payload.schedule_interview_body_html = scheduleInterviewBodyHtml.trim() || null;
+      payload.rejection_subject = rejectionSubject.trim() || null;
+      payload.rejection_body_html = rejectionBodyHtml.trim() || null;
 
       const updated = await apiClient.updateRecruiterSettings(payload as Partial<RecruiterSettings>);
       setSettings(updated);
@@ -159,7 +186,7 @@ export default function PublicProfileForm() {
   const slugOk = slugAvailability === 'available' || slugAvailability === 'current';
 
   return (
-    <div className="space-y-8 max-w-2xl">
+    <div className="space-y-8 w-full">
       {/* Public Page Section */}
       <section className="bg-white rounded-xl border border-gray-200 p-6">
         <div className="flex items-center gap-3 mb-6">
@@ -293,6 +320,24 @@ export default function PublicProfileForm() {
           onSenderNameChange={setSenderName}
           onReplyToEmailChange={setReplyToEmail}
           onSignatureChange={setEmailSignature}
+        />
+      </section>
+
+      {/* Email templates */}
+      <section className="bg-white rounded-xl border border-gray-200 p-6">
+        <EmailTemplatesSection
+          applicationReceivedSubject={applicationReceivedSubject}
+          applicationReceivedBodyHtml={applicationReceivedBodyHtml}
+          scheduleInterviewSubject={scheduleInterviewSubject}
+          scheduleInterviewBodyHtml={scheduleInterviewBodyHtml}
+          rejectionSubject={rejectionSubject}
+          rejectionBodyHtml={rejectionBodyHtml}
+          onApplicationReceivedSubjectChange={setApplicationReceivedSubject}
+          onApplicationReceivedBodyChange={setApplicationReceivedBodyHtml}
+          onScheduleInterviewSubjectChange={setScheduleInterviewSubject}
+          onScheduleInterviewBodyChange={setScheduleInterviewBodyHtml}
+          onRejectionSubjectChange={setRejectionSubject}
+          onRejectionBodyChange={setRejectionBodyHtml}
         />
       </section>
 

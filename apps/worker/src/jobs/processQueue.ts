@@ -19,8 +19,9 @@ export async function processCandidate(candidateId: string): Promise<{ ok: boole
             resume_weight: true,
             answers_weight: true,
             scoring_instructions: true,
+            calendly_link: true,
             recruiter: {
-              select: { email: true },
+              include: { emailPersonalization: true },
             },
           },
         },
@@ -47,7 +48,8 @@ export async function processCandidate(candidateId: string): Promise<{ ok: boole
       },
     });
 
-    await sendEmails(candidate, candidate.job);
+    const personalization = candidate.job.recruiter?.emailPersonalization ?? null;
+    await sendEmails(candidate, candidate.job, personalization);
 
     const flags = (candidate.disqualification_flags || []) as Array<{ severity?: string }>;
     const hasElimination = flags.some((f) => f.severity === 'eliminated');
@@ -84,8 +86,10 @@ export async function processQueue() {
           resume_weight: true,
           answers_weight: true,
           scoring_instructions: true,
+          calendly_link: true,
           recruiter: {
             select: { email: true },
+            include: { emailPersonalization: true },
           },
         },
       },
@@ -125,8 +129,8 @@ export async function processQueue() {
 
       console.log(`Candidate ${candidate.id} scored successfully.`);
 
-      // Send emails
-      await sendEmails(candidate, candidate.job);
+      const personalization = candidate.job.recruiter?.emailPersonalization ?? null;
+      await sendEmails(candidate, candidate.job, personalization);
 
       const flags = (candidate.disqualification_flags || []) as Array<{ severity?: string }>;
       const hasElimination = flags.some((f) => f.severity === 'eliminated');

@@ -106,10 +106,8 @@ const server = http.createServer(async (req, res) => {
         where: { id: candidateId, deleted_at: null },
         include: {
           job: {
-            select: {
-              id: true,
-              title: true,
-              calendly_link: true,
+            include: {
+              recruiter: { include: { emailPersonalization: true } },
             },
           },
         },
@@ -121,9 +119,11 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
+      const personalization = candidate.job.recruiter?.emailPersonalization ?? null;
       await sendScheduleInterviewEmail(
         { id: candidate.id, name: candidate.name, email: candidate.email },
         candidate.job,
+        personalization,
       );
 
       await prisma.candidate.update({
@@ -173,9 +173,8 @@ const server = http.createServer(async (req, res) => {
         where: { id: candidateId, deleted_at: null },
         include: {
           job: {
-            select: {
-              id: true,
-              title: true,
+            include: {
+              recruiter: { include: { emailPersonalization: true } },
             },
           },
         },
@@ -187,9 +186,11 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
+      const personalization = candidate.job.recruiter?.emailPersonalization ?? null;
       await sendRejectionEmail(
         { id: candidate.id, name: candidate.name, email: candidate.email },
         candidate.job,
+        personalization,
       );
 
       res.writeHead(200);

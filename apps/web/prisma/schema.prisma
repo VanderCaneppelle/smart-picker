@@ -31,15 +31,41 @@ model Recruiter {
   brand_color          String?
   public_linkedin_url  String?
 
-  // Email personalization
+  // Deprecated: migrar para RecruiterEmailPersonalization (manter temporariamente para migração)
   email_sender_name   String?
   reply_to_email      String?
-  email_signature     String?
+  email_signature     String?   @db.Text
 
   jobs             Job[]
   savedCandidates  SavedCandidate[]
+  emailPersonalization RecruiterEmailPersonalization?
 
   @@index([email])
+}
+
+// Personalização de e-mails (remetente + modelos por tipo)
+// Uma linha por recrutador; campos null = usar template padrão do sistema
+model RecruiterEmailPersonalization {
+  recruiter_id String @id // FK to Recruiter
+
+  // Remetente (aplicado a todos os e-mails)
+  email_sender_name String?
+  reply_to_email    String?
+  email_signature   String?   @db.Text
+
+  // Candidatura recebida (para o candidato)
+  application_received_subject     String?
+  application_received_body_html   String?   @db.Text
+
+  // Agendar entrevista
+  schedule_interview_subject     String?
+  schedule_interview_body_html   String?   @db.Text
+
+  // Rejeição
+  rejection_subject     String?
+  rejection_body_html   String?   @db.Text
+
+  recruiter Recruiter @relation(fields: [recruiter_id], references: [id], onDelete: Cascade)
 }
 
 model SavedCandidate {

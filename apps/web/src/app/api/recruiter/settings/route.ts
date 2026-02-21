@@ -29,6 +29,13 @@ const UpdateSettingsSchema = z.object({
   email_sender_name: z.string().max(200).nullable().optional(),
   reply_to_email: z.string().email('E-mail inválido').nullable().optional(),
   email_signature: z.string().max(2000).nullable().optional(),
+
+  application_received_subject: z.string().max(300).nullable().optional(),
+  application_received_body_html: z.string().max(15000).nullable().optional(),
+  schedule_interview_subject: z.string().max(300).nullable().optional(),
+  schedule_interview_body_html: z.string().max(15000).nullable().optional(),
+  rejection_subject: z.string().max(300).nullable().optional(),
+  rejection_body_html: z.string().max(15000).nullable().optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -52,6 +59,7 @@ export async function GET(request: NextRequest) {
         email_sender_name: true,
         reply_to_email: true,
         email_signature: true,
+        emailPersonalization: true,
       },
     });
 
@@ -62,7 +70,29 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return Response.json(recruiter);
+    const ep = recruiter.emailPersonalization;
+    const response = {
+      id: recruiter.id,
+      name: recruiter.name,
+      company: recruiter.company,
+      public_slug: recruiter.public_slug,
+      public_page_enabled: recruiter.public_page_enabled,
+      public_display_name: recruiter.public_display_name,
+      public_headline: recruiter.public_headline,
+      public_logo_url: recruiter.public_logo_url,
+      public_linkedin_url: recruiter.public_linkedin_url,
+      brand_color: recruiter.brand_color,
+      email_sender_name: ep?.email_sender_name ?? recruiter.email_sender_name,
+      reply_to_email: ep?.reply_to_email ?? recruiter.reply_to_email,
+      email_signature: ep?.email_signature ?? recruiter.email_signature,
+      application_received_subject: ep?.application_received_subject ?? null,
+      application_received_body_html: ep?.application_received_body_html ?? null,
+      schedule_interview_subject: ep?.schedule_interview_subject ?? null,
+      schedule_interview_body_html: ep?.schedule_interview_body_html ?? null,
+      rejection_subject: ep?.rejection_subject ?? null,
+      rejection_body_html: ep?.rejection_body_html ?? null,
+    };
+    return Response.json(response);
   } catch (error) {
     console.error('Error fetching recruiter settings:', error);
     return Response.json(
@@ -122,32 +152,18 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    const updateData: {
-      public_slug?: string;
-      public_page_enabled?: boolean;
-      public_display_name?: string | null;
-      public_headline?: string | null;
-      public_logo_url?: string | null;
-      public_linkedin_url?: string | null;
-      brand_color?: string | null;
-      email_sender_name?: string | null;
-      reply_to_email?: string | null;
-      email_signature?: string | null;
-    } = {};
-    if (data.public_slug !== undefined) updateData.public_slug = data.public_slug;
-    if (data.public_page_enabled !== undefined) updateData.public_page_enabled = data.public_page_enabled;
-    if (data.public_display_name !== undefined) updateData.public_display_name = data.public_display_name;
-    if (data.public_headline !== undefined) updateData.public_headline = data.public_headline;
-    if (data.public_logo_url !== undefined) updateData.public_logo_url = data.public_logo_url;
-    if (data.public_linkedin_url !== undefined) updateData.public_linkedin_url = data.public_linkedin_url;
-    if (data.brand_color !== undefined) updateData.brand_color = data.brand_color;
-    if (data.email_sender_name !== undefined) updateData.email_sender_name = data.email_sender_name;
-    if (data.reply_to_email !== undefined) updateData.reply_to_email = data.reply_to_email;
-    if (data.email_signature !== undefined) updateData.email_signature = data.email_signature;
+    const recruiterUpdate: Record<string, unknown> = {};
+    if (data.public_slug !== undefined) recruiterUpdate.public_slug = data.public_slug;
+    if (data.public_page_enabled !== undefined) recruiterUpdate.public_page_enabled = data.public_page_enabled;
+    if (data.public_display_name !== undefined) recruiterUpdate.public_display_name = data.public_display_name;
+    if (data.public_headline !== undefined) recruiterUpdate.public_headline = data.public_headline;
+    if (data.public_logo_url !== undefined) recruiterUpdate.public_logo_url = data.public_logo_url;
+    if (data.public_linkedin_url !== undefined) recruiterUpdate.public_linkedin_url = data.public_linkedin_url;
+    if (data.brand_color !== undefined) recruiterUpdate.brand_color = data.brand_color;
 
     const recruiter = await prisma.recruiter.update({
       where: { id: user.id },
-      data: updateData,
+      data: recruiterUpdate,
       select: {
         id: true,
         name: true,
@@ -159,13 +175,61 @@ export async function PATCH(request: NextRequest) {
         public_logo_url: true,
         public_linkedin_url: true,
         brand_color: true,
-        email_sender_name: true,
-        reply_to_email: true,
-        email_signature: true,
+        emailPersonalization: true,
       },
     });
 
-    return Response.json(recruiter);
+    const emailKeys = [
+      'email_sender_name',
+      'reply_to_email',
+      'email_signature',
+      'application_received_subject',
+      'application_received_body_html',
+      'schedule_interview_subject',
+      'schedule_interview_body_html',
+      'rejection_subject',
+      'rejection_body_html',
+    ] as const;
+    const hasEmailUpdate = emailKeys.some((k) => data[k] !== undefined);
+    if (hasEmailUpdate) {
+      const epData: Record<string, unknown> = {};
+      for (const k of emailKeys) {
+        if (data[k] !== undefined) epData[k] = data[k];
+      }
+      await prisma.recruiterEmailPersonalization.upsert({
+        where: { recruiter_id: user.id },
+        create: { recruiter_id: user.id, ...epData },
+        update: epData,
+      });
+    }
+
+    const ep = hasEmailUpdate
+      ? await prisma.recruiterEmailPersonalization.findUnique({
+          where: { recruiter_id: user.id },
+        })
+      : recruiter.emailPersonalization;
+    const response = {
+      id: recruiter.id,
+      name: recruiter.name,
+      company: recruiter.company,
+      public_slug: recruiter.public_slug,
+      public_page_enabled: recruiter.public_page_enabled,
+      public_display_name: recruiter.public_display_name,
+      public_headline: recruiter.public_headline,
+      public_logo_url: recruiter.public_logo_url,
+      public_linkedin_url: recruiter.public_linkedin_url,
+      brand_color: recruiter.brand_color,
+      email_sender_name: ep?.email_sender_name ?? null,
+      reply_to_email: ep?.reply_to_email ?? null,
+      email_signature: ep?.email_signature ?? null,
+      application_received_subject: ep?.application_received_subject ?? null,
+      application_received_body_html: ep?.application_received_body_html ?? null,
+      schedule_interview_subject: ep?.schedule_interview_subject ?? null,
+      schedule_interview_body_html: ep?.schedule_interview_body_html ?? null,
+      rejection_subject: ep?.rejection_subject ?? null,
+      rejection_body_html: ep?.rejection_body_html ?? null,
+    };
+    return Response.json(response);
   } catch (error) {
     console.error('Error updating recruiter settings:', error);
     return Response.json(

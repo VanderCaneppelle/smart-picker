@@ -25,6 +25,12 @@ export interface RecruiterSettings {
   email_sender_name: string | null;
   reply_to_email: string | null;
   email_signature: string | null;
+  application_received_subject: string | null;
+  application_received_body_html: string | null;
+  schedule_interview_subject: string | null;
+  schedule_interview_body_html: string | null;
+  rejection_subject: string | null;
+  rejection_body_html: string | null;
 }
 
 const API_BASE = '/api';
