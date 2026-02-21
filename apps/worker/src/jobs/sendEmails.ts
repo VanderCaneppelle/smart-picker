@@ -19,7 +19,7 @@ function buildFromAndReply(personalization: EmailPersonalization | null) {
     ? `${personalization.email_sender_name} <${FROM_EMAIL}>`
     : FROM_EMAIL;
   const replyTo = personalization?.reply_to_email ?? undefined;
-  return { from: fromStr, reply_to: replyTo };
+  return { from: fromStr, replyTo };
 }
 
 function varsFor(candidate: Candidate, job: Job, personalization: EmailPersonalization | null, calendlyLink?: string | null) {
@@ -120,7 +120,7 @@ export async function sendEmails(
   console.log(`[Email] Sending emails for candidate ${candidate.name} (${candidate.email}), job: ${job.title}`);
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-  const { from, reply_to } = buildFromAndReply(personalization);
+  const { from, replyTo } = buildFromAndReply(personalization);
   const vars = varsFor(candidate, job, personalization);
 
   // ---- Candidatura recebida (para o candidato) ----
@@ -131,7 +131,7 @@ export async function sendEmails(
   try {
     await resend.emails.send({
       from,
-      reply_to,
+      replyTo,
       to: candidate.email,
       subject: renderEmailTemplate(appSubject, vars),
       html: appBody,
@@ -204,13 +204,13 @@ export async function sendScheduleInterviewEmail(
   const bodyWithCalendly = bodyRaw.replace(/\{\{calendly_link\}\}/g, calendlyPlaceholder);
   const subject = personalization?.schedule_interview_subject?.trim() || `Você foi selecionado(a)! Agende sua entrevista – ${job.title}`;
 
-  const { from, reply_to } = buildFromAndReply(personalization);
+  const { from, replyTo } = buildFromAndReply(personalization);
   const html = appendSignature(renderEmailTemplate(bodyWithCalendly, vars), personalization);
 
   try {
     await resend.emails.send({
       from,
-      reply_to,
+      replyTo,
       to: candidate.email,
       subject: renderEmailTemplate(subject, vars),
       html,
@@ -238,12 +238,12 @@ export async function sendRejectionEmail(
   const bodyRaw = personalization?.rejection_body_html?.trim() || DEFAULT_REJECTION_HTML;
   const html = appendSignature(renderEmailTemplate(bodyRaw, vars), personalization);
 
-  const { from, reply_to } = buildFromAndReply(personalization);
+  const { from, replyTo } = buildFromAndReply(personalization);
 
   try {
     await resend.emails.send({
       from,
-      reply_to,
+      replyTo,
       to: candidate.email,
       subject: renderEmailTemplate(subject, vars),
       html,
