@@ -33,6 +33,41 @@ export interface RecruiterSettings {
   rejection_body_html: string | null;
 }
 
+export interface DashboardStatsResponse {
+  overview: {
+    openJobs: number;
+    totalJobs: number;
+    totalCandidates: number;
+    activeCandidates: number;
+    interviewCount: number;
+    shortlistedCount: number;
+    hiredCount: number;
+    rejectedCount: number;
+    avgCandidatesPerJob: number;
+    avgDaysJobOpen: number;
+    pendingReview: number;
+    staleJobsCount: number;
+    staleJobs: { id: string; title: string }[];
+  };
+  intelligence: {
+    autoFilteredPercent: number;
+    flaggedForReviewPercent: number;
+    eliminatedCount: number;
+    warningCount: number;
+    topCriteria: { name: string; count: number }[];
+    avgScorePerJob: { jobId: string; title: string; avgScore: number; candidateCount: number }[];
+    bestScore: number;
+    avgGlobalScore: number;
+  };
+  performance: {
+    funnel: { stage: string; count: number }[];
+    avgDaysToShortlist: number;
+    avgDaysToHire: number;
+    lowConversionJobs: { id: string; title: string; totalCandidates: number }[];
+  };
+  insights: string[];
+}
+
 const API_BASE = '/api';
 
 class ApiClient {
@@ -111,15 +146,7 @@ class ApiClient {
     return this.request<CandidatesListResponse>(`/jobs/${jobId}/candidates`);
   }
 
-  async getDashboardStats(): Promise<{
-    openJobs: number;
-    totalJobs: number;
-    totalCandidates: number;
-    avgCandidatesPerJob: number;
-    avgDaysJobOpen: number;
-    shortlistedCount: number;
-    jobsWithCandidates: number;
-  }> {
+  async getDashboardStats(): Promise<DashboardStatsResponse> {
     return this.request('/dashboard/stats');
   }
 

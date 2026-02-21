@@ -17,7 +17,7 @@ export default function LoginPage() {
 
   // Redirect if already authenticated
   if (isAuthenticated) {
-    router.push('/jobs');
+    router.push('/dashboard');
     return null;
   }
 
@@ -28,7 +28,7 @@ export default function LoginPage() {
     try {
       await login(email, password);
       toast.success('Login successful!');
-      router.push('/jobs');
+      router.push('/dashboard');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Login failed');
     } finally {

@@ -20,7 +20,7 @@ export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   if (isAuthenticated) {
-    router.push('/jobs');
+    router.push('/dashboard');
     return null;
   }
 
