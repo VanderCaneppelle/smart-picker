@@ -1,10 +1,19 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { X, ExternalLink, FileText, Brain, MessageSquare } from 'lucide-react';
+import { X, ExternalLink, FileText, Brain, MessageSquare, AlertCircle } from 'lucide-react';
 import { Button, Badge } from '@/components/ui';
 import type { Candidate, CandidateStatus } from '@hunter/core';
+
+const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['schedule_interview', 'hired', 'rejected'];
+
+const STATUS_EMAIL_MESSAGES: Record<string, string> = {
+  schedule_interview: 'Um e-mail de agendamento de entrevista será enviado ao candidato.',
+  hired: 'Um e-mail de contratação será enviado ao candidato.',
+  rejected: 'Um e-mail de rejeição será enviado ao candidato.',
+};
 
 interface CandidateDrawerProps {
   candidate: Candidate;
@@ -17,7 +26,7 @@ const STATUS_LABELS: Record<string, string> = {
   reviewing: 'Em análise',
   shortlisted: 'Pré-selecionado',
   schedule_interview: 'Agendar entrevista',
-  flagged: 'Flagged',
+  flagged: 'Sinalizado',
   rejected: 'Rejeitado',
   hired: 'Contratado',
 };
@@ -57,6 +66,7 @@ export default function CandidateDrawer({
   const [activeTab, setActiveTab] = useState<DrawerTab>('summary');
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [pendingAction, setPendingAction] = useState<CandidateStatus | null>(null);
 
   useEffect(() => {
     requestAnimationFrame(() => {
@@ -76,9 +86,20 @@ export default function CandidateDrawer({
     };
   }, [onClose]);
 
-  const handleQuickAction = useCallback(
-    async (newStatus: CandidateStatus) => {
+  const requestQuickAction = useCallback(
+    (newStatus: CandidateStatus) => {
       if (candidate.status === newStatus) return;
+      if (EMAIL_TRIGGER_STATUSES.includes(newStatus)) {
+        setPendingAction(newStatus);
+      } else {
+        executeQuickAction(newStatus);
+      }
+    },
+    [candidate.status],
+  );
+
+  const executeQuickAction = useCallback(
+    async (newStatus: CandidateStatus) => {
       setLoadingAction(newStatus);
       try {
         await onStatusChange(candidate.id, newStatus);
@@ -86,8 +107,15 @@ export default function CandidateDrawer({
         setLoadingAction(null);
       }
     },
-    [candidate.id, candidate.status, onStatusChange],
+    [candidate.id, onStatusChange],
   );
+
+  const confirmQuickAction = useCallback(() => {
+    if (pendingAction) {
+      executeQuickAction(pendingAction);
+      setPendingAction(null);
+    }
+  }, [pendingAction, executeQuickAction]);
 
   const tabs: { id: DrawerTab; label: string; icon: typeof Brain }[] = [
     { id: 'summary', label: 'Resumo IA', icon: Brain },
@@ -143,7 +171,7 @@ export default function CandidateDrawer({
             {QUICK_ACTIONS.map((action) => (
               <button
                 key={action.status}
-                onClick={() => handleQuickAction(action.status)}
+                onClick={() => requestQuickAction(action.status)}
                 disabled={candidate.status === action.status || loadingAction !== null}
                 className={`text-xs px-3 py-1.5 rounded-full border transition-colors
                   ${
@@ -200,6 +228,45 @@ export default function CandidateDrawer({
           </Button>
         </div>
       </div>
+
+      {/* Modal de confirmação de status com envio de e-mail */}
+      {pendingAction && createPortal(
+        <div className="fixed inset-0 z-[200] flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/40" onClick={() => setPendingAction(null)} />
+          <div className="relative bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                <AlertCircle className="h-5 w-5 text-amber-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Confirmar alteração</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-1">
+              Você está alterando o status para{' '}
+              <span className="font-medium text-gray-900">
+                {QUICK_ACTIONS.find((a) => a.status === pendingAction)?.label || pendingAction}
+              </span>.
+            </p>
+            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-5">
+              {STATUS_EMAIL_MESSAGES[pendingAction]}
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setPendingAction(null)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmQuickAction}
+                className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

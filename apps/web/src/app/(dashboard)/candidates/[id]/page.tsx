@@ -25,10 +25,20 @@ const statusOptions = [
   { value: 'reviewing', label: 'Em análise' },
   { value: 'schedule_interview', label: 'Agendar entrevista' },
   { value: 'shortlisted', label: 'Pré-selecionado' },
-  { value: 'flagged', label: 'Flagged' },
+  { value: 'flagged', label: 'Sinalizado' },
   { value: 'rejected', label: 'Rejeitado' },
   { value: 'hired', label: 'Contratado' },
 ];
+
+const STATUS_DISPLAY_LABELS: Record<string, string> = {
+  new: 'Novo',
+  reviewing: 'Em análise',
+  schedule_interview: 'Agendar entrevista',
+  shortlisted: 'Pré-selecionado',
+  flagged: 'Sinalizado',
+  rejected: 'Rejeitado',
+  hired: 'Contratado',
+};
 
 const getStatusBadgeVariant = (status: string) => {
   switch (status) {
@@ -65,7 +75,7 @@ export default function CandidateDetailPage() {
       const data = await apiClient.getCandidate(candidateId);
       setCandidate(data);
     } catch (error) {
-      toast.error('Failed to load candidate');
+      toast.error('Falha ao carregar candidato');
       console.error(error);
       router.push('/jobs');
     } finally {
@@ -83,15 +93,15 @@ export default function CandidateDetailPage() {
     try {
       const updated = await apiClient.updateCandidate(candidateId, { status: newStatus });
       setCandidate(updated);
-      toast.success('Status updated');
+      toast.success('Status atualizado');
     } catch (error) {
-      toast.error('Failed to update status');
+      toast.error('Falha ao atualizar status');
       console.error(error);
     }
   };
 
   if (isLoading) {
-    return <Loading text="Loading candidate..." />;
+    return <Loading text="Carregando candidato..." />;
   }
 
   if (!candidate) {
@@ -115,7 +125,7 @@ export default function CandidateDetailPage() {
           onClick={() => router.back()}
           leftIcon={<ArrowLeft className="h-4 w-4" />}
         >
-          Back
+          Voltar
         </Button>
       </div>
 
@@ -129,12 +139,12 @@ export default function CandidateDetailPage() {
                 <h1 className="text-2xl font-bold text-gray-900">{candidate.name}</h1>
                 {job && (
                   <p className="text-gray-600 mt-1">
-                    Applied for: <span className="font-medium">{job.title}</span>
+                    Candidatou-se para: <span className="font-medium">{job.title}</span>
                   </p>
                 )}
               </div>
               <Badge variant={getStatusBadgeVariant(candidate.status)} className="text-sm">
-                {candidate.status.replace(/_/g, ' ')}
+                {STATUS_DISPLAY_LABELS[candidate.status] || candidate.status}
               </Badge>
             </div>
 
@@ -165,7 +175,7 @@ export default function CandidateDetailPage() {
                   className="flex items-center gap-2 text-gray-600 hover:text-blue-600"
                 >
                   <Linkedin className="h-4 w-4" />
-                  LinkedIn Profile
+                  Perfil LinkedIn
                 </a>
               )}
 
@@ -176,14 +186,14 @@ export default function CandidateDetailPage() {
                 className="flex items-center gap-2 text-gray-600 hover:text-blue-600"
               >
                 <FileText className="h-4 w-4" />
-                View Resume
+                Ver Currículo
               </a>
             </div>
 
             {/* Status Update */}
             <div className="mt-6 pt-4 border-t">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Update Status
+                Atualizar Status
               </label>
               <Select
                 options={statusOptions}
@@ -225,7 +235,7 @@ export default function CandidateDetailPage() {
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
-                Application Answers
+                Respostas da Aplicação
               </h2>
               <div className="space-y-4">
                 {applicationQuestions.map((question) => (
@@ -236,7 +246,7 @@ export default function CandidateDetailPage() {
                     </p>
                     <p className="text-gray-600">
                       {answersMap.get(question.id) || (
-                        <span className="text-gray-400 italic">No answer provided</span>
+                        <span className="text-gray-400 italic">Sem resposta</span>
                       )}
                     </p>
                   </div>
@@ -250,7 +260,7 @@ export default function CandidateDetailPage() {
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Resume Summary
+                Resumo do Currículo
               </h2>
               <p className="text-gray-600 whitespace-pre-wrap">{candidate.resume_summary}</p>
             </div>
@@ -261,7 +271,7 @@ export default function CandidateDetailPage() {
         <div className="space-y-6">
           {/* AI Scores */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">AI Evaluation</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Avaliação IA</h2>
 
             <div className="space-y-4">
               {/* Fit Score */}
@@ -284,7 +294,7 @@ export default function CandidateDetailPage() {
                   >
                     {candidate.fit_score !== null && candidate.fit_score !== undefined
                       ? `${candidate.fit_score}%`
-                      : 'Pending'}
+                      : 'Pendente'}
                   </span>
                 </div>
                 {candidate.fit_score !== null && candidate.fit_score !== undefined && (
@@ -308,12 +318,12 @@ export default function CandidateDetailPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
                     <Star className="h-4 w-4" />
-                    Resume Rating
+                    Nota do Currículo
                   </span>
                   <span className="font-bold text-gray-900">
                     {candidate.resume_rating !== null && candidate.resume_rating !== undefined
                       ? `${candidate.resume_rating}/5`
-                      : 'Pending'}
+                      : 'Pendente'}
                   </span>
                 </div>
               </div>
@@ -323,12 +333,12 @@ export default function CandidateDetailPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
                     <MessageSquare className="h-4 w-4" />
-                    Answer Quality
+                    Qualidade das Respostas
                   </span>
                   <span className="font-bold text-gray-900">
                     {candidate.answer_quality_rating !== null && candidate.answer_quality_rating !== undefined
                       ? `${candidate.answer_quality_rating}/5`
-                      : 'Pending'}
+                      : 'Pendente'}
                   </span>
                 </div>
               </div>
@@ -339,7 +349,7 @@ export default function CandidateDetailPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
                       <Briefcase className="h-4 w-4" />
-                      Experience Level
+                      Nível de Experiência
                     </span>
                     <span className="font-medium text-gray-900">{candidate.experience_level}</span>
                   </div>
@@ -349,7 +359,7 @@ export default function CandidateDetailPage() {
 
             {candidate.needs_scoring && (
               <p className="text-sm text-gray-500 mt-4 pt-4 border-t">
-                AI evaluation is pending. Scores will be available shortly.
+                Avaliação por IA em andamento. As notas estarão disponíveis em breve.
               </p>
             )}
           </div>
@@ -357,7 +367,7 @@ export default function CandidateDetailPage() {
           {/* Job Info */}
           {job && (
             <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Job Details</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Detalhes da Vaga</h2>
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-gray-600">
                   <Briefcase className="h-4 w-4" />
@@ -373,7 +383,7 @@ export default function CandidateDetailPage() {
                   onClick={() => router.push(`/jobs/${job.id}`)}
                   className="w-full mt-2"
                 >
-                  View Job
+                  Ver Vaga
                 </Button>
               </div>
             </div>
@@ -381,18 +391,18 @@ export default function CandidateDetailPage() {
 
           {/* Timeline */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Timeline</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Cronologia</h2>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600">Applied</span>
+                <span className="text-gray-600">Aplicação</span>
                 <span className="text-gray-900">
-                  {new Date(candidate.created_at).toLocaleDateString()}
+                  {new Date(candidate.created_at).toLocaleDateString('pt-BR')}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Last Updated</span>
+                <span className="text-gray-600">Última atualização</span>
                 <span className="text-gray-900">
-                  {new Date(candidate.updated_at).toLocaleDateString()}
+                  {new Date(candidate.updated_at).toLocaleDateString('pt-BR')}
                 </span>
               </div>
             </div>

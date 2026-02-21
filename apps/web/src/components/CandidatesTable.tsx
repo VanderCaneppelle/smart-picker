@@ -15,11 +15,19 @@ import {
   XCircle,
   Bookmark,
   BookmarkCheck,
-  Flag,
+  AlertCircle,
 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { Badge, Select, SortIcon } from '@/components/ui';
 import type { Candidate, CandidateStatus, DisqualificationFlag } from '@hunter/core';
+
+const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['schedule_interview', 'hired', 'rejected'];
+
+const STATUS_EMAIL_MESSAGES: Record<string, string> = {
+  schedule_interview: 'Um e-mail de agendamento de entrevista será enviado ao candidato.',
+  hired: 'Um e-mail de contratação será enviado ao candidato.',
+  rejected: 'Um e-mail de rejeição será enviado ao candidato.',
+};
 
 interface CandidatesTableProps {
   jobId: string;
@@ -34,7 +42,7 @@ const statusOptions = [
   { value: 'reviewing', label: 'Em análise' },
   { value: 'schedule_interview', label: 'Agendar entrevista' },
   { value: 'shortlisted', label: 'Pré-selecionados' },
-  { value: 'flagged', label: 'Flagged' },
+  { value: 'flagged', label: 'Sinalizado' },
   { value: 'rejected', label: 'Rejeitados' },
   { value: 'hired', label: 'Contratados' },
 ];
@@ -44,7 +52,7 @@ const statusUpdateOptions = [
   { value: 'reviewing', label: 'Em análise' },
   { value: 'schedule_interview', label: 'Agendar entrevista' },
   { value: 'shortlisted', label: 'Pré-selecionado' },
-  { value: 'flagged', label: 'Flagged' },
+  { value: 'flagged', label: 'Sinalizado' },
   { value: 'rejected', label: 'Rejeitado' },
   { value: 'hired', label: 'Contratado' },
 ];
@@ -286,6 +294,7 @@ export default function CandidatesTable({
   const [savingId, setSavingId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [pendingStatusChange, setPendingStatusChange] = useState<{ candidateId: string; newStatus: CandidateStatus } | null>(null);
 
   const fetchSavedIds = useCallback(async () => {
     try {
@@ -300,7 +309,15 @@ export default function CandidatesTable({
     fetchSavedIds();
   }, [fetchSavedIds]);
 
-  const handleStatusChange = async (candidateId: string, newStatus: CandidateStatus) => {
+  const requestStatusChange = (candidateId: string, newStatus: CandidateStatus) => {
+    if (EMAIL_TRIGGER_STATUSES.includes(newStatus)) {
+      setPendingStatusChange({ candidateId, newStatus });
+    } else {
+      executeStatusChange(candidateId, newStatus);
+    }
+  };
+
+  const executeStatusChange = async (candidateId: string, newStatus: CandidateStatus) => {
     try {
       await apiClient.updateCandidate(candidateId, { status: newStatus });
       setCandidates((prev) =>
@@ -314,6 +331,17 @@ export default function CandidatesTable({
       toast.error('Falha ao atualizar status');
       console.error(error);
     }
+  };
+
+  const confirmStatusChange = () => {
+    if (pendingStatusChange) {
+      executeStatusChange(pendingStatusChange.candidateId, pendingStatusChange.newStatus);
+      setPendingStatusChange(null);
+    }
+  };
+
+  const cancelStatusChange = () => {
+    setPendingStatusChange(null);
   };
 
   const handleBulkStatusChange = async (newStatus: string) => {
@@ -547,12 +575,6 @@ export default function CandidatesTable({
                   <div className="min-w-0">
                     <p className="font-semibold text-gray-900 truncate">{candidate.name}</p>
                     <p className="text-sm text-gray-500 truncate mt-0.5">{candidate.email}</p>
-                    {isFlagged && candidate.flagged_reason && (
-                      <p className="text-xs text-orange-700 mt-1 flex items-start gap-1 break-words">
-                        <Flag className="h-3 w-3 shrink-0 mt-0.5" />
-                        <span className="min-w-0">{candidate.flagged_reason}</span>
-                      </p>
-                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -587,7 +609,7 @@ export default function CandidatesTable({
                 <select
                   value={candidate.status}
                   onChange={(e) =>
-                    handleStatusChange(candidate.id, e.target.value as CandidateStatus)
+                    requestStatusChange(candidate.id, e.target.value as CandidateStatus)
                   }
                   className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 >
@@ -717,17 +739,11 @@ export default function CandidatesTable({
                     />
                   </td>
 
-                  {/* Candidato: nome + email + flagged reason */}
+                  {/* Candidato: nome + email */}
                   <td className="px-4 py-3">
                     <div className="min-w-0">
                       <p className="font-medium text-gray-900 truncate">{candidate.name}</p>
                       <p className="text-xs text-gray-400 truncate">{candidate.email}</p>
-                      {isFlagged && candidate.flagged_reason && (
-                        <p className="text-xs text-orange-600 mt-0.5 flex items-start gap-1 break-words">
-                          <Flag className="h-3 w-3 shrink-0 mt-0.5" />
-                          <span className="min-w-0">{candidate.flagged_reason}</span>
-                        </p>
-                      )}
                     </div>
                   </td>
 
@@ -829,7 +845,7 @@ export default function CandidatesTable({
                     <select
                       value={candidate.status}
                       onChange={(e) =>
-                        handleStatusChange(candidate.id, e.target.value as CandidateStatus)
+                        requestStatusChange(candidate.id, e.target.value as CandidateStatus)
                       }
                       className={`text-xs border rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors ${
                         isFlagged ? 'border-orange-300 text-orange-700' : 'border-gray-200'
@@ -880,6 +896,45 @@ export default function CandidatesTable({
           </tbody>
         </table>
       </div>
+
+      {/* Modal de confirmação de status com envio de e-mail */}
+      {pendingStatusChange && createPortal(
+        <div className="fixed inset-0 z-[200] flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/40" onClick={cancelStatusChange} />
+          <div className="relative bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                <AlertCircle className="h-5 w-5 text-amber-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Confirmar alteração</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-1">
+              Você está alterando o status para{' '}
+              <span className="font-medium text-gray-900">
+                {statusUpdateOptions.find((o) => o.value === pendingStatusChange.newStatus)?.label}
+              </span>.
+            </p>
+            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-5">
+              {STATUS_EMAIL_MESSAGES[pendingStatusChange.newStatus]}
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={cancelStatusChange}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmStatusChange}
+                className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
