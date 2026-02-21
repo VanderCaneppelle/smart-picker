@@ -115,7 +115,7 @@ export default function CandidatesKanbanBoard({
 
   return (
     <>
-      {/* Toggle */}
+      {/* Toggle to show eliminated candidates */}
       <div className="flex items-center justify-end mb-3">
         <label className="flex items-center gap-2.5 text-sm text-gray-600 select-none cursor-pointer">
           <button
