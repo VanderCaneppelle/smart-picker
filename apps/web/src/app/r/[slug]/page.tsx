@@ -27,6 +27,9 @@ async function getRecruiterBySlug(slug: string) {
       public_linkedin_url: true,
       brand_color: true,
       reply_to_email: true,
+      emailPersonalization: {
+        select: { reply_to_email: true },
+      },
     },
   });
 
@@ -88,43 +91,69 @@ export default async function RecruiterPublicPage({ params }: PageProps) {
   const displayName =
     recruiter.public_display_name || recruiter.company || recruiter.name;
   const brandColor = recruiter.brand_color || '#2563eb';
-  const contactEmail = recruiter.reply_to_email || recruiter.email;
-
+  const contactEmail =
+    recruiter.emailPersonalization?.reply_to_email?.trim() ||
+    recruiter.reply_to_email?.trim() ||
+    recruiter.email;
   const linkedinUrl = recruiter.public_linkedin_url?.trim();
+
+  // Gradiente: cor da marca → versão mais escura
+  const hexToRgb = (hex: string) => {
+    const n = parseInt(hex.slice(1), 16);
+    return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff] as const;
+  };
+  const [r, g, b] = hexToRgb(brandColor);
+  const darken = (pct: number) =>
+    `rgb(${Math.round(r * (1 - pct / 100))},${Math.round(g * (1 - pct / 100))},${Math.round(b * (1 - pct / 100))})`;
+  const headerGradient = `linear-gradient(135deg, ${brandColor} 0%, ${darken(25)} 50%, ${darken(40)} 100%)`;
+  const tagline =
+    recruiter.public_headline ||
+    'Estamos em busca de talentos. Conheça nossas vagas e faça parte do time.';
 
   return (
     <div className="min-h-screen bg-gray-50/80">
-      {/* Header: logo + nome + LinkedIn + contato */}
-      <header className="bg-white border-b border-gray-100 shadow-sm">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col items-center text-center">
-            <div className="flex justify-center mb-3">
+      {/* Header: gradiente brand, logo+nome no canto, frase, ações à direita */}
+      <header
+        className="relative overflow-hidden text-white shadow-lg"
+        style={{ background: headerGradient }}
+      >
+        <div className="absolute inset-0 bg-white/5" aria-hidden />
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            {/* Esquerda: logo + nome do recrutador */}
+            <div className="flex items-center gap-4">
               {recruiter.public_logo_url ? (
                 <img
                   src={recruiter.public_logo_url}
                   alt={displayName}
-                  className="h-12 w-12 object-contain rounded-xl"
+                  className="h-16 w-16 sm:h-20 sm:w-20 object-contain rounded-xl bg-white/10 shadow-md flex-shrink-0"
                 />
               ) : (
                 <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center"
-                  style={{ backgroundColor: `${brandColor}18` }}
+                  className="h-16 w-16 sm:h-20 sm:w-20 rounded-xl flex items-center justify-center bg-white/15 shadow-md flex-shrink-0"
+                  style={{ color: 'white' }}
                 >
-                  <Globe className="h-6 w-6" style={{ color: brandColor }} />
+                  <Globe className="h-8 w-8 sm:h-10 sm:w-10" />
                 </div>
               )}
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-white drop-shadow-sm">
+                  {displayName}
+                </h1>
+                <p className="mt-0.5 text-sm sm:text-base text-white/90 max-w-md">
+                  {tagline}
+                </p>
+              </div>
             </div>
-            <h1 className="text-xl font-bold text-gray-900">{displayName}</h1>
-            {recruiter.public_headline && (
-              <p className="mt-1 text-sm text-gray-500 max-w-md">{recruiter.public_headline}</p>
-            )}
-            <div className="mt-4 flex items-center justify-center gap-3">
+
+            {/* Direita: LinkedIn + Entrar em contato */}
+            <div className="flex items-center gap-3 flex-shrink-0">
               {linkedinUrl && (
                 <a
                   href={linkedinUrl.startsWith('http') ? linkedinUrl : `https://${linkedinUrl}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 text-[#0a66c2] hover:bg-[#0a66c2]/5 transition-colors"
+                  className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-white/15 text-white hover:bg-white/25 transition-colors backdrop-blur-sm"
                   aria-label="LinkedIn"
                 >
                   <Linkedin className="h-5 w-5" />
@@ -133,7 +162,7 @@ export default async function RecruiterPublicPage({ params }: PageProps) {
               {contactEmail && (
                 <a
                   href={`mailto:${contactEmail}`}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white text-gray-800 text-sm font-semibold hover:bg-white/95 shadow-md transition-colors"
                 >
                   <Mail className="h-4 w-4" />
                   Entrar em contato
@@ -168,7 +197,7 @@ export default async function RecruiterPublicPage({ params }: PageProps) {
         </section>
 
         {/* Bloco: Não encontrou a vaga? */}
-        {contactEmail && (
+        {recruiter.reply_to_email && (
           <section className="pb-12">
             <div
               className="rounded-2xl p-8 sm:p-10 text-center text-white shadow-lg"

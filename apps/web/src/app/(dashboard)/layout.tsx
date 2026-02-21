@@ -15,15 +15,6 @@ const statusFilterOptions = [
   { value: 'on_hold', label: 'Pausada' },
 ];
 
-const typeFilterOptions = [
-  { value: '', label: 'Todos os tipos' },
-  { value: 'full_time', label: 'Tempo integral' },
-  { value: 'part_time', label: 'Meio período' },
-  { value: 'contract', label: 'Contrato' },
-  { value: 'internship', label: 'Estágio' },
-  { value: 'freelance', label: 'Freelance' },
-];
-
 const mainNavItems = [
   { href: '/jobs/new', label: 'Criar vaga', icon: PlusCircle, primary: true },
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -81,13 +72,11 @@ function DashboardLayoutContent({
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   const currentStatus = searchParams.get('status') ?? '';
-  const currentType = searchParams.get('employment_type') ?? '';
   const isJobsPage = pathname === '/jobs' || (pathname?.startsWith('/jobs/') && pathname !== '/jobs/new');
 
-  const jobsHref = (status?: string, employmentType?: string) => {
+  const jobsHref = (status?: string) => {
     const p = new URLSearchParams(searchParams?.toString() ?? '');
     if (status !== undefined) (status ? p.set('status', status) : p.delete('status'));
-    if (employmentType !== undefined) (employmentType ? p.set('employment_type', employmentType) : p.delete('employment_type'));
     const q = p.toString();
     return `/jobs${q ? `?${q}` : ''}`;
   };
@@ -129,16 +118,17 @@ function DashboardLayoutContent({
 
   return (
     <div className="min-h-screen flex bg-gray-50">
-      {/* Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-56 lg:flex-shrink-0 bg-white border-r border-gray-200">
-        <Link href="/dashboard" className="flex items-center gap-2 px-4 h-16 border-b border-gray-100">
+      {/* Sidebar: altura da tela, rodapé (Perfil/Config/Sair) fixo */}
+      <aside className="hidden lg:flex lg:flex-col lg:w-56 lg:h-screen lg:sticky lg:top-0 lg:flex-shrink-0 bg-white border-r border-gray-200">
+        <Link href="/dashboard" className="flex items-center gap-2 px-4 h-16 border-b border-gray-100 flex-shrink-0">
           <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
             <TrendingUp className="h-5 w-5 text-white" />
           </div>
           <span className="text-lg font-bold text-gray-900">Rankea</span>
         </Link>
 
-        <nav className="flex-1 py-4 px-3 flex flex-col">
+        <nav className="flex-1 flex flex-col min-h-0 py-4 px-3">
+          <div className="flex-1 overflow-y-auto min-h-0 space-y-0.5">
           <div className="space-y-0.5 mb-3 pb-3 border-b border-gray-100">
             {mainNavItems.slice(0, 1).map(({ href, label, icon: Icon, primary }) => {
               const active = isActive(href);
@@ -204,23 +194,9 @@ function DashboardLayoutContent({
                         {statusFilterOptions.map(({ value, label: optLabel }) => (
                           <Link
                             key={value || 'status-all'}
-                            href={jobsHref(value, currentType)}
+                            href={jobsHref(value)}
                             className={`block px-2 py-1.5 rounded-md text-sm transition-colors ${
                               currentStatus === value
-                                ? 'bg-emerald-50 text-emerald-700 font-medium'
-                                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                            }`}
-                          >
-                            {optLabel}
-                          </Link>
-                        ))}
-                        <p className="px-2 pt-2 pb-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Tipo</p>
-                        {typeFilterOptions.map(({ value, label: optLabel }) => (
-                          <Link
-                            key={value || 'type-all'}
-                            href={jobsHref(currentStatus, value)}
-                            className={`block px-2 py-1.5 rounded-md text-sm transition-colors ${
-                              currentType === value
                                 ? 'bg-emerald-50 text-emerald-700 font-medium'
                                 : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                             }`}
@@ -259,7 +235,8 @@ function DashboardLayoutContent({
               );
             })}
           </div>
-          <div className="mt-auto pt-4 border-t border-gray-100 space-y-0.5">
+          </div>
+          <div className="mt-auto pt-4 border-t border-gray-100 space-y-0.5 flex-shrink-0 bg-white">
             <Link
               href="/perfil"
               className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
