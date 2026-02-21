@@ -20,6 +20,22 @@ model Recruiter {
   created_at   DateTime  @default(now())
   updated_at   DateTime  @updatedAt
 
+  // Public page
+  public_slug         String?   @unique
+  public_page_enabled Boolean   @default(false)
+
+  // Branding
+  public_display_name  String?
+  public_headline      String?
+  public_logo_url      String?
+  brand_color          String?
+  public_linkedin_url  String?
+
+  // Email personalization
+  email_sender_name   String?
+  reply_to_email      String?
+  email_signature     String?
+
   jobs             Job[]
   savedCandidates  SavedCandidate[]
 

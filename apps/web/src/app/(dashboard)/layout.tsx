@@ -5,7 +5,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loading } from '@/components/ui';
-import { TrendingUp, LogOut, Briefcase, PlusCircle, LayoutDashboard, Users, User, ChevronDown, Menu, X } from 'lucide-react';
+import { TrendingUp, LogOut, Briefcase, PlusCircle, LayoutDashboard, Users, User, ChevronDown, Menu, X, Settings } from 'lucide-react';
 
 const statusFilterOptions = [
   { value: '', label: 'Todos os status' },
@@ -123,6 +123,7 @@ function DashboardLayoutContent({
     if (href === '/dashboard') return pathname === '/dashboard';
     if (href === '/candidatos-salvos') return pathname === '/candidatos-salvos';
     if (href === '/perfil') return pathname === '/perfil';
+    if (href === '/settings/public-profile') return pathname === '/settings/public-profile';
     return pathname === href;
   };
 
@@ -270,6 +271,17 @@ function DashboardLayoutContent({
               <User className={`h-5 w-5 flex-shrink-0 ${isActive('/perfil') ? 'text-white' : 'text-gray-500'}`} />
               Perfil
             </Link>
+            <Link
+              href="/settings/public-profile"
+              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                isActive('/settings/public-profile')
+                  ? 'bg-emerald-600 text-white border-l-2 border-l-emerald-700 -ml-px pl-[11px]'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+              }`}
+            >
+              <Settings className={`h-5 w-5 flex-shrink-0 ${isActive('/settings/public-profile') ? 'text-white' : 'text-gray-500'}`} />
+              Configurações
+            </Link>
             <button
               type="button"
               onClick={handleLogout}
@@ -374,6 +386,16 @@ function DashboardLayoutContent({
                       >
                         <User className="h-5 w-5" />
                         Perfil
+                      </Link>
+                      <Link
+                        href="/settings/public-profile"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 px-3 py-3 rounded-lg ${
+                          isActive('/settings/public-profile') ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        <Settings className="h-5 w-5" />
+                        Configurações
                       </Link>
                       <button
                         type="button"

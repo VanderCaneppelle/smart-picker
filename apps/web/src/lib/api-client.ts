@@ -11,6 +11,22 @@ import type {
   CandidateFilters,
 } from '@hunter/core';
 
+export interface RecruiterSettings {
+  id: string;
+  name: string;
+  company: string | null;
+  public_slug: string | null;
+  public_page_enabled: boolean;
+  public_display_name: string | null;
+  public_headline: string | null;
+  public_logo_url: string | null;
+  public_linkedin_url: string | null;
+  brand_color: string | null;
+  email_sender_name: string | null;
+  reply_to_email: string | null;
+  email_signature: string | null;
+}
+
 const API_BASE = '/api';
 
 class ApiClient {
@@ -107,6 +123,7 @@ class ApiClient {
     name: string;
     company: string | null;
     phone_number: string | null;
+    public_slug: string | null;
     created_at: string;
     updated_at: string;
   }> {
@@ -127,6 +144,22 @@ class ApiClient {
     updated_at: string;
   }> {
     return this.request('/recruiter/me', { method: 'PATCH', body: JSON.stringify(data) });
+  }
+
+  // Recruiter settings (public page + branding)
+  async getRecruiterSettings(): Promise<RecruiterSettings> {
+    return this.request('/recruiter/settings');
+  }
+
+  async updateRecruiterSettings(data: Partial<RecruiterSettings>): Promise<RecruiterSettings> {
+    return this.request('/recruiter/settings', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async checkSlugAvailability(slug: string): Promise<{ available: boolean; reason?: string }> {
+    return this.request(`/recruiter/slug-availability?slug=${encodeURIComponent(slug)}`);
   }
 
   // Candidates
