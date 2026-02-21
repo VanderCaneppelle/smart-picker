@@ -34,29 +34,29 @@ import type { Job, ApplicationQuestion, QuestionType } from '@hunter/core';
 type EliminatoryCriteria = NonNullable<ApplicationQuestion['eliminatory_criteria']>;
 
 const employmentTypeOptions = [
-  { value: 'full_time', label: 'Full Time' },
-  { value: 'part_time', label: 'Part Time' },
-  { value: 'contract', label: 'Contract' },
-  { value: 'internship', label: 'Internship' },
+  { value: 'full_time', label: 'Tempo integral' },
+  { value: 'part_time', label: 'Meio período' },
+  { value: 'contract', label: 'Contrato' },
+  { value: 'internship', label: 'Estágio' },
   { value: 'freelance', label: 'Freelance' },
 ];
 
 const statusOptions = [
-  { value: 'draft', label: 'Draft' },
-  { value: 'active', label: 'Active' },
-  { value: 'closed', label: 'Closed' },
-  { value: 'on_hold', label: 'On Hold' },
+  { value: 'draft', label: 'Rascunho' },
+  { value: 'active', label: 'Ativa' },
+  { value: 'closed', label: 'Fechada' },
+  { value: 'on_hold', label: 'Pausada' },
 ];
 
 const currencyOptions = [
-  { value: '', label: 'Select currency' },
-  { value: 'USD', label: 'USD - US Dollar' },
+  { value: '', label: 'Selecione a moeda' },
+  { value: 'AED', label: 'AED - Dirham dos EAU' },
+  { value: 'BRL', label: 'BRL - Real Brasileiro' },
   { value: 'EUR', label: 'EUR - Euro' },
-  { value: 'GBP', label: 'GBP - British Pound' },
-  { value: 'BRL', label: 'BRL - Brazilian Real' },
-  { value: 'SAR', label: 'SAR - Saudi Riyal' },
-  { value: 'AED', label: 'AED - UAE Dirham' },
-  { value: 'INR', label: 'INR - Indian Rupee' },
+  { value: 'GBP', label: 'GBP - Libra Esterlina' },
+  { value: 'INR', label: 'INR - Rúpia Indiana' },
+  { value: 'SAR', label: 'SAR - Riyal Saudita' },
+  { value: 'USD', label: 'USD - Dólar Americano' },
 ];
 
 const questionTypeOptions = [
@@ -133,7 +133,7 @@ export default function JobDetailPage() {
       setAnswersWeight(data.answers_weight ?? 5);
       setScoringInstructions(data.scoring_instructions || '');
     } catch (error) {
-      toast.error('Failed to load job');
+      toast.error('Falha ao carregar vaga');
       console.error(error);
       router.push('/jobs');
     } finally {
@@ -149,19 +149,19 @@ export default function JobDetailPage() {
     const url = `${window.location.origin}/jobs/${jobId}/apply`;
     try {
       await navigator.clipboard.writeText(url);
-      toast.success('Link copied to clipboard!');
+      toast.success('Link copiado!');
     } catch {
-      toast.error('Failed to copy link');
+      toast.error('Falha ao copiar link');
     }
   };
 
   const handleDuplicate = async () => {
     try {
       const duplicated = await apiClient.duplicateJob(jobId);
-      toast.success('Job duplicated successfully!');
+      toast.success('Vaga duplicada com sucesso!');
       router.push(`/jobs/${duplicated.id}`);
     } catch (error) {
-      toast.error('Failed to duplicate job');
+      toast.error('Falha ao duplicar vaga');
       console.error(error);
     }
   };
@@ -170,10 +170,10 @@ export default function JobDetailPage() {
     setIsDeleting(true);
     try {
       await apiClient.deleteJob(jobId);
-      toast.success('Job deleted successfully!');
+      toast.success('Vaga excluída com sucesso!');
       router.push('/jobs');
     } catch (error) {
-      toast.error('Failed to delete job');
+      toast.error('Falha ao excluir vaga');
       console.error(error);
     } finally {
       setIsDeleting(false);
@@ -200,9 +200,9 @@ export default function JobDetailPage() {
         scoring_instructions: scoringInstructions.trim() || null,
       });
       setJob(updated);
-      toast.success('Job updated successfully!');
+      toast.success('Vaga atualizada com sucesso!');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update job');
+      toast.error(error instanceof Error ? error.message : 'Falha ao atualizar vaga');
     } finally {
       setIsSaving(false);
     }
@@ -270,7 +270,7 @@ export default function JobDetailPage() {
   };
 
   if (isLoading) {
-    return <Loading text="Loading job..." />;
+    return <Loading text="Carregando vaga..." />;
   }
 
   if (!job) {
@@ -288,7 +288,7 @@ export default function JobDetailPage() {
             onClick={() => router.push('/jobs')}
             leftIcon={<ArrowLeft className="h-4 w-4" />}
           >
-            Back
+            Voltar
           </Button>
         </div>
 
@@ -297,7 +297,7 @@ export default function JobDetailPage() {
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-gray-900">{job.title}</h1>
               <Badge variant={getStatusBadgeVariant(job.status)}>
-                {job.status.replace(/_/g, ' ')}
+                {statusOptions.find((o) => o.value === job.status)?.label || job.status}
               </Badge>
             </div>
             <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
@@ -307,7 +307,7 @@ export default function JobDetailPage() {
               </span>
               <span className="flex items-center gap-1">
                 <Briefcase className="h-4 w-4" />
-                {job.employment_type.replace(/_/g, ' ')}
+                {employmentTypeOptions.find((o) => o.value === job.employment_type)?.label || job.employment_type}
               </span>
               {job.salary_range && (
                 <span className="flex items-center gap-1">
@@ -319,10 +319,10 @@ export default function JobDetailPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={handleShare}>
+            <Button variant="ghost" size="sm" onClick={handleShare} title="Compartilhar link da vaga">
               <Share2 className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleDuplicate}>
+            <Button variant="ghost" size="sm" onClick={handleDuplicate} title="Duplicar vaga">
               <Copy className="h-4 w-4" />
             </Button>
             <Button
@@ -330,12 +330,13 @@ export default function JobDetailPage() {
               size="sm"
               onClick={() => setShowDeleteModal(true)}
               className="text-red-500 hover:text-red-700 hover:bg-red-50"
+              title="Excluir vaga"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
             {activeTab === 'details' && (
               <Button onClick={handleSave} isLoading={isSaving} leftIcon={<Save className="h-4 w-4" />}>
-                Save Changes
+                Salvar alterações
               </Button>
             )}
           </div>
@@ -353,7 +354,7 @@ export default function JobDetailPage() {
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
-            Candidates ({job._count?.candidates || 0})
+            Candidatos ({job._count?.candidates || 0})
           </button>
           <button
             onClick={() => setActiveTab('details')}
@@ -363,7 +364,7 @@ export default function JobDetailPage() {
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
-            Job Details
+            Detalhes da Vaga
           </button>
         </nav>
       </div>
@@ -375,22 +376,22 @@ export default function JobDetailPage() {
         <div className="space-y-8">
           {/* Basic Info */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Informações Básicas</h2>
             <div className="grid gap-4 md:grid-cols-2">
               <Input
-                label="Job Title"
+                label="Título da Vaga"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
               />
               <Input
-                label="Location"
+                label="Localização"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 required
               />
               <Select
-                label="Employment Type"
+                label="Tipo de Contratação"
                 options={employmentTypeOptions}
                 value={employmentType}
                 onChange={(e) => setEmploymentType(e.target.value)}
@@ -408,16 +409,16 @@ export default function JobDetailPage() {
 
           {/* Compensation */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Compensation</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Remuneração</h2>
             <div className="grid gap-4 md:grid-cols-2">
               <Input
-                label="Salary Range"
+                label="Faixa Salarial"
                 value={salaryRange}
                 onChange={(e) => setSalaryRange(e.target.value)}
-                placeholder="e.g. 100,000 - 150,000"
+                placeholder="Ex: 5.000 - 8.000"
               />
               <Select
-                label="Currency"
+                label="Moeda"
                 options={currencyOptions}
                 value={currencyCode}
                 onChange={(e) => setCurrencyCode(e.target.value)}
@@ -427,7 +428,7 @@ export default function JobDetailPage() {
 
           {/* Description */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Job Description</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Descrição da Vaga</h2>
             <RichTextEditor
               value={description}
               onChange={setDescription}
@@ -437,20 +438,9 @@ export default function JobDetailPage() {
 
           {/* Application Questions */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">Application Questions</h2>
-                <p className="text-sm text-gray-500">Custom questions for candidates</p>
-              </div>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={addQuestion}
-                leftIcon={<Plus className="h-4 w-4" />}
-              >
-                Add Question
-              </Button>
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Perguntas da Aplicação</h2>
+              <p className="text-sm text-gray-500">Perguntas personalizadas para os candidatos</p>
             </div>
 
             {applicationQuestions.length === 0 ? (
@@ -724,6 +714,18 @@ export default function JobDetailPage() {
                 ))}
               </div>
             )}
+
+            <div className="mt-4">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={addQuestion}
+                leftIcon={<Plus className="h-4 w-4" />}
+              >
+                Adicionar pergunta
+              </Button>
+            </div>
           </div>
 
           {/* AI Scoring Settings */}
@@ -835,21 +837,21 @@ export default function JobDetailPage() {
       <Modal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        title="Delete Job"
+        title="Excluir Vaga"
         footer={
           <>
             <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-              Cancel
+              Cancelar
             </Button>
             <Button variant="danger" onClick={handleDelete} isLoading={isDeleting}>
-              Delete
+              Excluir
             </Button>
           </>
         }
       >
         <p className="text-gray-600">
-          Are you sure you want to delete this job? This action cannot be undone.
-          All candidates associated with this job will also be removed.
+          Tem certeza que deseja excluir esta vaga? Esta ação não pode ser desfeita.
+          Todos os candidatos associados a esta vaga também serão removidos.
         </p>
       </Modal>
     </div>

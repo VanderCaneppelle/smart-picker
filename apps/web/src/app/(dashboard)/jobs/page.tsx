@@ -23,8 +23,23 @@ const getStatusBadgeVariant = (status: string) => {
   }
 };
 
+const EMPLOYMENT_TYPE_LABELS: Record<string, string> = {
+  full_time: 'Tempo integral',
+  part_time: 'Meio período',
+  contract: 'Contrato',
+  internship: 'Estágio',
+  freelance: 'Freelance',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  draft: 'Rascunho',
+  active: 'Ativa',
+  closed: 'Fechada',
+  on_hold: 'Pausada',
+};
+
 const formatEmploymentType = (type: string) => {
-  return type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+  return EMPLOYMENT_TYPE_LABELS[type] || type.replace(/_/g, ' ');
 };
 
 function JobsPageContent() {
@@ -46,7 +61,7 @@ function JobsPageContent() {
       });
       setJobs(data.jobs);
     } catch (error) {
-      toast.error('Failed to load jobs');
+      toast.error('Falha ao carregar vagas');
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -137,7 +152,7 @@ function JobsPageContent() {
                   </div>
                 </div>
                 <Badge variant={getStatusBadgeVariant(job.status)}>
-                  {job.status.replace(/_/g, ' ')}
+                  {STATUS_LABELS[job.status] || job.status.replace(/_/g, ' ')}
                 </Badge>
               </div>
 

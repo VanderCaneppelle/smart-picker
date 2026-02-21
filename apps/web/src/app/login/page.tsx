@@ -27,10 +27,10 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      toast.success('Login successful!');
+      toast.success('Login realizado com sucesso!');
       router.push('/dashboard');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Login failed');
+      toast.error(error instanceof Error ? error.message : 'Falha no login');
     } finally {
       setIsLoading(false);
     }
@@ -56,23 +56,23 @@ export default function LoginPage() {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <Input
-              label="Email address"
+              label="E-mail"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
-              placeholder="you@example.com"
+              placeholder="voce@exemplo.com"
             />
 
             <Input
-              label="Password"
+              label="Senha"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
-              placeholder="Enter your password"
+              placeholder="Digite sua senha"
             />
           </div>
 

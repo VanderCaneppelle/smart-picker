@@ -16,28 +16,28 @@ import {
 import type { ApplicationQuestion, QuestionType, EliminatoryCriteria } from '@hunter/core';
 
 const employmentTypeOptions = [
-  { value: 'full_time', label: 'Full Time' },
-  { value: 'part_time', label: 'Part Time' },
-  { value: 'contract', label: 'Contract' },
-  { value: 'internship', label: 'Internship' },
+  { value: 'full_time', label: 'Tempo integral' },
+  { value: 'part_time', label: 'Meio período' },
+  { value: 'contract', label: 'Contrato' },
+  { value: 'internship', label: 'Estágio' },
   { value: 'freelance', label: 'Freelance' },
 ];
 
 const statusOptions = [
-  { value: 'draft', label: 'Draft' },
-  { value: 'active', label: 'Active' },
-  { value: 'on_hold', label: 'On Hold' },
+  { value: 'draft', label: 'Rascunho' },
+  { value: 'active', label: 'Ativa' },
+  { value: 'on_hold', label: 'Pausada' },
 ];
 
 const currencyOptions = [
-  { value: '', label: 'Select currency' },
-  { value: 'USD', label: 'USD - US Dollar' },
+  { value: '', label: 'Selecione a moeda' },
+  { value: 'AED', label: 'AED - Dirham dos EAU' },
+  { value: 'BRL', label: 'BRL - Real Brasileiro' },
   { value: 'EUR', label: 'EUR - Euro' },
-  { value: 'GBP', label: 'GBP - British Pound' },
-  { value: 'BRL', label: 'BRL - Brazilian Real' },
-  { value: 'SAR', label: 'SAR - Saudi Riyal' },
-  { value: 'AED', label: 'AED - UAE Dirham' },
-  { value: 'INR', label: 'INR - Indian Rupee' },
+  { value: 'GBP', label: 'GBP - Libra Esterlina' },
+  { value: 'INR', label: 'INR - Rúpia Indiana' },
+  { value: 'SAR', label: 'SAR - Riyal Saudita' },
+  { value: 'USD', label: 'USD - Dólar Americano' },
 ];
 
 const questionTypeOptions = [
@@ -138,12 +138,12 @@ export default function NewJobPage() {
   const validate = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!title.trim()) newErrors.title = 'Title is required';
-    if (!location.trim()) newErrors.location = 'Location is required';
-    if (!description.trim()) newErrors.description = 'Description is required';
+    if (!title.trim()) newErrors.title = 'Título é obrigatório';
+    if (!location.trim()) newErrors.location = 'Localização é obrigatória';
+    if (!description.trim()) newErrors.description = 'Descrição é obrigatória';
 
     if (calendlyLink && !calendlyLink.startsWith('http')) {
-      newErrors.calendlyLink = 'Please enter a valid URL';
+      newErrors.calendlyLink = 'Insira uma URL válida';
     }
 
     setErrors(newErrors);
@@ -154,7 +154,7 @@ export default function NewJobPage() {
     e.preventDefault();
 
     if (!validate()) {
-      toast.error('Please fix the errors before submitting');
+      toast.error('Corrija os erros antes de enviar');
       return;
     }
 
@@ -177,10 +177,10 @@ export default function NewJobPage() {
         scoring_instructions: scoringInstructions.trim() || null,
       });
 
-      toast.success('Job created successfully!');
+      toast.success('Vaga criada com sucesso!');
       router.push(`/jobs/${job.id}`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to create job');
+      toast.error(error instanceof Error ? error.message : 'Falha ao criar vaga');
     } finally {
       setIsSubmitting(false);
     }
@@ -196,11 +196,11 @@ export default function NewJobPage() {
           onClick={() => router.push('/jobs')}
           leftIcon={<ArrowLeft className="h-4 w-4" />}
         >
-          Back
+          Voltar
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Create Job</h1>
-          <p className="text-gray-600 mt-1">Fill in the details for your new job posting</p>
+          <h1 className="text-2xl font-bold text-gray-900">Criar Vaga</h1>
+          <p className="text-gray-600 mt-1">Preencha os detalhes da nova vaga</p>
         </div>
       </div>
 
@@ -208,26 +208,26 @@ export default function NewJobPage() {
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Basic Info */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Informações Básicas</h2>
           <div className="grid gap-4 md:grid-cols-2">
             <Input
-              label="Job Title"
+              label="Título da Vaga"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               error={errors.title}
               required
-              placeholder="e.g. Senior Software Engineer"
+              placeholder="Ex: Desenvolvedor Full Stack Sênior"
             />
             <Input
-              label="Location"
+              label="Localização"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               error={errors.location}
               required
-              placeholder="e.g. San Francisco, CA or Remote"
+              placeholder="Ex: São Paulo, SP ou Remoto"
             />
             <Select
-              label="Employment Type"
+              label="Tipo de Contratação"
               options={employmentTypeOptions}
               value={employmentType}
               onChange={(e) => setEmploymentType(e.target.value)}
@@ -245,17 +245,17 @@ export default function NewJobPage() {
 
         {/* Compensation */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Compensation</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Remuneração</h2>
           <div className="grid gap-4 md:grid-cols-2">
             <Input
-              label="Salary Range"
+              label="Faixa Salarial"
               value={salaryRange}
               onChange={(e) => setSalaryRange(e.target.value)}
-              placeholder="e.g. 100,000 - 150,000"
-              helperText="Optional"
+              placeholder="Ex: 5.000 - 8.000"
+              helperText="Opcional"
             />
             <Select
-              label="Currency"
+              label="Moeda"
               options={currencyOptions}
               value={currencyCode}
               onChange={(e) => setCurrencyCode(e.target.value)}
@@ -265,33 +265,22 @@ export default function NewJobPage() {
 
         {/* Description */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Job Description</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Descrição da Vaga</h2>
           <RichTextEditor
-            label="Description"
+            label="Descrição"
             value={description}
             onChange={setDescription}
             error={errors.description}
             required
-            placeholder="Describe the role, responsibilities, requirements..."
+            placeholder="Descreva a vaga, responsabilidades, requisitos..."
           />
         </div>
 
         {/* Application Questions */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">Application Questions</h2>
-              <p className="text-sm text-gray-500">Add custom questions for candidates</p>
-            </div>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={addQuestion}
-              leftIcon={<Plus className="h-4 w-4" />}
-            >
-              Add Question
-            </Button>
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Perguntas da Aplicação</h2>
+            <p className="text-sm text-gray-500">Perguntas personalizadas para os candidatos</p>
           </div>
 
           {applicationQuestions.length === 0 ? (
@@ -569,6 +558,18 @@ export default function NewJobPage() {
               ))}
             </div>
           )}
+
+          <div className="mt-4">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={addQuestion}
+              leftIcon={<Plus className="h-4 w-4" />}
+            >
+              Adicionar pergunta
+            </Button>
+          </div>
         </div>
 
         {/* AI Scoring Settings */}
@@ -685,10 +686,10 @@ export default function NewJobPage() {
             variant="secondary"
             onClick={() => router.push('/jobs')}
           >
-            Cancel
+            Cancelar
           </Button>
           <Button type="submit" isLoading={isSubmitting}>
-            Create Job
+            Criar Vaga
           </Button>
         </div>
       </form>

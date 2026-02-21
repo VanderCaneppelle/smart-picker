@@ -38,7 +38,7 @@ export default function DashboardLayout({
   }, [isLoading, isAuthenticated, router]);
 
   if (isLoading) {
-    return <Loading fullScreen text="Loading..." />;
+    return <Loading fullScreen text="Carregando..." />;
   }
 
   if (!isAuthenticated) {
@@ -46,7 +46,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <Suspense fallback={<Loading fullScreen text="Loading..." />}>
+    <Suspense fallback={<Loading fullScreen text="Carregando..." />}>
       <DashboardLayoutContent pathname={pathname} user={user} onLogout={logout}>
         {children}
       </DashboardLayoutContent>
