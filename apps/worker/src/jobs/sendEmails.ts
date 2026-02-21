@@ -1,4 +1,5 @@
 import { resend, FROM_EMAIL } from '../lib/resend.js';
+import { withResendRateLimit } from '../lib/resendRateLimit.js';
 import { renderEmailTemplate, type EmailPersonalization } from '../lib/emailTemplates.js';
 
 interface Candidate {
@@ -129,13 +130,15 @@ export async function sendEmails(
   const appBody = appendSignature(renderEmailTemplate(appBodyRaw, vars), personalization);
 
   try {
-    await resend.emails.send({
-      from,
-      replyTo,
-      to: candidate.email,
-      subject: renderEmailTemplate(appSubject, vars),
-      html: appBody,
-    });
+    await withResendRateLimit(() =>
+      resend!.emails.send({
+        from,
+        replyTo,
+        to: candidate.email,
+        subject: renderEmailTemplate(appSubject, vars),
+        html: appBody,
+      })
+    );
     console.log(`[Email] Confirmation email sent to candidate: ${candidate.email}`);
   } catch (error) {
     console.error(`[Email] FAILED to send confirmation to ${candidate.email}:`, error);
@@ -145,11 +148,12 @@ export async function sendEmails(
   const recruiterEmail = job.recruiter?.email;
   if (recruiterEmail) {
     try {
-      await resend.emails.send({
-        from,
-        to: recruiterEmail,
-        subject: `Nova candidatura: ${candidate.name} – ${job.title}`,
-        html: `
+      await withResendRateLimit(() =>
+        resend!.emails.send({
+          from,
+          to: recruiterEmail,
+          subject: `Nova candidatura: ${candidate.name} – ${job.title}`,
+          html: `
           <!DOCTYPE html>
           <html>
           <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -174,7 +178,8 @@ export async function sendEmails(
           </body>
           </html>
         `,
-      });
+        })
+      );
       console.log(`[Email] Notification sent to recruiter: ${recruiterEmail}`);
     } catch (error) {
       console.error(`[Email] FAILED to send notification to recruiter ${recruiterEmail}:`, error);
@@ -208,13 +213,15 @@ export async function sendScheduleInterviewEmail(
   const html = appendSignature(renderEmailTemplate(bodyWithCalendly, vars), personalization);
 
   try {
-    await resend.emails.send({
-      from,
-      replyTo,
-      to: candidate.email,
-      subject: renderEmailTemplate(subject, vars),
-      html,
-    });
+    await withResendRateLimit(() =>
+      resend!.emails.send({
+        from,
+        replyTo,
+        to: candidate.email,
+        subject: renderEmailTemplate(subject, vars),
+        html,
+      })
+    );
     console.log(`[Email] Schedule interview email sent to ${candidate.email}`);
   } catch (error) {
     console.error(`[Email] FAILED schedule interview email to ${candidate.email}:`, error);
@@ -241,13 +248,15 @@ export async function sendRejectionEmail(
   const { from, replyTo } = buildFromAndReply(personalization);
 
   try {
-    await resend.emails.send({
-      from,
-      replyTo,
-      to: candidate.email,
-      subject: renderEmailTemplate(subject, vars),
-      html,
-    });
+    await withResendRateLimit(() =>
+      resend!.emails.send({
+        from,
+        replyTo,
+        to: candidate.email,
+        subject: renderEmailTemplate(subject, vars),
+        html,
+      })
+    );
     console.log(`[Email] Rejection email sent to ${candidate.email}`);
   } catch (error) {
     console.error(`[Email] FAILED rejection email to ${candidate.email}:`, error);
