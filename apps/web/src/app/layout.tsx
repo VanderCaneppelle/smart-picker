@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   title: 'Rankea — Seleção simples, decisão inteligente',
   description: 'Reduza o tempo de triagem e aumente a precisão da sua seleção com ranking automatizado por IA. Feito para consultores de RH.',
   keywords: ['recrutamento', 'seleção', 'RH', 'IA', 'ranking', 'candidatos', 'triagem'],
+  icons: {
+    icon: '/favicon.png',
+    apple: '/favicon.png',
+  },
   openGraph: {
     title: 'Rankea — Seleção simples, decisão inteligente',
     description: 'Ranking automatizado de candidatos por IA. Feito para consultores de RH independentes.',

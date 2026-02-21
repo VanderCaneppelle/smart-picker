@@ -29,7 +29,9 @@ import {
   Loading,
 } from '@/components/ui';
 import CandidatesSection from '@/components/CandidatesSection';
-import type { Job, ApplicationQuestion, QuestionType, EliminatoryCriteria } from '@hunter/core';
+import type { Job, ApplicationQuestion, QuestionType } from '@hunter/core';
+
+type EliminatoryCriteria = NonNullable<ApplicationQuestion['eliminatory_criteria']>;
 
 const employmentTypeOptions = [
   { value: 'full_time', label: 'Full Time' },
