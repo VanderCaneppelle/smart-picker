@@ -15,14 +15,6 @@ const STATUS_EMAIL_MESSAGES: Record<string, string> = {
   rejected: 'Um e-mail de rejeição será enviado ao candidato.',
 };
 
-const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['schedule_interview', 'hired', 'rejected'];
-
-const STATUS_EMAIL_MESSAGES: Record<string, string> = {
-  schedule_interview: 'Um e-mail de agendamento de entrevista será enviado ao candidato.',
-  hired: 'Um e-mail de contratação será enviado ao candidato.',
-  rejected: 'Um e-mail de rejeição será enviado ao candidato.',
-};
-
 interface CandidateDrawerProps {
   candidate: Candidate;
   onClose: () => void;
