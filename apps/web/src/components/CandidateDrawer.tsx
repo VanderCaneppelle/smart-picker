@@ -6,14 +6,7 @@ import { useRouter } from 'next/navigation';
 import { X, ExternalLink, FileText, Brain, MessageSquare, AlertCircle } from 'lucide-react';
 import { Button, Badge } from '@/components/ui';
 import type { Candidate, CandidateStatus, ApplicationQuestion } from '@hunter/core';
-
-const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['schedule_interview', 'hired', 'rejected'];
-
-const STATUS_EMAIL_MESSAGES: Record<string, string> = {
-  schedule_interview: 'Um e-mail de agendamento de entrevista será enviado ao candidato.',
-  hired: 'Um e-mail de contratação será enviado ao candidato.',
-  rejected: 'Um e-mail de rejeição será enviado ao candidato.',
-};
+import { EMAIL_TRIGGER_STATUSES, STATUS_EMAIL_MESSAGES } from '@/lib/candidateStatus';
 
 interface CandidateDrawerProps {
   candidate: Candidate;

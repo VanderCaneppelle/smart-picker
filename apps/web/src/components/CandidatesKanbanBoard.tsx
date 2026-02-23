@@ -17,17 +17,10 @@ import { toast } from 'sonner';
 import { AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import type { Candidate, CandidateStatus } from '@hunter/core';
+import { EMAIL_TRIGGER_STATUSES, STATUS_EMAIL_MESSAGES } from '@/lib/candidateStatus';
 import CandidatesKanbanColumn from './CandidatesKanbanColumn';
 import CandidateKanbanCard from './CandidateKanbanCard';
 import CandidateDrawer from './CandidateDrawer';
-
-const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['schedule_interview', 'hired', 'rejected'];
-
-const STATUS_EMAIL_MESSAGES: Record<string, string> = {
-  schedule_interview: 'Um e-mail de agendamento de entrevista será enviado ao candidato.',
-  hired: 'Um e-mail de contratação será enviado ao candidato.',
-  rejected: 'Um e-mail de rejeição será enviado ao candidato.',
-};
 
 const STATUS_LABELS: Record<string, string> = {
   new: 'Novos',
