@@ -79,10 +79,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Trigger rejection emails for each candidate moved to rejected
+    // Trigger rejection emails sequentially to avoid overwhelming the worker
     if (status === 'rejected') {
       for (const id of validIds) {
-        triggerRejectionEmail(id);
+        await triggerRejectionEmail(id);
       }
     }
 

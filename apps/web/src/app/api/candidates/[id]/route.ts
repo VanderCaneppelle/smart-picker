@@ -122,11 +122,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     // When status changes to schedule_interview, send email with Calendly link
     if (data.status === 'schedule_interview') {
-      triggerScheduleInterviewEmail(candidate.id);
+      await triggerScheduleInterviewEmail(candidate.id);
     }
     // When status changes to rejected, send rejection email to candidate
     if (data.status === 'rejected') {
-      triggerRejectionEmail(candidate.id);
+      await triggerRejectionEmail(candidate.id);
     }
 
     return Response.json(candidate);
