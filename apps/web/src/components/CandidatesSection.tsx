@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
-import { Loading, EmptyState } from '@/components/ui';
+import { Loading, EmptyState, Select } from '@/components/ui';
 import CandidatesViewToggle, {
   resolveInitialView,
   type CandidatesView,
@@ -11,6 +11,17 @@ import CandidatesViewToggle, {
 import CandidatesTable from './CandidatesTable';
 import CandidatesKanbanBoard from './CandidatesKanbanBoard';
 import type { Candidate } from '@hunter/core';
+
+const statusOptions = [
+  { value: '', label: 'Todos (excl. rejeitados)' },
+  { value: 'new', label: 'Novos' },
+  { value: 'reviewing', label: 'Em análise' },
+  { value: 'schedule_interview', label: 'Agendar entrevista' },
+  { value: 'shortlisted', label: 'Pré-selecionados' },
+  { value: 'flagged', label: 'Sinalizado' },
+  { value: 'rejected', label: 'Rejeitados' },
+  { value: 'hired', label: 'Contratados' },
+];
 
 interface CandidatesSectionProps {
   jobId: string;
@@ -20,6 +31,7 @@ export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [view, setView] = useState<CandidatesView>('list');
+  const [statusFilter, setStatusFilter] = useState('');
 
   const initializedRef = useRef(false);
 
@@ -46,6 +58,23 @@ export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
     fetchCandidates();
   }, [fetchCandidates]);
 
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = {
+      all: candidates.filter((c) => c.status !== 'rejected').length,
+      new: 0,
+      reviewing: 0,
+      schedule_interview: 0,
+      shortlisted: 0,
+      flagged: 0,
+      rejected: 0,
+      hired: 0,
+    };
+    candidates.forEach((c) => {
+      counts[c.status] = (counts[c.status] || 0) + 1;
+    });
+    return counts;
+  }, [candidates]);
+
   if (isLoading) {
     return <Loading text="Carregando candidatos..." />;
   }
@@ -61,8 +90,21 @@ export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <CandidatesViewToggle view={view} onViewChange={setView} />
+        {view === 'list' && (
+          <div className="flex items-center gap-3 sm:ml-auto">
+            <Select
+              options={statusOptions}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full sm:w-56"
+            />
+            <span className="text-sm text-gray-500 whitespace-nowrap">
+              {statusFilter ? (statusCounts[statusFilter] ?? 0) : statusCounts.all} candidatos
+            </span>
+          </div>
+        )}
       </div>
 
       {view === 'list' ? (
@@ -71,6 +113,8 @@ export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
           candidates={candidates}
           setCandidates={setCandidates}
           onRefetch={fetchCandidates}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
         />
       ) : (
         <CandidatesKanbanBoard candidates={candidates} setCandidates={setCandidates} />

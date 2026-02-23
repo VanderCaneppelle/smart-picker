@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { Share2, Copy, Eye, MapPin, Briefcase, Users, DollarSign } from 'lucide-react';
+import { Share2, Copy, Eye, MapPin, Briefcase, Users, DollarSign, Pencil } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { Button, Badge, SearchFilter, Loading, EmptyState } from '@/components/ui';
 import type { Job, JobStatus, EmploymentType } from '@hunter/core';
@@ -138,52 +138,60 @@ function JobsPageContent() {
           {filteredJobs.map((job) => (
             <div
               key={job.id}
-              className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow"
+              role="button"
+              tabIndex={0}
+              onClick={() => router.push(`/jobs/${job.id}`)}
+              onKeyDown={(e) => e.key === 'Enter' && router.push(`/jobs/${job.id}`)}
+              className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow cursor-pointer overflow-hidden min-w-0 flex flex-col"
             >
               {/* Card Header */}
-              <div className="flex items-start justify-between mb-3">
+              <div className="flex items-start justify-between gap-2 mb-3 min-w-0 shrink-0">
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-gray-900 truncate">
                     {job.title}
                   </h3>
-                  <div className="flex items-center gap-1 text-sm text-gray-500 mt-1">
-                    <MapPin className="h-3.5 w-3.5" />
+                  <div className="flex items-center gap-1 text-sm text-gray-500 mt-1 min-w-0">
+                    <MapPin className="h-3.5 w-3.5 shrink-0" />
                     <span className="truncate">{job.location}</span>
                   </div>
                 </div>
-                <Badge variant={getStatusBadgeVariant(job.status)}>
+                <Badge variant={getStatusBadgeVariant(job.status)} className="shrink-0">
                   {STATUS_LABELS[job.status] || job.status.replace(/_/g, ' ')}
                 </Badge>
               </div>
 
               {/* Card Info */}
-                <div className="space-y-2 mb-4">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Briefcase className="h-4 w-4" />
-                  <span>{formatEmploymentType(job.employment_type)}</span>
+              <div className="space-y-2 mb-4 min-w-0 shrink-0">
+                <div className="flex items-center gap-2 text-sm text-gray-600 min-w-0">
+                  <Briefcase className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{formatEmploymentType(job.employment_type)}</span>
                 </div>
                 {job.salary_range && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <DollarSign className="h-4 w-4" />
-                    <span>
+                  <div className="flex items-center gap-2 text-sm text-gray-600 min-w-0">
+                    <DollarSign className="h-4 w-4 shrink-0" />
+                    <span className="truncate">
                       {job.salary_range}
                       {job.currency_code && ` ${job.currency_code}`}
                     </span>
                   </div>
                 )}
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Users className="h-4 w-4" />
+                <div className="flex items-center gap-2 text-sm text-gray-600 min-w-0">
+                  <Users className="h-4 w-4 shrink-0" />
                   <span>{job._count?.candidates || 0} candidatos</span>
                 </div>
               </div>
 
-              {/* Card Actions */}
-              <div className="flex items-center gap-2 pt-3 border-t">
+              {/* Card Actions - tudo dentro do card */}
+              <div
+                className="flex flex-wrap items-center gap-2 pt-3 border-t border-gray-100 min-w-0 mt-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => handleShare(job)}
                   title="Compartilhar"
+                  className="shrink-0"
                 >
                   <Share2 className="h-4 w-4" />
                 </Button>
@@ -192,17 +200,27 @@ function JobsPageContent() {
                   size="sm"
                   onClick={() => handleDuplicate(job)}
                   title="Duplicar"
+                  className="shrink-0"
                 >
                   <Copy className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push(`/jobs/${job.id}?tab=details`)}
+                  title="Editar detalhes da vaga"
+                  className="shrink-0 text-gray-500 hover:text-gray-700"
+                >
+                  <Pencil className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="secondary"
                   size="sm"
                   onClick={() => router.push(`/jobs/${job.id}`)}
-                  leftIcon={<Eye className="h-4 w-4" />}
-                  className="ml-auto"
+                  leftIcon={<Eye className="h-4 w-4 shrink-0" />}
+                  className="shrink-0 ml-auto"
                 >
-                  Ver
+                  Ver candidatos
                 </Button>
               </div>
             </div>

@@ -101,6 +101,7 @@ export async function POST(request: NextRequest) {
         description: validation.data.description,
         salary_range: validation.data.salary_range,
         currency_code: validation.data.currency_code,
+        show_salary_to_candidates: validation.data.show_salary_to_candidates ?? false,
         calendly_link: validation.data.calendly_link || null,
         application_questions: validation.data.application_questions,
         interview_questions: validation.data.interview_questions,

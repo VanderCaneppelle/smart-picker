@@ -11,6 +11,7 @@ export interface JobItem {
   employment_type: string;
   salary_range: string | null;
   currency_code: string | null;
+  show_salary_to_candidates?: boolean;
 }
 
 const EMPLOYMENT_OPTIONS = [
@@ -103,7 +104,7 @@ export function JobListWithFilters({ jobs, brandColor }: JobListWithFiltersProps
                     <Clock className="h-3.5 w-3.5 text-gray-400" />
                     {formatEmploymentType(job.employment_type)}
                   </span>
-                  {job.salary_range && (
+                  {job.show_salary_to_candidates && job.salary_range && (
                     <span className="text-gray-600">
                       {job.salary_range}
                       {job.currency_code ? ` ${job.currency_code}` : ''}

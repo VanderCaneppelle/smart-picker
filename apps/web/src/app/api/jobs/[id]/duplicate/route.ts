@@ -50,6 +50,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         description: originalJob.description,
         salary_range: originalJob.salary_range,
         currency_code: originalJob.currency_code,
+        show_salary_to_candidates: originalJob.show_salary_to_candidates ?? false,
         calendly_link: originalJob.calendly_link,
         application_questions: applicationQuestions as unknown as Prisma.InputJsonValue,
         interview_questions: originalJob.interview_questions,

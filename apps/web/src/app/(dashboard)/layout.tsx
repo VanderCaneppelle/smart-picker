@@ -117,7 +117,7 @@ function DashboardLayoutContent({
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen flex bg-gray-50 overflow-x-hidden">
       {/* Sidebar: altura da tela, rodapé (Perfil/Config/Sair) fixo */}
       <aside className="hidden lg:flex lg:flex-col lg:w-56 lg:h-screen lg:sticky lg:top-0 lg:flex-shrink-0 bg-white border-r border-gray-200">
         <Link href="/dashboard" className="flex items-center gap-2 px-4 h-16 border-b border-gray-100 flex-shrink-0">
@@ -151,7 +151,7 @@ function DashboardLayoutContent({
                       active ? 'text-white' : primary ? 'text-emerald-600' : 'text-gray-500'
                     }`}
                   />
-                  {primary ? `+ ${label}` : label}
+                  {label}
                 </Link>
               );
             })}
@@ -162,27 +162,35 @@ function DashboardLayoutContent({
                 const active = isActive(href);
                 return (
                   <div key={href}>
-                    <button
-                      type="button"
-                      onClick={() => setVagasExpanded((v) => !v)}
-                      className={`relative flex items-center justify-between w-full gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors active:scale-[0.98] ${
+                    <div
+                      className={`relative flex items-center justify-between w-full gap-1 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                         active
                           ? 'bg-emerald-600 text-white border-l-2 border-l-emerald-700 -ml-px pl-[11px]'
-                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                          : ''
                       }`}
                     >
-                      <span className="flex items-center gap-3">
-                        <Briefcase className={`h-5 w-5 flex-shrink-0 ${active ? 'text-white' : 'text-gray-500'}`} />
-                        {label}
-                      </span>
-                      <span
-                        className={`inline-flex flex-shrink-0 transition-transform duration-200 ease-out ${
-                          vagasExpanded ? 'rotate-0' : '-rotate-90'
+                      <Link
+                        href="/jobs"
+                        className={`flex flex-1 min-w-0 items-center gap-3 rounded-md py-0.5 ${
+                          active
+                            ? 'text-white'
+                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                         }`}
                       >
-                        <ChevronDown className={`h-4 w-4 ${active ? 'text-white' : 'text-gray-500'}`} />
-                      </span>
-                    </button>
+                        <Briefcase className={`h-5 w-5 flex-shrink-0 ${active ? 'text-white' : 'text-gray-500'}`} />
+                        {label}
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => setVagasExpanded((v) => !v)}
+                        className={`p-1 rounded-md transition-transform duration-200 ease-out ${
+                          vagasExpanded ? 'rotate-0' : '-rotate-90'
+                        } ${active ? 'text-white hover:bg-white/20' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
+                        aria-label={vagasExpanded ? 'Recolher filtros' : 'Expandir filtros'}
+                      >
+                        <ChevronDown className="h-4 w-4" />
+                      </button>
+                    </div>
                     <div
                       className={`grid transition-[grid-template-rows] duration-200 ease-out ${
                         vagasExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
@@ -190,7 +198,6 @@ function DashboardLayoutContent({
                     >
                       <div className="min-h-0 overflow-hidden">
                         <div className="mt-0.5 ml-2 pl-4 border-l border-gray-200 space-y-0.5">
-                        <p className="px-2 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</p>
                         {statusFilterOptions.map(({ value, label: optLabel }) => (
                           <Link
                             key={value || 'status-all'}
@@ -230,7 +237,7 @@ function DashboardLayoutContent({
                       active ? 'text-white' : primary ? 'text-emerald-600' : 'text-gray-500'
                     }`}
                   />
-                  {primary ? `+ ${label}` : label}
+                  {label}
                 </Link>
               );
             })}
@@ -321,7 +328,7 @@ function DashboardLayoutContent({
                       className="flex items-center gap-3 px-3 py-3 rounded-lg text-emerald-600 bg-emerald-50 border border-emerald-200 font-medium"
                     >
                       <PlusCircle className="h-5 w-5" />
-                      + Criar vaga
+                      Criar vaga
                     </Link>
                     <Link
                       href="/dashboard"
@@ -393,7 +400,7 @@ function DashboardLayoutContent({
           </div>
         </header>
 
-        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 lg:py-8 overflow-auto">
+        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 lg:py-8 overflow-y-auto overflow-x-hidden min-w-0">
           {children}
         </main>
       </div>
