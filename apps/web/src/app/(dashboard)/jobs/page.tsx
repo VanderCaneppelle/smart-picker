@@ -207,7 +207,7 @@ function JobsPageContent() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => router.push(`/jobs/${job.id}?tab=details`)}
+                  onClick={() => router.push(`/jobs/${job.id}?tab=details&edit=1`)}
                   title="Editar detalhes da vaga"
                   className="shrink-0 text-gray-500 hover:text-gray-700"
                 >

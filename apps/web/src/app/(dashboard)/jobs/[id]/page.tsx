@@ -16,6 +16,8 @@ import {
   Brain,
   ShieldAlert,
   Info,
+  Pencil,
+  X,
 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { apiClient } from '@/lib/api-client';
@@ -98,6 +100,7 @@ export default function JobDetailPage() {
   const [activeTab, setActiveTab] = useState<'candidates' | 'details'>(() =>
     searchParams.get('tab') === 'details' ? 'details' : 'candidates'
   );
+  const [isEditing, setIsEditing] = useState(() => searchParams.get('edit') === '1');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -153,7 +156,11 @@ export default function JobDetailPage() {
 
   useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab === 'details') setActiveTab('details');
+    const edit = searchParams.get('edit');
+    if (tab === 'details') {
+      setActiveTab('details');
+      if (edit === '1') setIsEditing(true);
+    }
     if (tab === 'candidates') setActiveTab('candidates');
   }, [searchParams]);
 
@@ -347,10 +354,30 @@ export default function JobDetailPage() {
             >
               <Trash2 className="h-4 w-4" />
             </Button>
-            {activeTab === 'details' && (
-              <Button onClick={handleSave} isLoading={isSaving} leftIcon={<Save className="h-4 w-4" />}>
-                Salvar alterações
+            {activeTab === 'details' && !isEditing && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setIsEditing(true)}
+                leftIcon={<Pencil className="h-4 w-4" />}
+              >
+                Editar
               </Button>
+            )}
+            {activeTab === 'details' && isEditing && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsEditing(false)}
+                  leftIcon={<X className="h-4 w-4" />}
+                >
+                  Cancelar
+                </Button>
+                <Button onClick={handleSave} isLoading={isSaving} leftIcon={<Save className="h-4 w-4" />}>
+                  Salvar alterações
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -396,12 +423,16 @@ export default function JobDetailPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
+                disabled={!isEditing}
+                className={!isEditing ? 'bg-gray-50 border-gray-200' : ''}
               />
               <Input
                 label="Localização"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 required
+                disabled={!isEditing}
+                className={!isEditing ? 'bg-gray-50 border-gray-200' : ''}
               />
               <Select
                 label="Tipo de Contratação"
@@ -409,6 +440,7 @@ export default function JobDetailPage() {
                 value={employmentType}
                 onChange={(e) => setEmploymentType(e.target.value)}
                 required
+                disabled={!isEditing}
               />
               <Select
                 label="Status"
@@ -416,6 +448,7 @@ export default function JobDetailPage() {
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
                 required
+                disabled={!isEditing}
               />
             </div>
           </div>
@@ -429,12 +462,15 @@ export default function JobDetailPage() {
                 value={salaryRange}
                 onChange={(e) => setSalaryRange(e.target.value)}
                 placeholder="Ex: 5.000 - 8.000"
+                disabled={!isEditing}
+                className={!isEditing ? 'bg-gray-50 border-gray-200' : ''}
               />
               <Select
                 label="Moeda"
                 options={currencyOptions}
                 value={currencyCode}
                 onChange={(e) => setCurrencyCode(e.target.value)}
+                disabled={!isEditing}
               />
             </div>
           </div>
@@ -442,11 +478,18 @@ export default function JobDetailPage() {
           {/* Description */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Descrição da Vaga</h2>
-            <RichTextEditor
-              value={description}
-              onChange={setDescription}
-              required
-            />
+            {isEditing ? (
+              <RichTextEditor
+                value={description}
+                onChange={setDescription}
+                required
+              />
+            ) : (
+              <div
+                className="prose prose-sm max-w-none text-gray-700 border border-gray-200 rounded-lg p-4 bg-gray-50 min-h-[120px]"
+                dangerouslySetInnerHTML={{ __html: description || '<p class="text-gray-500">Sem descrição.</p>' }}
+              />
+            )}
           </div>
 
           {/* Application Questions */}
@@ -478,6 +521,8 @@ export default function JobDetailPage() {
                           value={question.question}
                           onChange={(e) => updateQuestion(index, { question: e.target.value })}
                           placeholder="Digite sua pergunta"
+                          disabled={!isEditing}
+                          className={!isEditing ? 'bg-gray-50 border-gray-200' : ''}
                         />
                         <div className="flex items-center gap-4 flex-wrap">
                           <Select
@@ -485,6 +530,7 @@ export default function JobDetailPage() {
                             value={question.type}
                             onChange={(e) => updateQuestion(index, { type: e.target.value as QuestionType })}
                             className="w-44"
+                            disabled={!isEditing}
                           />
                           <label className="flex items-center gap-2 text-sm">
                             <input
@@ -492,6 +538,7 @@ export default function JobDetailPage() {
                               checked={question.required}
                               onChange={(e) => updateQuestion(index, { required: e.target.checked })}
                               className="rounded border-gray-300"
+                              disabled={!isEditing}
                             />
                             Obrigatória
                           </label>
@@ -500,6 +547,7 @@ export default function JobDetailPage() {
                               <input
                                 type="checkbox"
                                 checked={question.is_eliminatory || false}
+                                disabled={!isEditing}
                                 onChange={(e) => {
                                   const isElim = e.target.checked;
                                   const updates: Partial<ApplicationQuestion> = { is_eliminatory: isElim };
@@ -542,31 +590,36 @@ export default function JobDetailPage() {
                                     value={option}
                                     onChange={(e) => updateOption(index, optIndex, e.target.value)}
                                     placeholder={`Opção ${optIndex + 1}`}
-                                    className="flex-1"
+                                    className={`flex-1 ${!isEditing ? 'bg-gray-50 border-gray-200' : ''}`}
+                                    disabled={!isEditing}
                                   />
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => removeOption(index, optIndex)}
-                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                    disabled={(question.options?.length || 0) <= 1}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
+                                  {isEditing && (
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => removeOption(index, optIndex)}
+                                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                      disabled={(question.options?.length || 0) <= 1}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  )}
                                 </div>
                               ))}
                             </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => addOption(index)}
-                              leftIcon={<Plus className="h-3 w-3" />}
-                              className="mt-2 text-emerald-600 hover:text-emerald-700"
-                            >
-                              Adicionar opção
-                            </Button>
+                            {isEditing && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => addOption(index)}
+                                leftIcon={<Plus className="h-3 w-3" />}
+                                className="mt-2 text-emerald-600 hover:text-emerald-700"
+                              >
+                                Adicionar opção
+                              </Button>
+                            )}
                           </div>
                         )}
 
@@ -603,7 +656,8 @@ export default function JobDetailPage() {
                                       },
                                     })
                                   }
-                                  className="text-sm border border-amber-300 rounded-md px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                  disabled={!isEditing}
+                                  className="text-sm border border-amber-300 rounded-md px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 >
                                   <option value="Sim">Sim</option>
                                   <option value="Não">Não</option>
@@ -625,6 +679,7 @@ export default function JobDetailPage() {
                                         checked={
                                           question.eliminatory_criteria?.accepted_values?.includes(option) ?? true
                                         }
+                                        disabled={!isEditing}
                                         onChange={(e) => {
                                           const current = question.eliminatory_criteria?.accepted_values || [...(question.options || [])];
                                           const updated = e.target.checked
@@ -666,7 +721,8 @@ export default function JobDetailPage() {
                                         })
                                       }
                                       placeholder="Ex: 3000"
-                                      className="w-full text-sm border border-amber-300 rounded-md px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                      disabled={!isEditing}
+                                      className="w-full text-sm border border-amber-300 rounded-md px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                     />
                                   </div>
                                   <div>
@@ -683,7 +739,8 @@ export default function JobDetailPage() {
                                         })
                                       }
                                       placeholder="Ex: 8000"
-                                      className="w-full text-sm border border-amber-300 rounded-md px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                      disabled={!isEditing}
+                                      className="w-full text-sm border border-amber-300 rounded-md px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                     />
                                   </div>
                                   <div>
@@ -701,7 +758,8 @@ export default function JobDetailPage() {
                                           },
                                         })
                                       }
-                                      className="w-full text-sm border border-amber-300 rounded-md px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                      disabled={!isEditing}
+                                      className="w-full text-sm border border-amber-300 rounded-md px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                     />
                                   </div>
                                 </div>
@@ -713,32 +771,36 @@ export default function JobDetailPage() {
                           </div>
                         )}
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeQuestion(index)}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {isEditing && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeQuestion(index)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
             )}
 
-            <div className="mt-4">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={addQuestion}
-                leftIcon={<Plus className="h-4 w-4" />}
-              >
-                Adicionar pergunta
-              </Button>
-            </div>
+            {isEditing && (
+              <div className="mt-4">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={addQuestion}
+                  leftIcon={<Plus className="h-4 w-4" />}
+                >
+                  Adicionar pergunta
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* AI Scoring Settings */}
@@ -766,7 +828,8 @@ export default function JobDetailPage() {
                   max="10"
                   value={resumeWeight}
                   onChange={(e) => setResumeWeight(Number(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+                  disabled={!isEditing}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none accent-emerald-600 disabled:cursor-not-allowed disabled:opacity-70"
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Experiência, formação e habilidades do currículo
@@ -787,7 +850,8 @@ export default function JobDetailPage() {
                   max="10"
                   value={answersWeight}
                   onChange={(e) => setAnswersWeight(Number(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+                  disabled={!isEditing}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none accent-emerald-600 disabled:cursor-not-allowed disabled:opacity-70"
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Qualidade das respostas às perguntas da aplicação
@@ -820,6 +884,7 @@ export default function JobDetailPage() {
                 onChange={(e) => setScoringInstructions(e.target.value)}
                 placeholder="Ex: Priorize candidatos com experiência em React. Valorize certificações AWS. Candidatos com inglês fluente devem ter pontuação maior..."
                 rows={3}
+                disabled={!isEditing}
               />
             </div>
           </div>
@@ -833,6 +898,8 @@ export default function JobDetailPage() {
               onChange={(e) => setCalendlyLink(e.target.value)}
               placeholder="https://calendly.com/seu-link"
               helperText="Opcional. Se não preencher, o agendamento deverá ser feito manualmente."
+              disabled={!isEditing}
+              className={!isEditing ? 'bg-gray-50 border-gray-200' : ''}
             />
             <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex gap-3">
               <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
@@ -857,14 +924,17 @@ export default function JobDetailPage() {
               onChange={(e) => setInterviewQuestions(e.target.value)}
               placeholder="Perguntas para fazer durante a entrevista ou anotações internas..."
               rows={4}
+              disabled={!isEditing}
             />
           </div>
 
-          <div className="flex justify-end">
-            <Button onClick={handleSave} isLoading={isSaving} leftIcon={<Save className="h-4 w-4" />}>
-              Salvar alterações
-            </Button>
-          </div>
+          {isEditing && (
+            <div className="flex justify-end">
+              <Button onClick={handleSave} isLoading={isSaving} leftIcon={<Save className="h-4 w-4" />}>
+                Salvar alterações
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
