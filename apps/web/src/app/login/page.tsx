@@ -100,40 +100,6 @@ export default function LoginPage() {
             </p>
           </div>
         </div>
-
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <Input
-              label="E-mail"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              placeholder="voce@exemplo.com"
-            />
-
-            <Input
-              label="Senha"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              placeholder="Digite sua senha"
-            />
-          </div>
-
-          <Button
-            type="submit"
-            className="w-full bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500"
-            size="lg"
-            isLoading={isLoading}
-          >
-            Entrar
-          </Button>
-        </form>
-
       </div>
     </div>
   );
