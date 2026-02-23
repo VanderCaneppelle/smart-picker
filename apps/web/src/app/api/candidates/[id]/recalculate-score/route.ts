@@ -35,8 +35,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       data: { needs_scoring: true },
     });
 
-    // Trigger the worker to process this candidate
-    triggerWorkerProcess(id);
+    // Trigger the worker to recalculate score only (no emails)
+    triggerWorkerProcess(id, { skipEmails: true });
 
     return Response.json({
       message: 'Recalculation started. Score will be updated shortly.',

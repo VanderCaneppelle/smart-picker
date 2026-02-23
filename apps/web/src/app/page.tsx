@@ -28,7 +28,12 @@ export default function LandingPage() {
               <span className="text-xl font-bold text-gray-900">Rankea</span>
             </div>
             <div className="flex items-center gap-4">
-              {/* Links de login/signup ocultos por enquanto */}
+              <Link
+                href="/login"
+                className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+              >
+                Entrar
+              </Link>
             </div>
           </div>
         </div>
@@ -47,7 +52,17 @@ export default function LandingPage() {
             <p className="text-xl sm:text-2xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
               Reduza o tempo de triagem e aumente a precisão da sua seleção com ranking automatizado por IA.
             </p>
-            {/* CTAs removidos temporariamente */}
+            <div className="flex flex-col items-center gap-3">
+              <Link
+                href="/signup"
+                className="inline-flex items-center justify-center px-8 py-4 rounded-xl font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/25 transition-all hover:shadow-emerald-500/30"
+              >
+                Criar minha primeira vaga
+              </Link>
+              <p className="text-sm text-gray-500">
+                Sem cartão de crédito. Comece em minutos.
+              </p>
+            </div>
           </div>
 
           {/* Hero Visual */}

@@ -4,8 +4,16 @@ import { sendEmails } from './sendEmails.js';
 
 const BATCH_SIZE = parseInt(process.env.BATCH_SIZE || '5', 10);
 
-/** Process a single candidate by ID (event-driven)  upda*/
-export async function processCandidate(candidateId: string): Promise<{ ok: boolean; error?: string }> {
+export interface ProcessCandidateOptions {
+  /** When true, only recalculate score; do not send "candidatura recebida" or recruiter notification. Used for "recalcular nota". */
+  skipEmails?: boolean;
+}
+
+/** Process a single candidate by ID (event-driven). */
+export async function processCandidate(
+  candidateId: string,
+  options?: ProcessCandidateOptions
+): Promise<{ ok: boolean; error?: string }> {
   try {
     const candidate = await prisma.candidate.findFirst({
       where: { id: candidateId, deleted_at: null, needs_scoring: true },
@@ -32,7 +40,7 @@ export async function processCandidate(candidateId: string): Promise<{ ok: boole
       return { ok: false, error: 'Candidate not found or already processed' };
     }
 
-    console.log(`Processing candidate: ${candidate.name} (${candidate.id})`);
+    console.log(`Processing candidate: ${candidate.name} (${candidate.id})${options?.skipEmails ? ' (score only, no emails)' : ''}`);
 
     const scores = await scoreCandidate(candidate);
 
@@ -48,8 +56,10 @@ export async function processCandidate(candidateId: string): Promise<{ ok: boole
       },
     });
 
-    const personalization = candidate.job.recruiter?.emailPersonalization ?? null;
-    await sendEmails(candidate, candidate.job, personalization);
+    if (!options?.skipEmails) {
+      const personalization = candidate.job.recruiter?.emailPersonalization ?? null;
+      await sendEmails(candidate, candidate.job, personalization);
+    }
 
     const flags = (candidate.disqualification_flags || []) as Array<{ severity?: string }>;
     const hasElimination = flags.some((f) => f.severity === 'eliminated');

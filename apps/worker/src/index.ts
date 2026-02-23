@@ -51,6 +51,7 @@ const server = http.createServer(async (req, res) => {
     try {
       const body = await parseBody(req);
       const candidateId = typeof body.candidateId === 'string' ? body.candidateId : null;
+      const skipEmails = body.skipEmails === true;
 
       if (!candidateId) {
         res.writeHead(400);
@@ -58,7 +59,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      const result = await processCandidate(candidateId);
+      const result = await processCandidate(candidateId, { skipEmails });
 
       if (result.ok) {
         res.writeHead(200);
