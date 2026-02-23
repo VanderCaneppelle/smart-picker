@@ -1,10 +1,15 @@
 const WORKER_TRIGGER_TIMEOUT_MS = 12_000;
 
+export interface TriggerProcessOptions {
+  /** When true, worker only recalculates score and does not send any emails (e.g. for "recalcular nota"). */
+  skipEmails?: boolean;
+}
+
 /**
  * Triggers the worker to process a candidate (event-driven).
  * Returns a Promise so the caller can await and ensure the request is sent (important in serverless).
  */
-export function triggerWorkerProcess(candidateId: string): Promise<void> {
+export function triggerWorkerProcess(candidateId: string, options?: TriggerProcessOptions): Promise<void> {
   const workerUrl = process.env.WORKER_URL;
   const workerSecret = process.env.WORKER_SECRET;
 
@@ -23,7 +28,7 @@ export function triggerWorkerProcess(candidateId: string): Promise<void> {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${workerSecret}`,
     },
-    body: JSON.stringify({ candidateId }),
+    body: JSON.stringify({ candidateId, skipEmails: options?.skipEmails === true }),
     signal: controller.signal,
   })
     .then(async (res) => {

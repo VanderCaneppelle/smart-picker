@@ -347,6 +347,11 @@ export default function JobDetailPage() {
             >
               <Trash2 className="h-4 w-4" />
             </Button>
+            {activeTab === 'details' && (
+              <Button onClick={handleSave} isLoading={isSaving} leftIcon={<Save className="h-4 w-4" />}>
+                Salvar alterações
+              </Button>
+            )}
           </div>
         </div>
       </div>
