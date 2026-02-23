@@ -104,6 +104,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     if (data.description !== undefined) updateData.description = data.description;
     if (data.salary_range !== undefined) updateData.salary_range = data.salary_range;
     if (data.currency_code !== undefined) updateData.currency_code = data.currency_code;
+    if (data.show_salary_to_candidates !== undefined) updateData.show_salary_to_candidates = data.show_salary_to_candidates;
     if (data.calendly_link !== undefined) updateData.calendly_link = data.calendly_link || null;
     if (data.application_questions !== undefined) updateData.application_questions = data.application_questions;
     if (data.interview_questions !== undefined) updateData.interview_questions = data.interview_questions;

@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Evita barra de rolagem horizontal na página quando conteúdo (ex.: tabela) tem scroll próprio */
+html,
+body {
+  overflow-x: hidden;
+}
+
 /* TipTap Editor Styles */
 .tiptap {
   @apply outline-none min-h-[200px];

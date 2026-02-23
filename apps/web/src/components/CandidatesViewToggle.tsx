@@ -9,7 +9,7 @@ export type CandidatesView = 'list' | 'kanban';
 const STORAGE_KEY = 'candidates_view';
 
 export function resolveInitialView(): CandidatesView {
-  if (typeof window === 'undefined') return 'list';
+  if (typeof window === 'undefined') return 'kanban';
 
   const urlView = new URLSearchParams(window.location.search).get('view');
   if (urlView === 'list' || urlView === 'kanban') {
@@ -20,7 +20,7 @@ export function resolveInitialView(): CandidatesView {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored === 'list' || stored === 'kanban') return stored;
 
-  return 'list';
+  return 'kanban';
 }
 
 interface CandidatesViewToggleProps {

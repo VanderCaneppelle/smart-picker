@@ -33,6 +33,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         job_id: id,
         deleted_at: null,
       },
+      include: {
+        job: {
+          select: { application_questions: true },
+        },
+      },
       orderBy: [
         { fit_score: 'desc' },
         { created_at: 'desc' },

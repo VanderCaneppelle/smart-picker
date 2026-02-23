@@ -89,9 +89,10 @@ model Job {
   location              String
   employment_type       String      // full_time, part_time, contract, internship, freelance
   description           String      @db.Text
-  salary_range          String?
-  currency_code         String?
-  calendly_link         String?
+  salary_range               String?
+  currency_code              String?
+  show_salary_to_candidates  Boolean   @default(false)
+  calendly_link              String?
   application_questions Json        @default("[]")
   interview_questions   String?     @db.Text
   status                String      @default("draft")

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { ArrowLeft, Plus, Trash2, Brain, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Brain, ShieldAlert, Info } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { apiClient } from '@/lib/api-client';
 import {
@@ -61,7 +61,8 @@ export default function NewJobPage() {
   const [employmentType, setEmploymentType] = useState('full_time');
   const [description, setDescription] = useState('');
   const [salaryRange, setSalaryRange] = useState('');
-  const [currencyCode, setCurrencyCode] = useState('');
+  const [currencyCode, setCurrencyCode] = useState('BRL');
+  const [showSalaryToCandidates, setShowSalaryToCandidates] = useState(false);
   const [calendlyLink, setCalendlyLink] = useState('');
   const [interviewQuestions, setInterviewQuestions] = useState('');
   const [status, setStatus] = useState('draft');
@@ -168,6 +169,7 @@ export default function NewJobPage() {
         description,
         salary_range: salaryRange.trim() || null,
         currency_code: (currencyCode || null) as 'USD' | 'EUR' | 'SAR' | 'AED' | 'KWD' | 'QAR' | 'BHD' | 'OMR' | 'INR' | 'GBP' | 'BRL' | null,
+        show_salary_to_candidates: showSalaryToCandidates,
         calendly_link: calendlyLink.trim() || null,
         interview_questions: interviewQuestions.trim() || null,
         status: status as 'draft' | 'active' | 'on_hold',
@@ -252,7 +254,7 @@ export default function NewJobPage() {
               value={salaryRange}
               onChange={(e) => setSalaryRange(e.target.value)}
               placeholder="Ex: 5.000 - 8.000"
-              helperText="Opcional"
+              helperText="Controle interno. Só será exibida aos candidatos se você marcar a opção abaixo."
             />
             <Select
               label="Moeda"
@@ -261,6 +263,15 @@ export default function NewJobPage() {
               onChange={(e) => setCurrencyCode(e.target.value)}
             />
           </div>
+          <label className="mt-4 flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showSalaryToCandidates}
+              onChange={(e) => setShowSalaryToCandidates(e.target.checked)}
+              className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+            />
+            <span>Exibir faixa salarial para os candidatos na página da vaga</span>
+          </label>
         </div>
 
         {/* Description */}
@@ -656,27 +667,41 @@ export default function NewJobPage() {
           </div>
         </div>
 
-        {/* Additional Settings */}
+        {/* Agendamento de entrevista */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Configurações Adicionais</h2>
-          <div className="space-y-4">
-            <Input
-              label="Link do Calendly"
-              value={calendlyLink}
-              onChange={(e) => setCalendlyLink(e.target.value)}
-              error={errors.calendlyLink}
-              placeholder="https://calendly.com/your-link"
-              helperText="Opcional - para agendamento de entrevistas"
-            />
-            <Textarea
-              label="Perguntas da Entrevista (Interno)"
-              value={interviewQuestions}
-              onChange={(e) => setInterviewQuestions(e.target.value)}
-              placeholder="Perguntas para fazer durante a entrevista..."
-              helperText="Visível apenas para recrutadores"
-              rows={4}
-            />
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Agendamento de entrevista</h2>
+          <Input
+            label="Link do Calendly"
+            value={calendlyLink}
+            onChange={(e) => setCalendlyLink(e.target.value)}
+            error={errors.calendlyLink}
+            placeholder="https://calendly.com/seu-link"
+            helperText="Opcional. Se não preencher, o agendamento deverá ser feito manualmente."
+          />
+          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex gap-3">
+            <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+            <div className="text-sm text-blue-800">
+              <p className="font-medium mb-1">Envio automático de e-mail</p>
+              <p>
+                Se você preencher o link do Calendly acima, ao mover um candidato para &quot;Agendar entrevista&quot;
+                será enviado automaticamente um e-mail com o link para ele agendar. Caso não preencha,
+                você precisará fazer o agendamento manualmente com cada candidato.
+              </p>
+            </div>
           </div>
+        </div>
+
+        {/* Anotações internas */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Anotações internas</h2>
+          <p className="text-sm text-gray-500 mb-4">Visível apenas para recrutadores. Use para perguntas da entrevista ou observações.</p>
+          <Textarea
+            label="Perguntas da entrevista / notas"
+            value={interviewQuestions}
+            onChange={(e) => setInterviewQuestions(e.target.value)}
+            placeholder="Perguntas para fazer durante a entrevista ou anotações internas..."
+            rows={4}
+          />
         </div>
 
         {/* Submit */}

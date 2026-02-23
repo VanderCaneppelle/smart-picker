@@ -34,6 +34,9 @@ interface CandidatesTableProps {
   candidates: Candidate[];
   setCandidates: React.Dispatch<React.SetStateAction<Candidate[]>>;
   onRefetch: () => Promise<void>;
+  /** Quando fornecido, o filtro de status fica na seção (lateral direita); a tabela não exibe o select de status. */
+  statusFilter?: string;
+  onStatusFilterChange?: (value: string) => void;
 }
 
 const statusOptions = [
@@ -284,9 +287,14 @@ export default function CandidatesTable({
   candidates,
   setCandidates,
   onRefetch,
+  statusFilter: statusFilterProp,
+  onStatusFilterChange,
 }: CandidatesTableProps) {
   const router = useRouter();
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilterInternal, setStatusFilterInternal] = useState('');
+  const statusFilter = statusFilterProp ?? statusFilterInternal;
+  const setStatusFilter = onStatusFilterChange ?? setStatusFilterInternal;
+  const filterControlledExternally = statusFilterProp !== undefined;
   const [sortField, setSortField] = useState<SortField>('fit_score');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [recalculatingId, setRecalculatingId] = useState<string | null>(null);
@@ -295,6 +303,10 @@ export default function CandidatesTable({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   const [pendingStatusChange, setPendingStatusChange] = useState<{ candidateId: string; newStatus: CandidateStatus } | null>(null);
+
+  useEffect(() => {
+    if (filterControlledExternally) setSelectedIds(new Set());
+  }, [statusFilter, filterControlledExternally]);
 
   const fetchSavedIds = useCallback(async () => {
     try {
@@ -499,23 +511,22 @@ export default function CandidatesTable({
 
   return (
     <div>
-      {/* Filters & Bulk Actions */}
+      {/* Bulk Actions (filtro de status fica na seção quando filterControlledExternally) */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-        <div className="flex items-center gap-3">
-          <Select
-            options={statusOptions.map((opt) => ({
-              ...opt,
-              label: `${opt.label} (${opt.value ? statusCounts[opt.value] || 0 : statusCounts.all})`,
-            }))}
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              setSelectedIds(new Set());
-            }}
-            className="w-full sm:w-64"
-          />
-        </div>
-        <div className="flex items-center gap-3">
+        {!filterControlledExternally && (
+          <div className="flex items-center gap-3">
+            <Select
+              options={statusOptions}
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setSelectedIds(new Set());
+              }}
+              className="w-full sm:w-64"
+            />
+          </div>
+        )}
+        <div className="flex items-center gap-3 sm:ml-auto">
           {selectedIds.size > 0 && (
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600 font-medium">
@@ -541,9 +552,11 @@ export default function CandidatesTable({
               </button>
             </div>
           )}
-          <span className="text-sm text-gray-500 sm:shrink-0">
-            {filteredAndSortedCandidates.length} candidatos
-          </span>
+          {!filterControlledExternally && (
+            <span className="text-sm text-gray-500 sm:shrink-0">
+              {filteredAndSortedCandidates.length} candidatos
+            </span>
+          )}
         </div>
       </div>
 
@@ -632,12 +645,12 @@ export default function CandidatesTable({
         })}
       </div>
 
-      {/* Desktop: table */}
-      <div className="hidden md:block bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <table className="w-full table-fixed">
+      {/* Desktop: table - overflow-x-auto + min-width nas colunas para evitar sobreposição */}
+      <div className="hidden md:block bg-white rounded-lg border border-gray-200 overflow-x-auto">
+        <table className="w-full min-w-[960px] table-auto">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className={thClass} style={{ width: '3%' }}>
+              <th className={`${thClass} whitespace-nowrap`} style={{ minWidth: 44 }}>
                 <input
                   type="checkbox"
                   checked={allVisibleSelected}
@@ -645,12 +658,12 @@ export default function CandidatesTable({
                   className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
                 />
               </th>
-              <th className={thClass} style={{ width: '17%' }}>
+              <th className={`${thClass} whitespace-nowrap`} style={{ minWidth: 140 }}>
                 Candidato
               </th>
               <th
-                className={thSortClass}
-                style={{ width: '9%' }}
+                className={`${thSortClass} whitespace-nowrap`}
+                style={{ minWidth: 90 }}
                 onClick={() => handleSort('created_at')}
               >
                 <div className="flex items-center gap-1">
@@ -658,15 +671,15 @@ export default function CandidatesTable({
                   <SortIcon direction={sortField === 'created_at' ? sortDirection : null} />
                 </div>
               </th>
-              <th className={thClass} style={{ width: '6%' }}>
+              <th className={`${thClass} whitespace-nowrap`} style={{ minWidth: 70 }}>
                 LinkedIn
               </th>
-              <th className={thClass} style={{ width: '6%' }}>
+              <th className={`${thClass} whitespace-nowrap`} style={{ minWidth: 82 }}>
                 Currículo
               </th>
               <th
-                className={thSortClass}
-                style={{ width: '7%' }}
+                className={`${thSortClass} whitespace-nowrap`}
+                style={{ minWidth: 78 }}
                 onClick={() => handleSort('resume_rating')}
               >
                 <div className="flex items-center gap-1">
@@ -675,8 +688,8 @@ export default function CandidatesTable({
                 </div>
               </th>
               <th
-                className={thSortClass}
-                style={{ width: '8%' }}
+                className={`${thSortClass} whitespace-nowrap`}
+                style={{ minWidth: 88 }}
                 onClick={() => handleSort('answer_quality_rating')}
               >
                 <div className="flex items-center gap-1">
@@ -687,8 +700,8 @@ export default function CandidatesTable({
                 </div>
               </th>
               <th
-                className={thSortClass}
-                style={{ width: '8%' }}
+                className={`${thSortClass} whitespace-nowrap`}
+                style={{ minWidth: 82 }}
                 onClick={() => handleSort('fit_score')}
               >
                 <div className="flex items-center gap-1">
@@ -696,16 +709,16 @@ export default function CandidatesTable({
                   <SortIcon direction={sortField === 'fit_score' ? sortDirection : null} />
                 </div>
               </th>
-              <th className={thClass} style={{ width: '8%' }}>
+              <th className={`${thClass} whitespace-nowrap`} style={{ minWidth: 98 }}>
                 Elegibilidade
               </th>
-              <th className={thClass} style={{ width: '12%' }}>
+              <th className={`${thClass} whitespace-nowrap`} style={{ minWidth: 120 }}>
                 Status
               </th>
-              <th className={thClass} style={{ width: '9%' }}>
+              <th className={`${thClass} whitespace-nowrap`} style={{ minWidth: 72 }}>
                 Convite
               </th>
-              <th className={thClass} style={{ width: '3%' }}>
+              <th className={`${thClass} whitespace-nowrap`} style={{ minWidth: 44 }}>
                 <span className="sr-only">Ações</span>
               </th>
             </tr>

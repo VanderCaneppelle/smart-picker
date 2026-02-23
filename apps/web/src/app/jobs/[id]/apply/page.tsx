@@ -282,7 +282,7 @@ export default function ApplyPage() {
                     <Briefcase className="h-4 w-4 text-gray-500" />
                     {formatEmploymentType(job.employment_type)}
                   </span>
-                  {job.salary_range && (
+                  {job.show_salary_to_candidates && job.salary_range && (
                     <span className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full">
                       <DollarSign className="h-4 w-4" />
                       {job.salary_range} {job.currency_code}

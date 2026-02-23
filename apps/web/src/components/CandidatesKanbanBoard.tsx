@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
   DndContext,
@@ -14,7 +14,7 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { toast } from 'sonner';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import type { Candidate, CandidateStatus } from '@hunter/core';
 import CandidatesKanbanColumn from './CandidatesKanbanColumn';
@@ -52,6 +52,9 @@ const SECONDARY_COLUMNS: { status: CandidateStatus; title: string; headerColor: 
   { status: 'rejected', title: 'Rejeitados', headerColor: 'bg-neutral-100' },
 ];
 
+const HIRED_COLUMN = MAIN_COLUMNS.find((c) => c.status === 'hired')!;
+const MAIN_WITHOUT_HIRED = MAIN_COLUMNS.filter((c) => c.status !== 'hired');
+
 const ALL_STATUSES = [...MAIN_COLUMNS, ...SECONDARY_COLUMNS].map((c) => c.status);
 
 interface CandidatesKanbanBoardProps {
@@ -67,6 +70,35 @@ export default function CandidatesKanbanBoard({
   const [showEliminated, setShowEliminated] = useState(false);
   const [drawerCandidateId, setDrawerCandidateId] = useState<string | null>(null);
   const [pendingDragChange, setPendingDragChange] = useState<{ candidateId: string; newStatus: CandidateStatus } | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollButtons = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 0);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 2);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    updateScrollButtons();
+    el.addEventListener('scroll', updateScrollButtons);
+    const ro = new ResizeObserver(updateScrollButtons);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener('scroll', updateScrollButtons);
+      ro.disconnect();
+    };
+  }, [updateScrollButtons, showEliminated]);
+
+  const scroll = (dir: 'left' | 'right') => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir === 'left' ? -280 : 280, behavior: 'smooth' });
+  };
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
@@ -147,7 +179,7 @@ export default function CandidatesKanbanBoard({
   }, []);
 
   const visibleColumns = showEliminated
-    ? [...MAIN_COLUMNS, ...SECONDARY_COLUMNS]
+    ? [...MAIN_WITHOUT_HIRED, ...SECONDARY_COLUMNS, HIRED_COLUMN]
     : MAIN_COLUMNS;
 
   return (
@@ -180,8 +212,23 @@ export default function CandidatesKanbanBoard({
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-3 overflow-x-auto pb-4">
-          {visibleColumns.map((col) => (
+        <div className="relative flex items-stretch">
+          {canScrollLeft && (
+            <button
+              type="button"
+              onClick={() => scroll('left')}
+              className="absolute left-0 top-0 z-10 h-full w-10 flex-shrink-0 bg-gradient-to-r from-gray-100 to-transparent flex items-center justify-center text-gray-600 hover:from-gray-200 hover:text-gray-900 transition-opacity"
+              aria-label="Rolar colunas para a esquerda"
+            >
+              <ChevronLeft className="h-6 w-6" />
+            </button>
+          )}
+          <div
+            ref={scrollContainerRef}
+            className="flex gap-3 overflow-x-auto overflow-y-hidden pb-4 scroll-smooth snap-x snap-mandatory min-w-0"
+            style={{ scrollbarGutter: 'stable' }}
+          >
+            {visibleColumns.map((col) => (
             <CandidatesKanbanColumn
               key={col.status}
               status={col.status}
@@ -191,6 +238,17 @@ export default function CandidatesKanbanBoard({
               onCardClick={handleCardClick}
             />
           ))}
+          </div>
+          {canScrollRight && (
+            <button
+              type="button"
+              onClick={() => scroll('right')}
+              className="absolute right-0 top-0 z-10 h-full w-10 flex-shrink-0 bg-gradient-to-l from-gray-100 to-transparent flex items-center justify-center text-gray-600 hover:from-gray-200 hover:text-gray-900 transition-opacity"
+              aria-label="Rolar colunas para a direita"
+            >
+              <ChevronRight className="h-6 w-6" />
+            </button>
+          )}
         </div>
 
         <DragOverlay dropAnimation={null}>

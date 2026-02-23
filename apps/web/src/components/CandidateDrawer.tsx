@@ -5,7 +5,15 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { X, ExternalLink, FileText, Brain, MessageSquare, AlertCircle } from 'lucide-react';
 import { Button, Badge } from '@/components/ui';
-import type { Candidate, CandidateStatus } from '@hunter/core';
+import type { Candidate, CandidateStatus, ApplicationQuestion } from '@hunter/core';
+
+const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['schedule_interview', 'hired', 'rejected'];
+
+const STATUS_EMAIL_MESSAGES: Record<string, string> = {
+  schedule_interview: 'Um e-mail de agendamento de entrevista será enviado ao candidato.',
+  hired: 'Um e-mail de contratação será enviado ao candidato.',
+  rejected: 'Um e-mail de rejeição será enviado ao candidato.',
+};
 
 const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['schedule_interview', 'hired', 'rejected'];
 
@@ -352,6 +360,8 @@ function SummaryTab({ candidate }: { candidate: Candidate }) {
 
 function AnswersTab({ candidate }: { candidate: Candidate }) {
   const answers = candidate.application_answers;
+  const questions = (candidate.job?.application_questions || []) as ApplicationQuestion[];
+  const questionById = new Map(questions.map((q) => [q.id, q]));
 
   if (!answers || answers.length === 0) {
     return <p className="text-sm text-gray-400 italic">Nenhuma resposta registrada</p>;
@@ -359,15 +369,18 @@ function AnswersTab({ candidate }: { candidate: Candidate }) {
 
   return (
     <div className="space-y-4">
-      {answers.map((answer, index) => (
-        <div
-          key={answer.question_id || index}
-          className="border-b border-gray-100 pb-3 last:border-0"
-        >
-          <p className="text-xs font-medium text-gray-500 mb-1">Pergunta {index + 1}</p>
-          <p className="text-sm text-gray-800 whitespace-pre-line">{answer.answer}</p>
-        </div>
-      ))}
+      {answers.map((answer, index) => {
+        const questionText = questionById.get(answer.question_id)?.question || `Pergunta ${index + 1}`;
+        return (
+          <div
+            key={answer.question_id || index}
+            className="border-b border-gray-100 pb-3 last:border-0"
+          >
+            <p className="text-sm font-medium text-gray-900 mb-1">{questionText}</p>
+            <p className="text-sm text-gray-800 whitespace-pre-line">{answer.answer}</p>
+          </div>
+        );
+      })}
     </div>
   );
 }

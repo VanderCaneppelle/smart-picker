@@ -48,6 +48,7 @@ async function getRecruiterBySlug(slug: string) {
       employment_type: true,
       salary_range: true,
       currency_code: true,
+      show_salary_to_candidates: true,
       created_at: true,
     },
     orderBy: { created_at: 'desc' },

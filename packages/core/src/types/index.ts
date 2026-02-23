@@ -100,6 +100,7 @@ export interface Job {
   description: string;
   salary_range?: string | null;
   currency_code?: Currency | null;
+  show_salary_to_candidates?: boolean;
   calendly_link?: string | null;
   application_questions: ApplicationQuestion[];
   interview_questions?: string | null;
@@ -122,6 +123,7 @@ export interface CreateJobInput {
   description: string;
   salary_range?: string | null;
   currency_code?: Currency | null;
+  show_salary_to_candidates?: boolean;
   calendly_link?: string | null;
   application_questions?: ApplicationQuestion[];
   interview_questions?: string | null;
@@ -138,6 +140,7 @@ export interface UpdateJobInput {
   description?: string;
   salary_range?: string | null;
   currency_code?: Currency | null;
+  show_salary_to_candidates?: boolean;
   calendly_link?: string | null;
   application_questions?: ApplicationQuestion[];
   interview_questions?: string | null;
