@@ -19,6 +19,7 @@ import {
 import { apiClient } from '@/lib/api-client';
 import { Button, Badge, Select, Loading } from '@/components/ui';
 import type { Candidate, CandidateStatus, ApplicationQuestion, ApplicationAnswer } from '@hunter/core';
+import type { CandidateHistoryEvent } from '@/lib/api-client';
 
 const statusOptions = [
   { value: 'new', label: 'Novo' },
@@ -63,6 +64,7 @@ export default function CandidateDetailPage() {
   const candidateId = params.id as string;
 
   const [candidate, setCandidate] = useState<Candidate | null>(null);
+  const [events, setEvents] = useState<CandidateHistoryEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchCandidate = useCallback(async () => {
@@ -70,6 +72,8 @@ export default function CandidateDetailPage() {
       setIsLoading(true);
       const data = await apiClient.getCandidate(candidateId);
       setCandidate(data);
+      const eventsData = await apiClient.getCandidateEvents(candidateId);
+      setEvents(eventsData.events || []);
     } catch (error) {
       toast.error('Falha ao carregar candidato');
       console.error(error);
@@ -89,6 +93,8 @@ export default function CandidateDetailPage() {
     try {
       const updated = await apiClient.updateCandidate(candidateId, { status: newStatus });
       setCandidate(updated);
+      const eventsData = await apiClient.getCandidateEvents(candidateId);
+      setEvents(eventsData.events || []);
       toast.success('Status atualizado');
     } catch (error) {
       toast.error('Falha ao atualizar status');
@@ -110,6 +116,30 @@ export default function CandidateDetailPage() {
 
   // Map answers by question_id for easy lookup
   const answersMap = new Map(applicationAnswers.map((a) => [a.question_id, a.answer]));
+
+  const EVENT_LABELS: Record<string, string> = {
+    application_submitted: 'Candidatura recebida',
+    status_changed: 'Status alterado',
+    email_sent_interview: 'E-mail de entrevista enviado',
+    email_sent_rejection: 'E-mail de rejeição enviado',
+    score_recalculated: 'Recálculo de nota solicitado',
+  };
+
+  const historyEvents: CandidateHistoryEvent[] = [
+    {
+      id: `application-${candidate.id}`,
+      candidate_id: candidate.id,
+      job_id: candidate.job_id,
+      event_type: 'application_submitted',
+      from_status: null,
+      to_status: 'new',
+      message: 'Data de aplicação registrada',
+      metadata: null,
+      created_by: null,
+      created_at: candidate.created_at,
+    },
+    ...events.filter((event) => event.event_type !== 'application_submitted'),
+  ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
   return (
     <div>
@@ -385,23 +415,42 @@ export default function CandidateDetailPage() {
             </div>
           )}
 
-          {/* Timeline */}
+          {/* Histórico */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Cronologia</h2>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Aplicação</span>
-                <span className="text-gray-900">
-                  {new Date(candidate.created_at).toLocaleDateString('pt-BR')}
-                </span>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Histórico</h2>
+            {historyEvents.length === 0 ? (
+              <p className="text-sm text-gray-500">Nenhum evento registrado ainda.</p>
+            ) : (
+              <div className="space-y-3 max-h-80 overflow-auto">
+                {historyEvents.map((event) => (
+                  <div key={event.id} className="border border-gray-100 rounded-lg p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-medium text-gray-900">
+                        {EVENT_LABELS[event.event_type] || event.message || event.event_type}
+                      </p>
+                      <span className="text-xs text-gray-500">
+                        {new Date(event.created_at).toLocaleString('pt-BR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    </div>
+                    {event.from_status && event.to_status && (
+                      <p className="text-xs text-gray-600 mt-1">
+                        {STATUS_DISPLAY_LABELS[event.from_status] || event.from_status} {'->'}{' '}
+                        {STATUS_DISPLAY_LABELS[event.to_status] || event.to_status}
+                      </p>
+                    )}
+                    {event.message && (
+                      <p className="text-xs text-gray-500 mt-1">{event.message}</p>
+                    )}
+                  </div>
+                ))}
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Última atualização</span>
-                <span className="text-gray-900">
-                  {new Date(candidate.updated_at).toLocaleDateString('pt-BR')}
-                </span>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

@@ -105,6 +105,7 @@ model Job {
 
   recruiter             Recruiter?  @relation(fields: [user_id], references: [id])
   candidates            Candidate[]
+  events                CandidateEvent[]
 
   @@index([user_id])
   @@index([status])
@@ -137,10 +138,32 @@ model Candidate {
 
   job                     Job       @relation(fields: [job_id], references: [id])
   savedByRecruiters       SavedCandidate[]
+  events                  CandidateEvent[]
 
   @@index([job_id])
   @@index([status])
   @@index([fit_score])
   @@index([needs_scoring])
   @@index([deleted_at])
+}
+
+model CandidateEvent {
+  id          String   @id @default(uuid())
+  candidate_id String
+  job_id      String
+  event_type  String
+  from_status String?
+  to_status   String?
+  message     String?
+  metadata    Json?
+  created_by  String?
+  created_at  DateTime @default(now())
+
+  candidate   Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+  job         Job       @relation(fields: [job_id], references: [id], onDelete: Cascade)
+
+  @@index([candidate_id, created_at(sort: Desc)])
+  @@index([job_id, created_at(sort: Desc)])
+  @@index([event_type])
+  @@map("candidate_events")
 }

@@ -5,6 +5,7 @@ import { CandidateStatusSchema } from '@hunter/core';
 import { z } from 'zod';
 import { triggerRejectionEmail } from '@/lib/worker';
 import { migrateLegacyCandidateStatusesForRecruiter } from '@/lib/candidate-status';
+import { logCandidateEvent } from '@/lib/candidate-history';
 
 const BulkUpdateSchema = z.object({
   candidate_ids: z.array(z.string().uuid()).min(1, 'At least one candidate is required'),
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
           deleted_at: null,
         },
       },
-      select: { id: true, status: true },
+      select: { id: true, status: true, job_id: true },
     });
 
     if (candidates.length === 0) {
@@ -62,6 +63,21 @@ export async function POST(request: NextRequest) {
       where: { id: { in: validIds } },
       data: { status },
     });
+
+    for (const candidate of candidates) {
+      if (candidate.status !== status) {
+        await logCandidateEvent({
+          candidateId: candidate.id,
+          jobId: candidate.job_id,
+          eventType: 'status_changed',
+          fromStatus: candidate.status,
+          toStatus: status,
+          message: `Status alterado de ${candidate.status} para ${status} (ação em massa)`,
+          metadata: { source: 'bulk_update' },
+          createdBy: user.id,
+        });
+      }
+    }
 
     // Trigger rejection emails sequentially to avoid overwhelming the worker
     if (status === 'rejected') {

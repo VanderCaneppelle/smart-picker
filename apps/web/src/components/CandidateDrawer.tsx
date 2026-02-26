@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { X, ExternalLink, FileText, Brain, MessageSquare, AlertCircle } from 'lucide-react';
+import { X, ExternalLink, FileText, Brain, MessageSquare, AlertCircle, Clock3 } from 'lucide-react';
 import { Button, Badge } from '@/components/ui';
 import type { Candidate, CandidateStatus, ApplicationQuestion } from '@hunter/core';
+import { apiClient, type CandidateHistoryEvent } from '@/lib/api-client';
 
 const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['interview', 'hired', 'rejected'];
 
@@ -46,7 +47,7 @@ const QUICK_ACTIONS: { status: CandidateStatus; label: string }[] = [
   { status: 'rejected', label: 'Rejeitar' },
 ];
 
-type DrawerTab = 'summary' | 'answers' | 'resume';
+type DrawerTab = 'summary' | 'answers' | 'resume' | 'history';
 
 function scoreColor(score: number) {
   if (score >= 90) return 'text-green-600';
@@ -65,6 +66,8 @@ export default function CandidateDrawer({
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [pendingAction, setPendingAction] = useState<CandidateStatus | null>(null);
+  const [events, setEvents] = useState<CandidateHistoryEvent[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
 
   useEffect(() => {
     requestAnimationFrame(() => {
@@ -84,6 +87,22 @@ export default function CandidateDrawer({
     };
   }, [onClose]);
 
+  const fetchEvents = useCallback(async () => {
+    try {
+      setEventsLoading(true);
+      const data = await apiClient.getCandidateEvents(candidate.id);
+      setEvents(data.events || []);
+    } catch {
+      setEvents([]);
+    } finally {
+      setEventsLoading(false);
+    }
+  }, [candidate.id]);
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
+
   const requestQuickAction = useCallback(
     (newStatus: CandidateStatus) => {
       if (candidate.status === newStatus) return;
@@ -101,11 +120,12 @@ export default function CandidateDrawer({
       setLoadingAction(newStatus);
       try {
         await onStatusChange(candidate.id, newStatus);
+        await fetchEvents();
       } finally {
         setLoadingAction(null);
       }
     },
-    [candidate.id, onStatusChange],
+    [candidate.id, onStatusChange, fetchEvents],
   );
 
   const confirmQuickAction = useCallback(() => {
@@ -119,7 +139,37 @@ export default function CandidateDrawer({
     { id: 'summary', label: 'Resumo IA', icon: Brain },
     { id: 'answers', label: 'Respostas', icon: MessageSquare },
     { id: 'resume', label: 'Currículo', icon: FileText },
+    { id: 'history', label: 'Histórico', icon: Clock3 },
   ];
+
+  const STATUS_PT: Record<string, string> = {
+    new: 'Novo',
+    reviewing: 'Em análise',
+    interview: 'Entrevista',
+    in_validation: 'Em validação',
+    hired: 'Contratado',
+    rejected: 'Rejeitado',
+  };
+
+  const mergedEvents = useMemo(() => {
+    const appEvent: CandidateHistoryEvent = {
+      id: `application-${candidate.id}`,
+      candidate_id: candidate.id,
+      job_id: candidate.job_id,
+      event_type: 'application_submitted',
+      from_status: null,
+      to_status: 'new',
+      message: 'Data de aplicação registrada',
+      metadata: null,
+      created_by: null,
+      created_at: candidate.created_at,
+    };
+
+    const withoutApplication = events.filter((e) => e.event_type !== 'application_submitted');
+    return [appEvent, ...withoutApplication].sort(
+      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+  }, [candidate, events]);
 
   return (
     <div className="fixed inset-0 z-50 flex">
@@ -213,6 +263,13 @@ export default function CandidateDrawer({
           {activeTab === 'summary' && <SummaryTab candidate={candidate} />}
           {activeTab === 'answers' && <AnswersTab candidate={candidate} />}
           {activeTab === 'resume' && <ResumeTab candidate={candidate} />}
+          {activeTab === 'history' && (
+            <HistoryTab
+              events={mergedEvents}
+              eventsLoading={eventsLoading}
+              statusLabels={STATUS_PT}
+            />
+          )}
         </div>
 
         {/* Footer */}
@@ -407,6 +464,68 @@ function ResumeTab({ candidate }: { candidate: Candidate }) {
           Ver perfil no LinkedIn
         </a>
       )}
+    </div>
+  );
+}
+
+function HistoryTab({
+  events,
+  eventsLoading,
+  statusLabels,
+}: {
+  events: CandidateHistoryEvent[];
+  eventsLoading: boolean;
+  statusLabels: Record<string, string>;
+}) {
+  if (eventsLoading) {
+    return <p className="text-sm text-gray-400 italic">Carregando histórico...</p>;
+  }
+
+  if (events.length === 0) {
+    return <p className="text-sm text-gray-400 italic">Nenhum evento registrado</p>;
+  }
+
+  return (
+    <div className="space-y-4">
+      {events.map((event) => {
+        const dateText = new Date(event.created_at).toLocaleString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+
+        const titleByType: Record<string, string> = {
+          application_submitted: 'Candidatura recebida',
+          status_changed: 'Status alterado',
+          email_sent_interview: 'E-mail de entrevista enviado',
+          email_sent_rejection: 'E-mail de rejeição enviado',
+          score_recalculated: 'Recálculo de nota solicitado',
+        };
+
+        const title = titleByType[event.event_type] || 'Evento registrado';
+        const fromStatus = event.from_status ? statusLabels[event.from_status] || event.from_status : null;
+        const toStatus = event.to_status ? statusLabels[event.to_status] || event.to_status : null;
+
+        return (
+          <div key={event.id} className="pb-3 border-b border-gray-100 last:border-0">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-medium text-gray-900">{title}</p>
+              <p className="text-xs text-gray-500">{dateText}</p>
+            </div>
+            {event.event_type === 'status_changed' && (
+              <>
+                {fromStatus && toStatus && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    de {fromStatus} para {toStatus}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

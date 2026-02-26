@@ -68,6 +68,25 @@ export interface DashboardStatsResponse {
   insights: string[];
 }
 
+export interface CandidateHistoryEvent {
+  id: string;
+  candidate_id: string;
+  job_id: string;
+  event_type:
+    | 'application_submitted'
+    | 'status_changed'
+    | 'email_sent_interview'
+    | 'email_sent_rejection'
+    | 'score_recalculated'
+    | string;
+  from_status: string | null;
+  to_status: string | null;
+  message: string | null;
+  metadata: Record<string, unknown> | null;
+  created_by: string | null;
+  created_at: string;
+}
+
 const API_BASE = '/api';
 
 class ApiClient {
@@ -210,6 +229,10 @@ class ApiClient {
 
   async getCandidate(id: string): Promise<Candidate> {
     return this.request<Candidate>(`/candidates/${id}`);
+  }
+
+  async getCandidateEvents(id: string): Promise<{ events: CandidateHistoryEvent[]; total: number }> {
+    return this.request<{ events: CandidateHistoryEvent[]; total: number }>(`/candidates/${id}/events`);
   }
 
   async createCandidate(data: CreateCandidateInput): Promise<Candidate> {

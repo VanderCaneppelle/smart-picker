@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyAuth, unauthorizedResponse, jobBelongsToUser } from '@/lib/auth';
 import { triggerWorkerProcess } from '@/lib/worker';
+import { logCandidateEvent } from '@/lib/candidate-history';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -33,6 +34,15 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     await prisma.candidate.update({
       where: { id },
       data: { needs_scoring: true },
+    });
+
+    await logCandidateEvent({
+      candidateId: candidate.id,
+      jobId: candidate.job_id,
+      eventType: 'score_recalculated',
+      message: 'Recálculo de nota solicitado',
+      metadata: { source: 'manual_recalculate' },
+      createdBy: user.id,
     });
 
     // Trigger the worker to recalculate score only (no emails)

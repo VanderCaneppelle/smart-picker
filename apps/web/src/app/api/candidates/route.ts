@@ -7,6 +7,7 @@ import type { ApplicationQuestion, ApplicationAnswer } from '@hunter/core';
 import { Prisma } from '@prisma/client';
 import { evaluateEliminatoryQuestions } from '@/lib/evaluate-eliminatory';
 import { migrateLegacyCandidateStatusesForRecruiter } from '@/lib/candidate-status';
+import { logCandidateEvent } from '@/lib/candidate-history';
 
 // GET /api/candidates - List all candidates (protected)
 export async function GET(request: NextRequest) {
@@ -175,6 +176,16 @@ export async function POST(request: NextRequest) {
         disqualification_flags:
           (disqualificationFlags.length > 0 ? disqualificationFlags : []) as unknown as Prisma.InputJsonValue,
       },
+    });
+
+    await logCandidateEvent({
+      candidateId: candidate.id,
+      jobId: candidate.job_id,
+      eventType: 'application_submitted',
+      toStatus: candidate.status,
+      message: 'Candidatura recebida',
+      metadata: { has_alert: !!candidate.flagged_reason },
+      createdBy: 'system',
     });
 
     // Await trigger so serverless doesn't kill the request before the worker is called

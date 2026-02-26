@@ -4,6 +4,7 @@ import { verifyAuth, unauthorizedResponse, jobBelongsToUser } from '@/lib/auth';
 import { UpdateCandidateSchema } from '@hunter/core';
 import { triggerScheduleInterviewEmail, triggerRejectionEmail } from '@/lib/worker';
 import { migrateLegacyCandidateStatusesForRecruiter } from '@/lib/candidate-status';
+import { logCandidateEvent } from '@/lib/candidate-history';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -119,6 +120,19 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         },
       },
     });
+
+    if (data.status && data.status !== existingCandidate.status) {
+      await logCandidateEvent({
+        candidateId: candidate.id,
+        jobId: candidate.job_id,
+        eventType: 'status_changed',
+        fromStatus: existingCandidate.status,
+        toStatus: data.status,
+        message: `Status alterado de ${existingCandidate.status} para ${data.status}`,
+        metadata: { source: 'candidate_patch' },
+        createdBy: user.id,
+      });
+    }
 
     // When status changes to interview, send email with Calendly link
     if (data.status === 'interview') {

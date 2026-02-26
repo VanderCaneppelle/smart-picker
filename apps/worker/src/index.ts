@@ -3,6 +3,7 @@ import http from 'node:http';
 import { processCandidate } from './jobs/processQueue.js';
 import { sendScheduleInterviewEmail, sendRejectionEmail } from './jobs/sendEmails.js';
 import { prisma } from './lib/db.js';
+import { logCandidateEvent } from './lib/candidateHistory.js';
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const WORKER_SECRET = process.env.WORKER_SECRET;
@@ -132,6 +133,15 @@ const server = http.createServer(async (req, res) => {
         data: { schedule_interview_email_sent_at: new Date() },
       });
 
+      await logCandidateEvent({
+        candidateId: candidate.id,
+        jobId: candidate.job_id,
+        eventType: 'email_sent_interview',
+        message: 'E-mail de entrevista enviado',
+        metadata: { provider: 'resend' },
+        createdBy: 'system',
+      });
+
       res.writeHead(200);
       res.end(JSON.stringify({ ok: true }));
     } catch (err) {
@@ -193,6 +203,15 @@ const server = http.createServer(async (req, res) => {
         candidate.job,
         personalization,
       );
+
+      await logCandidateEvent({
+        candidateId: candidate.id,
+        jobId: candidate.job_id,
+        eventType: 'email_sent_rejection',
+        message: 'E-mail de rejeição enviado',
+        metadata: { provider: 'resend' },
+        createdBy: 'system',
+      });
 
       res.writeHead(200);
       res.end(JSON.stringify({ ok: true }));
