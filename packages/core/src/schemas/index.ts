@@ -17,9 +17,8 @@ export const EmploymentTypeSchema = z.enum([
 export const CandidateStatusSchema = z.enum([
   'new',
   'reviewing',
-  'schedule_interview',
-  'shortlisted',
-  'flagged',
+  'interview',
+  'in_validation',
   'rejected',
   'hired',
 ]);

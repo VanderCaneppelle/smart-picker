@@ -78,13 +78,14 @@ function CandidateKanbanCard({ candidate, isDragOverlay, onClick }: CandidateKan
     onClick?.(candidate);
   };
 
-  const isFlagged = candidate.status === 'flagged';
+  const flags = (candidate.disqualification_flags || []) as Array<{ severity?: string }>;
+  const hasAlert = flags.some((f) => f.severity === 'eliminated') || !!candidate.flagged_reason;
 
   if (isDragOverlay) {
     return (
       <div className="relative bg-white rounded-lg border border-blue-300 p-3 shadow-xl rotate-1 w-[264px]">
         <CardContent candidate={candidate} />
-        {isFlagged && <FlaggedCornerBadge />}
+        {hasAlert && <FlaggedCornerBadge />}
       </div>
     );
   }
@@ -98,12 +99,12 @@ function CandidateKanbanCard({ candidate, isDragOverlay, onClick }: CandidateKan
       className={`relative bg-white rounded-lg border p-3
         cursor-grab active:cursor-grabbing
         shadow-sm hover:shadow-md transition-all duration-150
-        ${isFlagged ? 'border-orange-300' : 'border-gray-200'}
+        ${hasAlert ? 'border-orange-300' : 'border-gray-200'}
         ${isDragging ? 'opacity-30' : ''}
       `}
     >
       <CardContent candidate={candidate} />
-      {isFlagged && <FlaggedCornerBadge />}
+      {hasAlert && <FlaggedCornerBadge />}
     </div>
   );
 }

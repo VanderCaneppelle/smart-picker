@@ -16,9 +16,8 @@ const statusOptions = [
   { value: '', label: 'Todos (excl. rejeitados)' },
   { value: 'new', label: 'Novos' },
   { value: 'reviewing', label: 'Em análise' },
-  { value: 'schedule_interview', label: 'Agendar entrevista' },
-  { value: 'shortlisted', label: 'Pré-selecionados' },
-  { value: 'flagged', label: 'Sinalizado' },
+  { value: 'interview', label: 'Entrevista' },
+  { value: 'in_validation', label: 'Em validação' },
   { value: 'rejected', label: 'Rejeitados' },
   { value: 'hired', label: 'Contratados' },
 ];
@@ -63,9 +62,8 @@ export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
       all: candidates.filter((c) => c.status !== 'rejected').length,
       new: 0,
       reviewing: 0,
-      schedule_interview: 0,
-      shortlisted: 0,
-      flagged: 0,
+      interview: 0,
+      in_validation: 0,
       rejected: 0,
       hired: 0,
     };

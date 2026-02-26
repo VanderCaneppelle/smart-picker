@@ -4,14 +4,14 @@ import { useState, useMemo } from 'react';
 import { ChevronDown, ChevronRight, Mail, Calendar, XCircle } from 'lucide-react';
 import { Input } from '@/components/ui';
 
-const PLACEHOLDERS = 'Variáveis: {{candidate_name}}, {{job_title}}, {{sender_name}}, {{signature}}. Para "Agendar entrevista": {{calendly_link}}';
+const PLACEHOLDERS = 'Variáveis: {{candidate_name}}, {{job_title}}, {{sender_name}}, {{signature}}. Para "Entrevista": {{calendly_link}}';
 
 const PREVIEW_VARS = {
   candidate_name: 'Maria Silva',
   job_title: 'Desenvolvedor Full Stack',
   sender_name: 'Equipe de RH',
   signature: 'Atenciosamente,\nEquipe de RH',
-  calendly_link: `<p>Agende sua entrevista pelo link abaixo:</p><div style="text-align: center; margin: 24px 0;"><a href="#" style="display: inline-block; background: #059669; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">Agendar entrevista (Calendly)</a></div><p>Se o link não abrir, copie e cole no navegador: <br><a href="#" style="color: #2563eb; word-break: break-all;">https://calendly.com/exemplo</a></p>`,
+  calendly_link: `<p>Agende sua entrevista pelo link abaixo:</p><div style="text-align: center; margin: 24px 0;"><a href="#" style="display: inline-block; background: #059669; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">Entrevista (Calendly)</a></div><p>Se o link não abrir, copie e cole no navegador: <br><a href="#" style="color: #2563eb; word-break: break-all;">https://calendly.com/exemplo</a></p>`,
 };
 
 function renderPreviewTemplate(
@@ -216,7 +216,7 @@ export default function EmailTemplatesSection({
       };
     if (expandedId === 'schedule_interview')
       return {
-        templateTitle: 'Agendar entrevista',
+        templateTitle: 'Entrevista',
         subject: scheduleInterviewSubject,
         bodyHtml: scheduleInterviewBodyHtml,
         defaultSubject: "Você foi selecionado(a)! Agende sua entrevista – {{job_title}}",
@@ -267,7 +267,7 @@ export default function EmailTemplatesSection({
           />
           <TemplateEditor
             id="schedule_interview"
-            title="Agendar entrevista"
+            title="Entrevista"
             icon={<Calendar className="h-4 w-4 text-blue-600" />}
             subject={scheduleInterviewSubject}
             bodyHtml={scheduleInterviewBodyHtml}

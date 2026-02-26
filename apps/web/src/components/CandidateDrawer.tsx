@@ -7,10 +7,10 @@ import { X, ExternalLink, FileText, Brain, MessageSquare, AlertCircle } from 'lu
 import { Button, Badge } from '@/components/ui';
 import type { Candidate, CandidateStatus, ApplicationQuestion } from '@hunter/core';
 
-const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['schedule_interview', 'hired', 'rejected'];
+const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['interview', 'hired', 'rejected'];
 
 const STATUS_EMAIL_MESSAGES: Record<string, string> = {
-  schedule_interview: 'Um e-mail de agendamento de entrevista será enviado ao candidato.',
+  interview: 'Um e-mail de agendamento de entrevista será enviado ao candidato.',
   hired: 'Um e-mail de contratação será enviado ao candidato.',
   rejected: 'Um e-mail de rejeição será enviado ao candidato.',
 };
@@ -24,9 +24,8 @@ interface CandidateDrawerProps {
 const STATUS_LABELS: Record<string, string> = {
   new: 'Novo',
   reviewing: 'Em análise',
-  shortlisted: 'Pré-selecionado',
-  schedule_interview: 'Agendar entrevista',
-  flagged: 'Sinalizado',
+  interview: 'Entrevista',
+  in_validation: 'Em validação',
   rejected: 'Rejeitado',
   hired: 'Contratado',
 };
@@ -34,17 +33,16 @@ const STATUS_LABELS: Record<string, string> = {
 const STATUS_BADGE_VARIANT: Record<string, 'default' | 'success' | 'warning' | 'danger' | 'info' | 'purple'> = {
   new: 'warning',
   reviewing: 'info',
-  shortlisted: 'success',
-  schedule_interview: 'purple',
-  flagged: 'danger',
+  interview: 'purple',
+  in_validation: 'success',
   rejected: 'danger',
   hired: 'success',
 };
 
 const QUICK_ACTIONS: { status: CandidateStatus; label: string }[] = [
   { status: 'reviewing', label: 'Em análise' },
-  { status: 'shortlisted', label: 'Pré-selecionar' },
-  { status: 'schedule_interview', label: 'Agendar entrevista' },
+  { status: 'interview', label: 'Mover para entrevista' },
+  { status: 'in_validation', label: 'Mover para validação' },
   { status: 'rejected', label: 'Rejeitar' },
 ];
 
@@ -338,10 +336,10 @@ function SummaryTab({ candidate }: { candidate: Candidate }) {
         <p className="text-sm text-gray-400 italic">Resumo não disponível</p>
       )}
 
-      {candidate.status === 'flagged' && candidate.flagged_reason && (
+      {candidate.flagged_reason && (
         <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
           <p className="text-xs font-medium text-orange-700 uppercase tracking-wider mb-1">
-            Motivo do Flag
+            Alerta de elegibilidade
           </p>
           <p className="text-sm text-orange-800">{candidate.flagged_reason}</p>
         </div>

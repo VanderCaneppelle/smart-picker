@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { migrateLegacyCandidateStatusesForRecruiter } from '@/lib/candidate-status';
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,10 +13,12 @@ export async function GET(request: NextRequest) {
     const userId = user.id;
     const now = new Date();
 
+    await migrateLegacyCandidateStatusesForRecruiter(userId);
+
     const [
       jobs,
       allCandidates,
-      shortlistedCount,
+      validationCount,
       interviewCount,
       hiredCount,
       rejectedCount,
@@ -47,10 +50,10 @@ export async function GET(request: NextRequest) {
         },
       }),
       prisma.candidate.count({
-        where: { deleted_at: null, status: 'shortlisted', job: { user_id: userId, deleted_at: null } },
+        where: { deleted_at: null, status: 'in_validation', job: { user_id: userId, deleted_at: null } },
       }),
       prisma.candidate.count({
-        where: { deleted_at: null, status: 'schedule_interview', job: { user_id: userId, deleted_at: null } },
+        where: { deleted_at: null, status: 'interview', job: { user_id: userId, deleted_at: null } },
       }),
       prisma.candidate.count({
         where: { deleted_at: null, status: 'hired', job: { user_id: userId, deleted_at: null } },
@@ -151,16 +154,16 @@ export async function GET(request: NextRequest) {
       { stage: 'Novos', count: allCandidates.filter((c) => c.status === 'new').length },
       { stage: 'Em revisão', count: reviewingCount },
       { stage: 'Entrevista', count: interviewCount },
-      { stage: 'Shortlist', count: shortlistedCount },
+      { stage: 'Em validação', count: validationCount },
       { stage: 'Contratados', count: hiredCount },
     ];
 
-    const shortlistedCandidates = allCandidates.filter((c) => c.status === 'shortlisted' || c.status === 'hired');
-    const avgDaysToShortlist = shortlistedCandidates.length > 0
+    const validationCandidates = allCandidates.filter((c) => c.status === 'in_validation' || c.status === 'hired');
+    const avgDaysToValidation = validationCandidates.length > 0
       ? Math.round(
-          shortlistedCandidates.reduce((acc, c) => {
+          validationCandidates.reduce((acc, c) => {
             return acc + (new Date(c.updated_at).getTime() - new Date(c.created_at).getTime()) / 86400000;
-          }, 0) / shortlistedCandidates.length
+          }, 0) / validationCandidates.length
         )
       : 0;
 
@@ -176,7 +179,7 @@ export async function GET(request: NextRequest) {
     const lowConversionJobs = activeJobs
       .filter((j) => {
         const candidates = allCandidates.filter((c) => c.job_id === j.id);
-        const advanced = candidates.filter((c) => ['reviewing', 'schedule_interview', 'shortlisted', 'hired'].includes(c.status));
+        const advanced = candidates.filter((c) => ['reviewing', 'interview', 'in_validation', 'hired'].includes(c.status));
         return candidates.length >= 3 && (advanced.length / candidates.length) < 0.2;
       })
       .map((j) => ({ id: j.id, title: j.title, totalCandidates: j._count.candidates }));
@@ -219,7 +222,7 @@ export async function GET(request: NextRequest) {
         totalCandidates,
         activeCandidates,
         interviewCount,
-        shortlistedCount,
+        validationCount,
         hiredCount,
         rejectedCount,
         avgCandidatesPerJob,
@@ -240,7 +243,7 @@ export async function GET(request: NextRequest) {
       },
       performance: {
         funnel,
-        avgDaysToShortlist,
+        avgDaysToValidation,
         avgDaysToHire,
         lowConversionJobs,
       },

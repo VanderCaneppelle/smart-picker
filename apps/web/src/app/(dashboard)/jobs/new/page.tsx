@@ -683,7 +683,7 @@ export default function NewJobPage() {
             <div className="text-sm text-blue-800">
               <p className="font-medium mb-1">Envio automático de e-mail</p>
               <p>
-                Se você preencher o link do Calendly acima, ao mover um candidato para &quot;Agendar entrevista&quot;
+                Se você preencher o link do Calendly acima, ao mover um candidato para &quot;Entrevista&quot;
                 será enviado automaticamente um e-mail com o link para ele agendar. Caso não preencha,
                 você precisará fazer o agendamento manualmente com cada candidato.
               </p>

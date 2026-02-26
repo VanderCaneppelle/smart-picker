@@ -23,9 +23,8 @@ import type { Candidate, CandidateStatus, ApplicationQuestion, ApplicationAnswer
 const statusOptions = [
   { value: 'new', label: 'Novo' },
   { value: 'reviewing', label: 'Em análise' },
-  { value: 'schedule_interview', label: 'Agendar entrevista' },
-  { value: 'shortlisted', label: 'Pré-selecionado' },
-  { value: 'flagged', label: 'Sinalizado' },
+  { value: 'interview', label: 'Entrevista' },
+  { value: 'in_validation', label: 'Em validação' },
   { value: 'rejected', label: 'Rejeitado' },
   { value: 'hired', label: 'Contratado' },
 ];
@@ -33,9 +32,8 @@ const statusOptions = [
 const STATUS_DISPLAY_LABELS: Record<string, string> = {
   new: 'Novo',
   reviewing: 'Em análise',
-  schedule_interview: 'Agendar entrevista',
-  shortlisted: 'Pré-selecionado',
-  flagged: 'Sinalizado',
+  interview: 'Entrevista',
+  in_validation: 'Em validação',
   rejected: 'Rejeitado',
   hired: 'Contratado',
 };
@@ -46,12 +44,10 @@ const getStatusBadgeVariant = (status: string) => {
       return 'warning';
     case 'reviewing':
       return 'info';
-    case 'schedule_interview':
+    case 'interview':
       return 'purple';
-    case 'shortlisted':
+    case 'in_validation':
       return 'success';
-    case 'flagged':
-      return 'danger';
     case 'rejected':
       return 'danger';
     case 'hired':
@@ -203,12 +199,12 @@ export default function CandidateDetailPage() {
               />
             </div>
 
-            {/* Flagged reason */}
-            {candidate.status === 'flagged' && candidate.flagged_reason && (
+            {/* Alert reason */}
+            {candidate.flagged_reason && (
               <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg flex items-start gap-2 text-orange-800 text-sm">
                 <Flag className="h-4 w-4 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium">Candidato flagueado automaticamente</p>
+                  <p className="font-medium">Candidato com alerta automático</p>
                   <p className="text-orange-700 mt-1">{candidate.flagged_reason}</p>
                 </div>
               </div>

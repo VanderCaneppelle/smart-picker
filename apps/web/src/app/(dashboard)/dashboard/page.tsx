@@ -141,7 +141,7 @@ export default function DashboardPage() {
             color="red"
           />
           <MetricCard
-            title="Sinalizados para revisão"
+            title="Com alerta para revisão"
             value={`${intelligence.flaggedForReviewPercent}%`}
             subtitle={`${intelligence.warningCount} com alertas`}
             icon={AlertTriangle}
@@ -266,9 +266,9 @@ export default function DashboardPage() {
               <h3 className="text-sm font-semibold text-gray-700 mb-3">Tempo médio</h3>
               <div className="space-y-4">
                 <div>
-                  <p className="text-xs text-gray-500 uppercase tracking-wider">Até shortlist</p>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider">Até validação</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">
-                    {performance.avgDaysToShortlist}
+                    {performance.avgDaysToValidation}
                     <span className="text-sm font-normal text-gray-500 ml-1">dias</span>
                   </p>
                 </div>

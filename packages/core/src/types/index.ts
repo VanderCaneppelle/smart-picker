@@ -24,9 +24,8 @@ export type EmploymentType = (typeof EmploymentType)[keyof typeof EmploymentType
 export const CandidateStatus = {
   NEW: 'new',
   REVIEWING: 'reviewing',
-  SCHEDULE_INTERVIEW: 'schedule_interview',
-  SHORTLISTED: 'shortlisted',
-  FLAGGED: 'flagged',
+  INTERVIEW: 'interview',
+  IN_VALIDATION: 'in_validation',
   REJECTED: 'rejected',
   HIRED: 'hired',
 } as const;

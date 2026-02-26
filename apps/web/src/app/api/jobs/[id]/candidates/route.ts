@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyAuth, unauthorizedResponse, jobBelongsToUser } from '@/lib/auth';
+import { migrateLegacyCandidateStatusesForRecruiter } from '@/lib/candidate-status';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -13,6 +14,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     if (!user) {
       return unauthorizedResponse();
     }
+
+    await migrateLegacyCandidateStatusesForRecruiter(user.id);
 
     const { id } = await params;
 

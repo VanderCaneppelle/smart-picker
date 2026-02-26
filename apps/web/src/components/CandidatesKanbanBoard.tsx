@@ -21,10 +21,10 @@ import CandidatesKanbanColumn from './CandidatesKanbanColumn';
 import CandidateKanbanCard from './CandidateKanbanCard';
 import CandidateDrawer from './CandidateDrawer';
 
-const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['schedule_interview', 'hired', 'rejected'];
+const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['interview', 'hired', 'rejected'];
 
 const STATUS_EMAIL_MESSAGES: Record<string, string> = {
-  schedule_interview: 'Um e-mail de agendamento de entrevista será enviado ao candidato.',
+  interview: 'Um e-mail de agendamento de entrevista será enviado ao candidato.',
   hired: 'Um e-mail de contratação será enviado ao candidato.',
   rejected: 'Um e-mail de rejeição será enviado ao candidato.',
 };
@@ -32,30 +32,22 @@ const STATUS_EMAIL_MESSAGES: Record<string, string> = {
 const STATUS_LABELS: Record<string, string> = {
   new: 'Novos',
   reviewing: 'Em Análise',
-  shortlisted: 'Pré-selecionados',
-  schedule_interview: 'Agendar Entrevista',
+  interview: 'Entrevista',
+  in_validation: 'Em Validação',
   hired: 'Contratados',
-  flagged: 'Sinalizados',
   rejected: 'Rejeitados',
 };
 
-const MAIN_COLUMNS: { status: CandidateStatus; title: string; headerColor: string }[] = [
+const COLUMNS: { status: CandidateStatus; title: string; headerColor: string }[] = [
   { status: 'new', title: 'Novos', headerColor: 'bg-gray-50' },
   { status: 'reviewing', title: 'Em Análise', headerColor: 'bg-blue-50' },
-  { status: 'shortlisted', title: 'Pré-selecionados', headerColor: 'bg-purple-50' },
-  { status: 'schedule_interview', title: 'Agendar Entrevista', headerColor: 'bg-orange-50' },
+  { status: 'interview', title: 'Entrevista', headerColor: 'bg-orange-50' },
+  { status: 'in_validation', title: 'Em Validação', headerColor: 'bg-purple-50' },
   { status: 'hired', title: 'Contratados', headerColor: 'bg-green-50' },
-];
-
-const SECONDARY_COLUMNS: { status: CandidateStatus; title: string; headerColor: string }[] = [
-  { status: 'flagged', title: 'Sinalizados', headerColor: 'bg-red-50' },
   { status: 'rejected', title: 'Rejeitados', headerColor: 'bg-neutral-100' },
 ];
 
-const HIRED_COLUMN = MAIN_COLUMNS.find((c) => c.status === 'hired')!;
-const MAIN_WITHOUT_HIRED = MAIN_COLUMNS.filter((c) => c.status !== 'hired');
-
-const ALL_STATUSES = [...MAIN_COLUMNS, ...SECONDARY_COLUMNS].map((c) => c.status);
+const ALL_STATUSES = COLUMNS.map((c) => c.status);
 
 interface CandidatesKanbanBoardProps {
   candidates: Candidate[];
@@ -67,7 +59,6 @@ export default function CandidatesKanbanBoard({
   setCandidates,
 }: CandidatesKanbanBoardProps) {
   const [activeDragCandidate, setActiveDragCandidate] = useState<Candidate | null>(null);
-  const [showEliminated, setShowEliminated] = useState(false);
   const [drawerCandidateId, setDrawerCandidateId] = useState<string | null>(null);
   const [pendingDragChange, setPendingDragChange] = useState<{ candidateId: string; newStatus: CandidateStatus } | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -92,7 +83,7 @@ export default function CandidatesKanbanBoard({
       el.removeEventListener('scroll', updateScrollButtons);
       ro.disconnect();
     };
-  }, [updateScrollButtons, showEliminated]);
+  }, [updateScrollButtons]);
 
   const scroll = (dir: 'left' | 'right') => {
     const el = scrollContainerRef.current;
@@ -178,34 +169,8 @@ export default function CandidatesKanbanBoard({
     setDrawerCandidateId(candidate.id);
   }, []);
 
-  const visibleColumns = showEliminated
-    ? [...MAIN_WITHOUT_HIRED, ...SECONDARY_COLUMNS, HIRED_COLUMN]
-    : MAIN_COLUMNS;
-
   return (
     <>
-      {/* Toggle to show eliminated candidates */}
-      <div className="flex items-center justify-end mb-3">
-        <label className="flex items-center gap-2.5 text-sm text-gray-600 select-none cursor-pointer">
-          <button
-            type="button"
-            role="switch"
-            aria-checked={showEliminated}
-            onClick={() => setShowEliminated((v) => !v)}
-            className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors
-              ${showEliminated ? 'bg-blue-600' : 'bg-gray-200'}
-            `}
-          >
-            <span
-              className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform
-                ${showEliminated ? 'translate-x-[18px]' : 'translate-x-[2px]'}
-              `}
-            />
-          </button>
-          Exibir candidatos eliminados
-        </label>
-      </div>
-
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -228,16 +193,16 @@ export default function CandidatesKanbanBoard({
             className="flex gap-3 overflow-x-auto overflow-y-hidden pb-4 scroll-smooth snap-x snap-mandatory min-w-0"
             style={{ scrollbarGutter: 'stable' }}
           >
-            {visibleColumns.map((col) => (
-            <CandidatesKanbanColumn
-              key={col.status}
-              status={col.status}
-              title={col.title}
-              candidates={grouped[col.status]}
-              headerColorClass={col.headerColor}
-              onCardClick={handleCardClick}
-            />
-          ))}
+            {COLUMNS.map((col) => (
+              <CandidatesKanbanColumn
+                key={col.status}
+                status={col.status}
+                title={col.title}
+                candidates={grouped[col.status]}
+                headerColorClass={col.headerColor}
+                onCardClick={handleCardClick}
+              />
+            ))}
           </div>
           {canScrollRight && (
             <button

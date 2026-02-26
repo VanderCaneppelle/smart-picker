@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { verifyAuth, unauthorizedResponse, jobBelongsToUser } from '@/lib/auth';
 import { UpdateCandidateSchema } from '@hunter/core';
 import { triggerScheduleInterviewEmail, triggerRejectionEmail } from '@/lib/worker';
+import { migrateLegacyCandidateStatusesForRecruiter } from '@/lib/candidate-status';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -15,6 +16,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     if (!user) {
       return unauthorizedResponse();
     }
+
+    await migrateLegacyCandidateStatusesForRecruiter(user.id);
 
     const { id } = await params;
 
@@ -61,6 +64,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return unauthorizedResponse();
     }
 
+    await migrateLegacyCandidateStatusesForRecruiter(user.id);
+
     const { id } = await params;
     const body = await request.json();
     const validation = UpdateCandidateSchema.safeParse(body);
@@ -102,11 +107,6 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     if (data.needs_scoring !== undefined) updateData.needs_scoring = data.needs_scoring;
     if (data.flagged_reason !== undefined) updateData.flagged_reason = data.flagged_reason;
 
-    // Clear flagged_reason when moving away from flagged status
-    if (data.status && data.status !== 'flagged' && existingCandidate.status === 'flagged') {
-      updateData.flagged_reason = null;
-    }
-
     const candidate = await prisma.candidate.update({
       where: { id },
       data: updateData,
@@ -120,8 +120,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       },
     });
 
-    // When status changes to schedule_interview, send email with Calendly link
-    if (data.status === 'schedule_interview') {
+    // When status changes to interview, send email with Calendly link
+    if (data.status === 'interview') {
       await triggerScheduleInterviewEmail(candidate.id);
     }
     // When status changes to rejected, send rejection email to candidate
@@ -146,6 +146,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     if (!user) {
       return unauthorizedResponse();
     }
+
+    await migrateLegacyCandidateStatusesForRecruiter(user.id);
 
     const { id } = await params;
 

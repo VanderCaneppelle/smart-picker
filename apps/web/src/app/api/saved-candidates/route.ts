@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyAuth, unauthorizedResponse, jobBelongsToUser } from '@/lib/auth';
+import { migrateLegacyCandidateStatusesForRecruiter } from '@/lib/candidate-status';
 
 // GET /api/saved-candidates - Lista candidatos salvos do recrutador (com dados do candidato)
 export async function GET(request: NextRequest) {
@@ -9,6 +10,8 @@ export async function GET(request: NextRequest) {
     if (!user) {
       return unauthorizedResponse();
     }
+
+    await migrateLegacyCandidateStatusesForRecruiter(user.id);
 
     const saved = (prisma as { savedCandidate?: { findMany: (args: unknown) => Promise<unknown[]> } }).savedCandidate;
     if (!saved) {

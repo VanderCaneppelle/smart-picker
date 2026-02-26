@@ -21,10 +21,10 @@ import { apiClient } from '@/lib/api-client';
 import { Badge, Select, SortIcon } from '@/components/ui';
 import type { Candidate, CandidateStatus, DisqualificationFlag } from '@hunter/core';
 
-const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['schedule_interview', 'hired', 'rejected'];
+const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['interview', 'hired', 'rejected'];
 
 const STATUS_EMAIL_MESSAGES: Record<string, string> = {
-  schedule_interview: 'Um e-mail de agendamento de entrevista será enviado ao candidato.',
+  interview: 'Um e-mail de agendamento de entrevista será enviado ao candidato.',
   hired: 'Um e-mail de contratação será enviado ao candidato.',
   rejected: 'Um e-mail de rejeição será enviado ao candidato.',
 };
@@ -43,9 +43,8 @@ const statusOptions = [
   { value: '', label: 'Todos (excl. rejeitados)' },
   { value: 'new', label: 'Novos' },
   { value: 'reviewing', label: 'Em análise' },
-  { value: 'schedule_interview', label: 'Agendar entrevista' },
-  { value: 'shortlisted', label: 'Pré-selecionados' },
-  { value: 'flagged', label: 'Sinalizado' },
+  { value: 'interview', label: 'Entrevista' },
+  { value: 'in_validation', label: 'Em validação' },
   { value: 'rejected', label: 'Rejeitados' },
   { value: 'hired', label: 'Contratados' },
 ];
@@ -53,9 +52,8 @@ const statusOptions = [
 const statusUpdateOptions = [
   { value: 'new', label: 'Novo' },
   { value: 'reviewing', label: 'Em análise' },
-  { value: 'schedule_interview', label: 'Agendar entrevista' },
-  { value: 'shortlisted', label: 'Pré-selecionado' },
-  { value: 'flagged', label: 'Sinalizado' },
+  { value: 'interview', label: 'Entrevista' },
+  { value: 'in_validation', label: 'Em validação' },
   { value: 'rejected', label: 'Rejeitado' },
   { value: 'hired', label: 'Contratado' },
 ];
@@ -64,8 +62,8 @@ const bulkStatusOptions = [
   { value: '', label: 'Mover para...' },
   { value: 'new', label: 'Novo' },
   { value: 'reviewing', label: 'Em análise' },
-  { value: 'schedule_interview', label: 'Agendar entrevista' },
-  { value: 'shortlisted', label: 'Pré-selecionado' },
+  { value: 'interview', label: 'Entrevista' },
+  { value: 'in_validation', label: 'Em validação' },
   { value: 'rejected', label: 'Rejeitado' },
   { value: 'hired', label: 'Contratado' },
 ];
@@ -76,12 +74,10 @@ const getStatusBadgeVariant = (status: string) => {
       return 'warning';
     case 'reviewing':
       return 'info';
-    case 'schedule_interview':
+    case 'interview':
       return 'purple';
-    case 'shortlisted':
+    case 'in_validation':
       return 'success';
-    case 'flagged':
-      return 'danger';
     case 'rejected':
       return 'danger';
     case 'hired':
@@ -336,7 +332,7 @@ export default function CandidatesTable({
         prev.map((c) => (c.id === candidateId ? { ...c, status: newStatus } : c))
       );
       toast.success('Status atualizado');
-      if (newStatus === 'schedule_interview') {
+      if (newStatus === 'interview') {
         setTimeout(onRefetch, 3000);
       }
     } catch (error) {
@@ -479,9 +475,8 @@ export default function CandidatesTable({
       all: candidates.filter((c) => c.status !== 'rejected').length,
       new: 0,
       reviewing: 0,
-      schedule_interview: 0,
-      shortlisted: 0,
-      flagged: 0,
+      interview: 0,
+      in_validation: 0,
       rejected: 0,
       hired: 0,
     };
@@ -565,12 +560,12 @@ export default function CandidatesTable({
         {filteredAndSortedCandidates.map((candidate) => {
           const flags = (candidate.disqualification_flags || []) as DisqualificationFlag[];
           const hasElimination = flags.some((f) => f.severity === 'eliminated');
-          const isFlagged = candidate.status === 'flagged';
+          const hasAlert = hasElimination || !!candidate.flagged_reason;
           return (
             <div
               key={candidate.id}
               className={`bg-white rounded-xl border p-4 shadow-sm ${
-                isFlagged
+                hasAlert
                   ? 'border-orange-300 bg-orange-50/30'
                   : hasElimination
                   ? 'border-red-200'
@@ -727,15 +722,16 @@ export default function CandidatesTable({
             {filteredAndSortedCandidates.map((candidate) => {
               const flags = (candidate.disqualification_flags || []) as DisqualificationFlag[];
               const hasFlags = flags.length > 0;
-              const isFlagged = candidate.status === 'flagged';
+              const hasElimination = flags.some((f) => f.severity === 'eliminated');
+              const hasAlert = hasElimination || !!candidate.flagged_reason;
 
               return (
                 <tr
                   key={candidate.id}
                   className={`transition-colors ${
-                    isFlagged
+                    hasAlert
                       ? 'bg-orange-50/40 hover:bg-orange-50/70'
-                      : hasFlags && flags.some((f) => f.severity === 'eliminated')
+                      : hasFlags && hasElimination
                       ? 'bg-red-50/40 hover:bg-red-50/70'
                       : hasFlags
                       ? 'bg-amber-50/30 hover:bg-amber-50/50'
@@ -861,7 +857,7 @@ export default function CandidatesTable({
                         requestStatusChange(candidate.id, e.target.value as CandidateStatus)
                       }
                       className={`text-xs border rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors ${
-                        isFlagged ? 'border-orange-300 text-orange-700' : 'border-gray-200'
+                        hasAlert ? 'border-orange-300 text-orange-700' : 'border-gray-200'
                       }`}
                     >
                       {statusUpdateOptions.map((opt) => (

@@ -6,6 +6,7 @@ import { CreateCandidateSchema, CandidateFiltersSchema } from '@hunter/core';
 import type { ApplicationQuestion, ApplicationAnswer } from '@hunter/core';
 import { Prisma } from '@prisma/client';
 import { evaluateEliminatoryQuestions } from '@/lib/evaluate-eliminatory';
+import { migrateLegacyCandidateStatusesForRecruiter } from '@/lib/candidate-status';
 
 // GET /api/candidates - List all candidates (protected)
 export async function GET(request: NextRequest) {
@@ -14,6 +15,8 @@ export async function GET(request: NextRequest) {
     if (!user) {
       return unauthorizedResponse();
     }
+
+    await migrateLegacyCandidateStatusesForRecruiter(user.id);
 
     const { searchParams } = new URL(request.url);
     

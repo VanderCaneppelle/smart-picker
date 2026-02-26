@@ -14,8 +14,8 @@ const statusOptions = [
   { value: '', label: 'Todos (exc. rejeitados)' },
   { value: 'new', label: 'Novo' },
   { value: 'reviewing', label: 'Em revisão' },
-  { value: 'schedule_interview', label: 'Agendar entrevista' },
-  { value: 'shortlisted', label: 'Shortlist' },
+  { value: 'interview', label: 'Entrevista' },
+  { value: 'in_validation', label: 'Em validação' },
   { value: 'rejected', label: 'Rejeitado' },
   { value: 'hired', label: 'Contratado' },
 ];
@@ -26,9 +26,9 @@ const getStatusBadgeVariant = (status: string) => {
       return 'warning';
     case 'reviewing':
       return 'info';
-    case 'schedule_interview':
+    case 'interview':
       return 'purple';
-    case 'shortlisted':
+    case 'in_validation':
       return 'success';
     case 'rejected':
       return 'danger';

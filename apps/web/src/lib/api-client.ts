@@ -40,7 +40,7 @@ export interface DashboardStatsResponse {
     totalCandidates: number;
     activeCandidates: number;
     interviewCount: number;
-    shortlistedCount: number;
+    validationCount: number;
     hiredCount: number;
     rejectedCount: number;
     avgCandidatesPerJob: number;
@@ -61,7 +61,7 @@ export interface DashboardStatsResponse {
   };
   performance: {
     funnel: { stage: string; count: number }[];
-    avgDaysToShortlist: number;
+    avgDaysToValidation: number;
     avgDaysToHire: number;
     lowConversionJobs: { id: string; title: string; totalCandidates: number }[];
   };

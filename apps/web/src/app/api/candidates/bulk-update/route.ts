@@ -4,6 +4,7 @@ import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
 import { CandidateStatusSchema } from '@hunter/core';
 import { z } from 'zod';
 import { triggerRejectionEmail } from '@/lib/worker';
+import { migrateLegacyCandidateStatusesForRecruiter } from '@/lib/candidate-status';
 
 const BulkUpdateSchema = z.object({
   candidate_ids: z.array(z.string().uuid()).min(1, 'At least one candidate is required'),
@@ -17,6 +18,8 @@ export async function POST(request: NextRequest) {
     if (!user) {
       return unauthorizedResponse();
     }
+
+    await migrateLegacyCandidateStatusesForRecruiter(user.id);
 
     const body = await request.json();
     const validation = BulkUpdateSchema.safeParse(body);
@@ -55,29 +58,10 @@ export async function POST(request: NextRequest) {
 
     const validIds = candidates.map((c) => c.id);
 
-    const updateData: Record<string, unknown> = { status };
-
-    // Clear flagged_reason when moving away from flagged
-    const flaggedIds = candidates.filter((c) => c.status === 'flagged').map((c) => c.id);
-    if (status !== 'flagged' && flaggedIds.length > 0) {
-      await prisma.candidate.updateMany({
-        where: { id: { in: flaggedIds } },
-        data: { status, flagged_reason: null },
-      });
-
-      const nonFlaggedIds = validIds.filter((id) => !flaggedIds.includes(id));
-      if (nonFlaggedIds.length > 0) {
-        await prisma.candidate.updateMany({
-          where: { id: { in: nonFlaggedIds } },
-          data: updateData,
-        });
-      }
-    } else {
-      await prisma.candidate.updateMany({
-        where: { id: { in: validIds } },
-        data: updateData,
-      });
-    }
+    await prisma.candidate.updateMany({
+      where: { id: { in: validIds } },
+      data: { status },
+    });
 
     // Trigger rejection emails sequentially to avoid overwhelming the worker
     if (status === 'rejected') {

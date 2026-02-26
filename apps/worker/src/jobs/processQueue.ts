@@ -61,16 +61,6 @@ export async function processCandidate(
       await sendEmails(candidate, candidate.job, personalization);
     }
 
-    const flags = (candidate.disqualification_flags || []) as Array<{ severity?: string }>;
-    const hasElimination = flags.some((f) => f.severity === 'eliminated');
-    if (hasElimination) {
-      await prisma.candidate.update({
-        where: { id: candidate.id },
-        data: { status: 'flagged' },
-      });
-      console.log(`Candidate ${candidate.id} flagged as eliminated after scoring and emails.`);
-    }
-
     console.log(`Candidate ${candidate.id} processed successfully.`);
     return { ok: true };
   } catch (error) {
@@ -141,16 +131,6 @@ export async function processQueue() {
 
       const personalization = candidate.job.recruiter?.emailPersonalization ?? null;
       await sendEmails(candidate, candidate.job, personalization);
-
-      const flags = (candidate.disqualification_flags || []) as Array<{ severity?: string }>;
-      const hasElimination = flags.some((f) => f.severity === 'eliminated');
-      if (hasElimination) {
-        await prisma.candidate.update({
-          where: { id: candidate.id },
-          data: { status: 'flagged' },
-        });
-        console.log(`Candidate ${candidate.id} flagged as eliminated after scoring and emails.`);
-      }
 
       console.log(`Emails sent for candidate ${candidate.id}.`);
     } catch (error) {
