@@ -27,7 +27,7 @@ const STATUS_LABELS: Record<string, string> = {
   reviewing: 'Em análise',
   interview: 'Entrevista',
   in_validation: 'Em validação',
-  rejected: 'Rejeitado',
+  rejected: 'Encerrado',
   hired: 'Contratado',
 };
 
@@ -44,7 +44,7 @@ const QUICK_ACTIONS: { status: CandidateStatus; label: string }[] = [
   { status: 'reviewing', label: 'Em análise' },
   { status: 'interview', label: 'Mover para entrevista' },
   { status: 'in_validation', label: 'Mover para validação' },
-  { status: 'rejected', label: 'Rejeitar' },
+  { status: 'rejected', label: 'Encerrar' },
 ];
 
 type DrawerTab = 'summary' | 'answers' | 'resume' | 'history';
@@ -148,7 +148,7 @@ export default function CandidateDrawer({
     interview: 'Entrevista',
     in_validation: 'Em validação',
     hired: 'Contratado',
-    rejected: 'Rejeitado',
+    rejected: 'Encerrado',
   };
 
   const mergedEvents = useMemo(() => {

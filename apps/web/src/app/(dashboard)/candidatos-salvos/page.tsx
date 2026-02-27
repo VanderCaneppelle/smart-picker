@@ -11,12 +11,12 @@ import type { Candidate, CandidateStatus } from '@hunter/core';
 type CandidateWithJob = Candidate & { job?: { id: string; title: string } };
 
 const statusOptions = [
-  { value: '', label: 'Todos (exc. rejeitados)' },
+  { value: '', label: 'Todos (exc. encerrados)' },
   { value: 'new', label: 'Novo' },
   { value: 'reviewing', label: 'Em revisão' },
   { value: 'interview', label: 'Entrevista' },
   { value: 'in_validation', label: 'Em validação' },
-  { value: 'rejected', label: 'Rejeitado' },
+  { value: 'rejected', label: 'Encerrado' },
   { value: 'hired', label: 'Contratado' },
 ];
 

@@ -40,12 +40,12 @@ interface CandidatesTableProps {
 }
 
 const statusOptions = [
-  { value: '', label: 'Todos (excl. rejeitados)' },
+  { value: '', label: 'Todos (excl. encerrados)' },
   { value: 'new', label: 'Novos' },
   { value: 'reviewing', label: 'Em análise' },
   { value: 'interview', label: 'Entrevista' },
   { value: 'in_validation', label: 'Em validação' },
-  { value: 'rejected', label: 'Rejeitados' },
+  { value: 'rejected', label: 'Encerrados' },
   { value: 'hired', label: 'Contratados' },
 ];
 
@@ -54,7 +54,7 @@ const statusUpdateOptions = [
   { value: 'reviewing', label: 'Em análise' },
   { value: 'interview', label: 'Entrevista' },
   { value: 'in_validation', label: 'Em validação' },
-  { value: 'rejected', label: 'Rejeitado' },
+  { value: 'rejected', label: 'Encerrado' },
   { value: 'hired', label: 'Contratado' },
 ];
 
@@ -64,7 +64,7 @@ const bulkStatusOptions = [
   { value: 'reviewing', label: 'Em análise' },
   { value: 'interview', label: 'Entrevista' },
   { value: 'in_validation', label: 'Em validação' },
-  { value: 'rejected', label: 'Rejeitado' },
+  { value: 'rejected', label: 'Encerrado' },
   { value: 'hired', label: 'Contratado' },
 ];
 

@@ -26,7 +26,7 @@ const statusOptions = [
   { value: 'reviewing', label: 'Em análise' },
   { value: 'interview', label: 'Entrevista' },
   { value: 'in_validation', label: 'Em validação' },
-  { value: 'rejected', label: 'Rejeitado' },
+  { value: 'rejected', label: 'Encerrado' },
   { value: 'hired', label: 'Contratado' },
 ];
 
@@ -35,7 +35,7 @@ const STATUS_DISPLAY_LABELS: Record<string, string> = {
   reviewing: 'Em análise',
   interview: 'Entrevista',
   in_validation: 'Em validação',
-  rejected: 'Rejeitado',
+  rejected: 'Encerrado',
   hired: 'Contratado',
 };
 

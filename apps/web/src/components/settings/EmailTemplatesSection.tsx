@@ -229,7 +229,7 @@ export default function EmailTemplatesSection({
         subject: rejectionSubject,
         bodyHtml: rejectionBodyHtml,
         defaultSubject: 'Atualização sobre sua candidatura: {{job_title}}',
-        defaultBodyHint: 'E-mail enviado quando o candidato é rejeitado.',
+        defaultBodyHint: 'E-mail enviado quando o candidato é encerrado.',
         showCalendlyInPreview: false,
       };
     return null;
@@ -288,7 +288,7 @@ export default function EmailTemplatesSection({
             onSubjectChange={onRejectionSubjectChange}
             onBodyChange={onRejectionBodyChange}
             defaultSubject="Atualização sobre sua candidatura: {{job_title}}"
-            defaultBodyHint="E-mail enviado quando o candidato é rejeitado."
+            defaultBodyHint="E-mail enviado quando o candidato é encerrado."
             expandedId={expandedId}
             onToggle={handleToggle}
           />

@@ -28,12 +28,12 @@ function filterCandidatesBySearch(candidates: Candidate[], query: string): Candi
 }
 
 const statusOptions = [
-  { value: '', label: 'Todos (excl. rejeitados)' },
+  { value: '', label: 'Todos (excl. encerrados)' },
   { value: 'new', label: 'Novos' },
   { value: 'reviewing', label: 'Em análise' },
   { value: 'interview', label: 'Entrevista' },
   { value: 'in_validation', label: 'Em validação' },
-  { value: 'rejected', label: 'Rejeitados' },
+  { value: 'rejected', label: 'Encerrados' },
   { value: 'hired', label: 'Contratados' },
 ];
 

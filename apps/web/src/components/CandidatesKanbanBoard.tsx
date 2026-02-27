@@ -35,7 +35,7 @@ const STATUS_LABELS: Record<string, string> = {
   interview: 'Entrevista',
   in_validation: 'Em Validação',
   hired: 'Contratados',
-  rejected: 'Rejeitados',
+  rejected: 'Encerrados',
 };
 
 const COLUMNS: { status: CandidateStatus; title: string; headerColor: string }[] = [
@@ -44,7 +44,7 @@ const COLUMNS: { status: CandidateStatus; title: string; headerColor: string }[]
   { status: 'interview', title: 'Entrevista', headerColor: 'bg-orange-50' },
   { status: 'in_validation', title: 'Em Validação', headerColor: 'bg-purple-50' },
   { status: 'hired', title: 'Contratados', headerColor: 'bg-green-50' },
-  { status: 'rejected', title: 'Rejeitados', headerColor: 'bg-neutral-100' },
+  { status: 'rejected', title: 'Encerrados', headerColor: 'bg-neutral-100' },
 ];
 
 const ALL_STATUSES = COLUMNS.map((c) => c.status);
