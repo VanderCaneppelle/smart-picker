@@ -52,11 +52,14 @@ const ALL_STATUSES = COLUMNS.map((c) => c.status);
 interface CandidatesKanbanBoardProps {
   candidates: Candidate[];
   setCandidates: React.Dispatch<React.SetStateAction<Candidate[]>>;
+  /** Quando preenchido, cards correspondentes podem receber destaque visual */
+  searchQuery?: string;
 }
 
 export default function CandidatesKanbanBoard({
   candidates,
   setCandidates,
+  searchQuery = '',
 }: CandidatesKanbanBoardProps) {
   const [activeDragCandidate, setActiveDragCandidate] = useState<Candidate | null>(null);
   const [drawerCandidateId, setDrawerCandidateId] = useState<string | null>(null);
@@ -201,6 +204,7 @@ export default function CandidatesKanbanBoard({
                 candidates={grouped[col.status]}
                 headerColorClass={col.headerColor}
                 onCardClick={handleCardClick}
+                highlightCards={!!searchQuery.trim()}
               />
             ))}
           </div>

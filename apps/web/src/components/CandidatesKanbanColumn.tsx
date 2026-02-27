@@ -11,6 +11,8 @@ interface CandidatesKanbanColumnProps {
   candidates: Candidate[];
   headerColorClass?: string;
   onCardClick?: (candidate: Candidate) => void;
+  /** Destaque sutil nos cards quando a busca está ativa */
+  highlightCards?: boolean;
 }
 
 function CandidatesKanbanColumn({
@@ -19,6 +21,7 @@ function CandidatesKanbanColumn({
   candidates,
   headerColorClass = 'bg-gray-50',
   onCardClick,
+  highlightCards = false,
 }: CandidatesKanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
@@ -47,6 +50,7 @@ function CandidatesKanbanColumn({
             key={candidate.id}
             candidate={candidate}
             onClick={onCardClick}
+            highlight={highlightCards}
           />
         ))}
       </div>
