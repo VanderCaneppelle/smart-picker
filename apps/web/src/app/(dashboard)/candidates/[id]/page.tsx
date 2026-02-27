@@ -430,7 +430,9 @@ export default function CandidateDetailPage() {
                         {STATUS_DISPLAY_LABELS[event.to_status] || event.to_status}
                       </p>
                     )}
-                    {event.message && (
+                    {/* Para eventos de status, usamos apenas os rótulos em português acima.
+                        Não exibimos a mensagem original do backend para evitar textos em inglês. */}
+                    {event.message && event.event_type !== 'status_changed' && (
                       <p className="text-xs text-gray-500 mt-1">{event.message}</p>
                     )}
                   </div>
