@@ -221,6 +221,19 @@ export default function JobDetailPage() {
       });
       setJob(updated);
       toast.success('Vaga atualizada com sucesso!');
+      setIsEditing(false);
+
+      // Remove o modo de edição da URL (tab continua em detalhes)
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('edit');
+        if (url.searchParams.get('tab') !== 'details') {
+          url.searchParams.set('tab', 'details');
+        }
+        router.replace(`${url.pathname}${url.search}`, { scroll: false });
+      } catch {
+        // Ignora falhas ao manipular URL (ex: em ambientes sem window)
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Falha ao atualizar vaga');
     } finally {
