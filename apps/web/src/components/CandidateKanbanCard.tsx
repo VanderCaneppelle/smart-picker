@@ -114,7 +114,7 @@ function CandidateKanbanCard({ candidate, isDragOverlay, onClick, highlight = fa
 
 function FlaggedCornerBadge() {
   return (
-    <span className="absolute top-1.5 right-1.5 flex items-center justify-center h-5 w-5 rounded-full bg-red-100">
+    <span className="absolute bottom-1.5 right-1.5 flex items-center justify-center h-5 w-5 rounded-full bg-red-100">
       <AlertTriangle className="h-3 w-3 text-red-600" />
     </span>
   );
