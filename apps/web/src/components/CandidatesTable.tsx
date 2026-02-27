@@ -40,7 +40,8 @@ interface CandidatesTableProps {
 }
 
 const statusOptions = [
-  { value: '', label: 'Todos (excl. encerrados)' },
+  { value: '', label: 'Todos' },
+  { value: 'active', label: 'Todos (excl. encerrados)' },
   { value: 'new', label: 'Novos' },
   { value: 'reviewing', label: 'Em análise' },
   { value: 'interview', label: 'Entrevista' },
@@ -442,10 +443,12 @@ export default function CandidatesTable({
   const filteredAndSortedCandidates = useMemo(() => {
     let result = [...candidates];
 
-    if (statusFilter) {
-      result = result.filter((c) => c.status === statusFilter);
-    } else {
+    if (statusFilter === 'active') {
+      // "Todos (excl. encerrados)"
       result = result.filter((c) => c.status !== 'rejected');
+    } else if (statusFilter && statusFilter !== 'active') {
+      // Status específico
+      result = result.filter((c) => c.status === statusFilter);
     }
 
     result.sort((a, b) => {

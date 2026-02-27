@@ -28,7 +28,8 @@ function filterCandidatesBySearch(candidates: Candidate[], query: string): Candi
 }
 
 const statusOptions = [
-  { value: '', label: 'Todos (excl. encerrados)' },
+  { value: '', label: 'Todos' },
+  { value: 'active', label: 'Todos (excl. encerrados)' },
   { value: 'new', label: 'Novos' },
   { value: 'reviewing', label: 'Em análise' },
   { value: 'interview', label: 'Entrevista' },
@@ -56,9 +57,25 @@ export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
   );
 
   const displayCandidates = useMemo(() => {
-    if (statusFilter) return filteredBySearch.filter((c) => c.status === statusFilter);
-    return filteredBySearch.filter((c) => c.status !== 'rejected');
-  }, [filteredBySearch, statusFilter]);
+    // Kanban: sempre mostra todos os status (incluindo encerrados), apenas aplicando a busca.
+    if (view === 'kanban') {
+      return filteredBySearch;
+    }
+
+    // Lista: respeita o filtro de status.
+    if (statusFilter === 'active') {
+      // "Todos (excl. encerrados)"
+      return filteredBySearch.filter((c) => c.status !== 'rejected');
+    }
+
+    if (statusFilter && statusFilter !== 'active') {
+      // Status específico (novo, em análise, encerrado, etc.)
+      return filteredBySearch.filter((c) => c.status === statusFilter);
+    }
+
+    // Padrão: "Todos" (inclui encerrados)
+    return filteredBySearch;
+  }, [filteredBySearch, statusFilter, view]);
 
   useEffect(() => {
     if (initializedRef.current) return;
@@ -114,7 +131,8 @@ export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
 
   const hasSearchQuery = searchQuery.trim().length > 0;
   const showEmptySearchMessage =
-    (view === 'kanban' || view === 'list') && displayCandidates.length === 0 && (hasSearchQuery || !!statusFilter);
+    displayCandidates.length === 0 &&
+    (hasSearchQuery || (view === 'list' && !!statusFilter));
 
   return (
     <div>
