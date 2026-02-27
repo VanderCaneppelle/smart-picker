@@ -122,18 +122,20 @@ export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
       <div className="flex flex-nowrap items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-3 shrink-0">
           <CandidatesViewToggle view={view} onViewChange={setView} />
-          <Select
-            options={statusOptions}
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-[200px] shrink-0"
-          />
+          {view === 'list' && (
+            <Select
+              options={statusOptions}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-[200px] shrink-0"
+            />
+          )}
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <div className="relative flex items-center w-[320px]">
+          <div className="relative flex items-center w-[380px]">
             <Search className="absolute left-3 h-4 w-4 text-gray-400 pointer-events-none" aria-hidden />
             <input
-              type="search"
+              type="text"
               placeholder="Buscar por nome, email ou palavra-chave"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
