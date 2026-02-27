@@ -20,6 +20,15 @@ const statusOptions = [
   { value: 'hired', label: 'Contratado' },
 ];
 
+const STATUS_LABELS: Record<CandidateStatus | string, string> = {
+  new: 'Novo',
+  reviewing: 'Em revisão',
+  interview: 'Entrevista',
+  in_validation: 'Em validação',
+  rejected: 'Encerrado',
+  hired: 'Contratado',
+};
+
 const getStatusBadgeVariant = (status: string) => {
   switch (status) {
     case 'new':
@@ -179,7 +188,7 @@ export default function CandidatosSalvosPage() {
                     </td>
                     <td className="px-4 py-3">
                       <Badge variant={getStatusBadgeVariant(c.status)}>
-                        {c.status.replace(/_/g, ' ')}
+                        {STATUS_LABELS[c.status] ?? c.status}
                       </Badge>
                     </td>
                     <td className="px-4 py-3 flex items-center gap-2">
