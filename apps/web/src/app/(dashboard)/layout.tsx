@@ -117,9 +117,9 @@ function DashboardLayoutContent({
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-50 overflow-x-hidden">
-      {/* Sidebar: altura da tela, rodapé (Perfil/Config/Sair) fixo */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-56 lg:h-screen lg:sticky lg:top-0 lg:flex-shrink-0 bg-white border-r border-gray-200">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
+      {/* Sidebar desktop fixa à esquerda */}
+      <aside className="hidden lg:flex lg:flex-col lg:w-56 lg:fixed lg:inset-y-0 lg:left-0 bg-white border-r border-gray-200">
         <Link href="/dashboard" className="flex items-center gap-2 px-4 h-16 border-b border-gray-100 flex-shrink-0">
           <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
             <TrendingUp className="h-5 w-5 text-white" />
@@ -279,7 +279,7 @@ function DashboardLayoutContent({
       </aside>
 
       {/* Main area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="lg:ml-56 flex flex-col min-w-0 min-h-screen">
         {/* Top bar: logo + hamburger (mobile) */}
         <header className="lg:hidden bg-white border-b border-gray-200 px-4 h-14 flex items-center justify-between shrink-0">
           <Link href="/dashboard" className="flex items-center gap-2">
