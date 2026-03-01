@@ -303,10 +303,17 @@ export default function LandingPage() {
               </div>
               <span className="text-xl font-bold text-gray-900">Rankea</span>
             </div>
-            <p className="text-gray-500 text-sm">
-              © {new Date().getFullYear()} Rankea. Todos os direitos reservados.
-            </p>
-            {/* Links removidos temporariamente */}
+            <div className="flex items-center gap-6">
+              <Link href="/termos" className="text-gray-500 hover:text-gray-700 text-sm">
+                Termos de Uso
+              </Link>
+              <Link href="/privacidade" className="text-gray-500 hover:text-gray-700 text-sm">
+                Política de Privacidade
+              </Link>
+              <p className="text-gray-500 text-sm">
+                © {new Date().getFullYear()} Rankea. Todos os direitos reservados.
+              </p>
+            </div>
           </div>
         </div>
       </footer>

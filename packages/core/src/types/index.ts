@@ -196,6 +196,10 @@ export interface CreateCandidateInput {
   linkedin_url?: string | null;
   resume_url: string;
   application_answers?: ApplicationAnswer[];
+  /** LGPD: consentimento explícito (obrigatório). */
+  consent_agreed: true;
+  /** LGPD: versão dos termos/privacidade aceitos (auditoria). */
+  consent_version?: string;
 }
 
 export interface UpdateCandidateInput {
