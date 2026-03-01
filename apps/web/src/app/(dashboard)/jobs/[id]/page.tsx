@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import {
@@ -103,6 +103,8 @@ export default function JobDetailPage() {
   const [isEditing, setIsEditing] = useState(() => searchParams.get('edit') === '1');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'tab-candidates' | 'tab-details' | 'back-to-jobs' | null>(null);
 
   // Form state
   const [title, setTitle] = useState('');
@@ -163,6 +165,185 @@ export default function JobDetailPage() {
     }
     if (tab === 'candidates') setActiveTab('candidates');
   }, [searchParams]);
+
+  const isDirty = useMemo(() => {
+    if (!job) return false;
+    const q = (a: ApplicationQuestion[], b: ApplicationQuestion[]) =>
+      JSON.stringify(a?.map((x) => ({ ...x }))) === JSON.stringify(b?.map((x) => ({ ...x })));
+    return (
+      title !== job.title ||
+      location !== job.location ||
+      employmentType !== job.employment_type ||
+      description !== (job.description ?? '') ||
+      (salaryRange || '') !== (job.salary_range ?? '') ||
+      currencyCode !== (job.currency_code ?? 'BRL') ||
+      showSalaryToCandidates !== (job.show_salary_to_candidates ?? false) ||
+      (calendlyLink || '') !== (job.calendly_link ?? '') ||
+      (interviewQuestions || '') !== (job.interview_questions ?? '') ||
+      status !== job.status ||
+      !q(applicationQuestions, (job.application_questions || []) as ApplicationQuestion[]) ||
+      resumeWeight !== (job.resume_weight ?? 5) ||
+      answersWeight !== (job.answers_weight ?? 5) ||
+      (scoringInstructions || '') !== (job.scoring_instructions ?? '')
+    );
+  }, [
+    job,
+    title,
+    location,
+    employmentType,
+    description,
+    salaryRange,
+    currencyCode,
+    showSalaryToCandidates,
+    calendlyLink,
+    interviewQuestions,
+    status,
+    applicationQuestions,
+    resumeWeight,
+    answersWeight,
+    scoringInstructions,
+  ]);
+
+  const revertForm = useCallback(() => {
+    if (!job) return;
+    setTitle(job.title);
+    setLocation(job.location);
+    setEmploymentType(job.employment_type);
+    setDescription(job.description ?? '');
+    setSalaryRange(job.salary_range ?? '');
+    setCurrencyCode(job.currency_code ?? 'BRL');
+    setShowSalaryToCandidates(job.show_salary_to_candidates ?? false);
+    setCalendlyLink(job.calendly_link ?? '');
+    setInterviewQuestions(job.interview_questions ?? '');
+    setStatus(job.status);
+    setApplicationQuestions((job.application_questions || []) as ApplicationQuestion[]);
+    setResumeWeight(job.resume_weight ?? 5);
+    setAnswersWeight(job.answers_weight ?? 5);
+    setScoringInstructions(job.scoring_instructions ?? '');
+  }, [job]);
+
+  const applyTabToUrl = useCallback(
+    (tab: 'candidates' | 'details', editing?: boolean) => {
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', tab);
+      if (tab === 'candidates') {
+        url.searchParams.delete('edit');
+      } else if (editing) {
+        url.searchParams.set('edit', '1');
+      } else {
+        url.searchParams.delete('edit');
+      }
+      router.replace(`${url.pathname}${url.search}`, { scroll: false });
+    },
+    [router],
+  );
+
+  const switchTab = useCallback(
+    (tab: 'candidates' | 'details') => {
+      setActiveTab(tab);
+      applyTabToUrl(tab, tab === 'details' && isEditing);
+    },
+    [isEditing, applyTabToUrl],
+  );
+
+  const handleTabClick = useCallback(
+    (tab: 'candidates' | 'details') => {
+      if (tab === activeTab) return;
+      if (activeTab === 'details' && isEditing && isDirty) {
+        setPendingAction(tab === 'candidates' ? 'tab-candidates' : 'tab-details');
+        setShowUnsavedModal(true);
+        return;
+      }
+      switchTab(tab);
+    },
+    [activeTab, isEditing, isDirty, switchTab],
+  );
+
+  const handleBackClick = useCallback(() => {
+    if (activeTab === 'details' && isEditing && isDirty) {
+      setPendingAction('back-to-jobs');
+      setShowUnsavedModal(true);
+      return;
+    }
+    router.push('/jobs');
+  }, [activeTab, isEditing, isDirty, router]);
+
+  const runPendingAction = useCallback(() => {
+    if (pendingAction === 'tab-candidates') switchTab('candidates');
+    else if (pendingAction === 'tab-details') switchTab('details');
+    else if (pendingAction === 'back-to-jobs') router.push('/jobs');
+    setPendingAction(null);
+    setShowUnsavedModal(false);
+  }, [pendingAction, switchTab, router]);
+
+  const handleUnsavedSaveAndContinue = useCallback(async () => {
+    if (!pendingAction) return;
+    setIsSaving(true);
+    try {
+      await apiClient.updateJob(jobId, {
+        title: title.trim(),
+        location: location.trim(),
+        employment_type: employmentType as 'full_time' | 'part_time' | 'contract' | 'internship' | 'freelance',
+        description,
+        salary_range: salaryRange.trim() || null,
+        currency_code: (currencyCode || null) as 'USD' | 'EUR' | 'SAR' | 'AED' | 'KWD' | 'QAR' | 'BHD' | 'OMR' | 'INR' | 'GBP' | 'BRL' | null,
+        show_salary_to_candidates: showSalaryToCandidates,
+        calendly_link: calendlyLink.trim() || null,
+        interview_questions: interviewQuestions.trim() || null,
+        status: status as 'draft' | 'active' | 'closed' | 'on_hold',
+        application_questions: applicationQuestions.filter((q) => q.question.trim()),
+        resume_weight: resumeWeight,
+        answers_weight: answersWeight,
+        scoring_instructions: scoringInstructions.trim() || null,
+      });
+      const updated = await apiClient.getJob(jobId);
+      setJob(updated);
+      toast.success('Vaga atualizada com sucesso!');
+      setIsEditing(false);
+      runPendingAction();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Falha ao atualizar vaga');
+    } finally {
+      setIsSaving(false);
+    }
+  }, [
+    pendingAction,
+    jobId,
+    title,
+    location,
+    employmentType,
+    description,
+    salaryRange,
+    currencyCode,
+    showSalaryToCandidates,
+    calendlyLink,
+    interviewQuestions,
+    status,
+    applicationQuestions,
+    resumeWeight,
+    answersWeight,
+    scoringInstructions,
+    runPendingAction,
+  ]);
+
+  const handleUnsavedDiscard = useCallback(() => {
+    revertForm();
+    setIsEditing(false);
+    runPendingAction();
+  }, [revertForm, runPendingAction]);
+
+  const handleCancelEdit = useCallback(() => {
+    if (isDirty) {
+      if (window.confirm('Descartar alterações não salvas? Os dados voltarão ao último estado salvo.')) {
+        revertForm();
+        setIsEditing(false);
+        applyTabToUrl('details', false);
+      }
+    } else {
+      setIsEditing(false);
+      applyTabToUrl('details', false);
+    }
+  }, [isDirty, revertForm, applyTabToUrl]);
 
   const handleShare = async () => {
     const url = `${window.location.origin}/jobs/${jobId}/apply`;
@@ -318,7 +499,7 @@ export default function JobDetailPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push('/jobs')}
+            onClick={handleBackClick}
             leftIcon={<ArrowLeft className="h-4 w-4" />}
           >
             Voltar
@@ -371,7 +552,10 @@ export default function JobDetailPage() {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => setIsEditing(true)}
+                onClick={() => {
+                  setIsEditing(true);
+                  applyTabToUrl('details', true);
+                }}
                 leftIcon={<Pencil className="h-4 w-4" />}
               >
                 Editar
@@ -382,7 +566,7 @@ export default function JobDetailPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setIsEditing(false)}
+                  onClick={handleCancelEdit}
                   leftIcon={<X className="h-4 w-4" />}
                 >
                   Cancelar
@@ -400,7 +584,8 @@ export default function JobDetailPage() {
       <div className="border-b border-gray-200 mb-6">
         <nav className="flex gap-8">
           <button
-            onClick={() => setActiveTab('candidates')}
+            type="button"
+            onClick={() => handleTabClick('candidates')}
             className={`py-3 border-b-2 font-medium text-sm transition-colors ${
               activeTab === 'candidates'
                 ? 'border-blue-600 text-blue-600'
@@ -410,7 +595,8 @@ export default function JobDetailPage() {
             Candidatos ({job._count?.candidates || 0})
           </button>
           <button
-            onClick={() => setActiveTab('details')}
+            type="button"
+            onClick={() => handleTabClick('details')}
             className={`py-3 border-b-2 font-medium text-sm transition-colors ${
               activeTab === 'details'
                 ? 'border-blue-600 text-blue-600'
@@ -950,6 +1136,40 @@ export default function JobDetailPage() {
           )}
         </div>
       )}
+
+      {/* Unsaved changes confirmation */}
+      <Modal
+        isOpen={showUnsavedModal}
+        onClose={() => {
+          setShowUnsavedModal(false);
+          setPendingAction(null);
+        }}
+        title="Alterações não salvas"
+        size="md"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShowUnsavedModal(false);
+                setPendingAction(null);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button variant="ghost" className="text-gray-700 hover:bg-gray-100" onClick={handleUnsavedDiscard}>
+              Sair sem salvar
+            </Button>
+            <Button onClick={handleUnsavedSaveAndContinue} isLoading={isSaving} leftIcon={<Save className="h-4 w-4" />}>
+              Salvar e continuar
+            </Button>
+          </>
+        }
+      >
+        <p className="text-gray-600">
+          Você tem alterações não salvas nos detalhes da vaga. Deseja salvar antes de continuar?
+        </p>
+      </Modal>
 
       {/* Delete Modal */}
       <Modal
