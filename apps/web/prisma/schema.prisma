@@ -134,6 +134,7 @@ model Candidate {
   schedule_interview_email_sent_at DateTime?
   consent_given_at                 DateTime?  // LGPD: registro do momento do consentimento
   consent_version                  String?    // LGPD: versão dos termos/privacidade aceitos
+  recruiter_notes                  String?   @db.Text // Notas e transcrições de entrevista
   created_at                      DateTime  @default(now())
   updated_at              DateTime  @updatedAt
   deleted_at              DateTime?

@@ -182,6 +182,7 @@ export interface Candidate {
   disqualification_flags?: DisqualificationFlag[] | null;
   flagged_reason?: string | null;
   schedule_interview_email_sent_at?: string | null;
+  recruiter_notes?: string | null;
   created_at: string;
   updated_at: string;
   deleted_at?: string | null;
@@ -211,6 +212,7 @@ export interface UpdateCandidateInput {
   experience_level?: string | null;
   needs_scoring?: boolean;
   flagged_reason?: string | null;
+  recruiter_notes?: string | null;
 }
 
 // ============================================

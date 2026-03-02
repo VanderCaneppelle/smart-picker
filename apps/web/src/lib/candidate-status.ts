@@ -26,30 +26,29 @@ export const LEGACY_STATUS_MAP: Record<string, string> = {
  * Safe to run multiple times (idempotent).
  */
 export async function migrateLegacyCandidateStatusesForRecruiter(userId: string): Promise<void> {
-  await Promise.all([
-    prisma.candidate.updateMany({
-      where: {
-        status: 'schedule_interview',
-        deleted_at: null,
-        job: { user_id: userId, deleted_at: null },
-      },
-      data: { status: 'interview' },
-    }),
-    prisma.candidate.updateMany({
-      where: {
-        status: 'shortlisted',
-        deleted_at: null,
-        job: { user_id: userId, deleted_at: null },
-      },
-      data: { status: 'in_validation' },
-    }),
-    prisma.candidate.updateMany({
-      where: {
-        status: 'flagged',
-        deleted_at: null,
-        job: { user_id: userId, deleted_at: null },
-      },
-      data: { status: 'new' },
-    }),
-  ]);
+  const jobFilter = { user_id: userId, deleted_at: null };
+  await prisma.candidate.updateMany({
+    where: {
+      status: 'schedule_interview',
+      deleted_at: null,
+      job: jobFilter,
+    },
+    data: { status: 'interview' },
+  });
+  await prisma.candidate.updateMany({
+    where: {
+      status: 'shortlisted',
+      deleted_at: null,
+      job: jobFilter,
+    },
+    data: { status: 'in_validation' },
+  });
+  await prisma.candidate.updateMany({
+    where: {
+      status: 'flagged',
+      deleted_at: null,
+      job: jobFilter,
+    },
+    data: { status: 'new' },
+  });
 }

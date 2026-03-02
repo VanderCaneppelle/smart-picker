@@ -15,9 +15,10 @@ import {
   Target,
   MessageSquare,
   Flag,
+  StickyNote,
 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
-import { Button, Badge, Select, Loading } from '@/components/ui';
+import { Button, Badge, Select, Loading, Textarea } from '@/components/ui';
 import type { Candidate, CandidateStatus, ApplicationQuestion, ApplicationAnswer } from '@hunter/core';
 import type { CandidateHistoryEvent } from '@/lib/api-client';
 
@@ -66,6 +67,8 @@ export default function CandidateDetailPage() {
   const [candidate, setCandidate] = useState<Candidate | null>(null);
   const [events, setEvents] = useState<CandidateHistoryEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [recruiterNotes, setRecruiterNotes] = useState('');
+  const [isSavingNotes, setIsSavingNotes] = useState(false);
 
   const fetchCandidate = useCallback(async () => {
     try {
@@ -86,6 +89,29 @@ export default function CandidateDetailPage() {
   useEffect(() => {
     fetchCandidate();
   }, [fetchCandidate]);
+
+  useEffect(() => {
+    if (candidate) {
+      setRecruiterNotes(candidate.recruiter_notes || '');
+    }
+  }, [candidate?.id, candidate?.recruiter_notes]);
+
+  const handleSaveNotes = async () => {
+    if (!candidate) return;
+    setIsSavingNotes(true);
+    try {
+      const updated = await apiClient.updateCandidate(candidateId, {
+        recruiter_notes: recruiterNotes.trim() || null,
+      });
+      setCandidate(updated);
+      toast.success('Notas salvas');
+    } catch (error) {
+      toast.error('Falha ao salvar notas');
+      console.error(error);
+    } finally {
+      setIsSavingNotes(false);
+    }
+  };
 
   const handleStatusChange = async (newStatus: CandidateStatus) => {
     if (!candidate) return;
@@ -240,6 +266,31 @@ export default function CandidateDetailPage() {
               </div>
             )}
 
+            {/* Notas e transcrição da entrevista */}
+            <div className="mt-6 pt-4 border-t">
+              <h3 className="text-sm font-medium text-gray-900 mb-2 flex items-center gap-2">
+                <StickyNote className="h-4 w-4" />
+                Notas e transcrição da entrevista
+              </h3>
+              <p className="text-xs text-gray-500 mb-2">
+                Adicione observações, notas da entrevista ou cole a transcrição completa.
+              </p>
+              <Textarea
+                value={recruiterNotes}
+                onChange={(e) => setRecruiterNotes(e.target.value)}
+                placeholder="Ex: Pontos fortes: experiência em X. Transcrever entrevista aqui..."
+                rows={6}
+                className="min-h-[120px]"
+              />
+              <Button
+                size="sm"
+                onClick={handleSaveNotes}
+                isLoading={isSavingNotes}
+                className="mt-2 bg-emerald-600 hover:bg-emerald-700"
+              >
+                Salvar notas
+              </Button>
+            </div>
           </div>
 
           {/* Application Answers */}
