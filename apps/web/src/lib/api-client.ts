@@ -165,8 +165,9 @@ class ApiClient {
     return this.request<CandidatesListResponse>(`/jobs/${jobId}/candidates`);
   }
 
-  async getDashboardStats(): Promise<DashboardStatsResponse> {
-    return this.request('/dashboard/stats');
+  async getDashboardStats(jobId?: string): Promise<DashboardStatsResponse> {
+    const query = jobId ? `?job_id=${encodeURIComponent(jobId)}` : '';
+    return this.request(`/dashboard/stats${query}`);
   }
 
   async getRecruiterProfile(): Promise<{

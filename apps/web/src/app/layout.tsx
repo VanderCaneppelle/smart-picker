@@ -26,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <head>
         <Script id="microsoft-clarity" strategy="afterInteractive">
           {`
@@ -38,7 +38,7 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body className="min-h-screen bg-gray-50 antialiased">
+      <body className="min-h-screen bg-gray-50 antialiased" suppressHydrationWarning>
         <AuthProvider>
           {children}
           <Toaster position="top-right" richColors />

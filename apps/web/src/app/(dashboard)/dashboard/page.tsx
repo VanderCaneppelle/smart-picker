@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Briefcase,
   Users,
@@ -19,24 +19,78 @@ import {
   BarChart3,
   Brain,
   Star,
+  ChevronDown,
 } from 'lucide-react';
 import { apiClient, type DashboardStatsResponse } from '@/lib/api-client';
 import { Loading } from '@/components/ui';
+import type { Job } from '@hunter/core';
 
 export default function DashboardPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialJobId = searchParams.get('job_id');
   const [data, setData] = useState<DashboardStatsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [selectedJobId, setSelectedJobId] = useState<string | 'all'>(initialJobId ?? 'all');
+  const [isJobMenuOpen, setIsJobMenuOpen] = useState(false);
+  const [jobSearch, setJobSearch] = useState('');
+  const jobFilterRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoading(true);
+    apiClient
+      .getDashboardStats(selectedJobId === 'all' ? undefined : selectedJobId)
+      .then((d) => {
+        if (!cancelled) setData(d);
+      })
+      .catch(() => {
+        if (!cancelled) setData(null);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedJobId]);
 
   useEffect(() => {
     let cancelled = false;
     apiClient
-      .getDashboardStats()
-      .then((d) => { if (!cancelled) setData(d); })
-      .catch(() => { if (!cancelled) setData(null); })
-      .finally(() => { if (!cancelled) setIsLoading(false); });
-    return () => { cancelled = true; };
+      .getJobs()
+      .then((res) => {
+        if (!cancelled) setJobs(res.jobs);
+      })
+      .catch((err) => {
+        console.error('Failed to load jobs for dashboard filter', err);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (!jobFilterRef.current) return;
+      if (!jobFilterRef.current.contains(e.target as Node)) {
+        setIsJobMenuOpen(false);
+      }
+    }
+    if (isJobMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isJobMenuOpen]);
+
+  const filteredJobs = useMemo(() => {
+    const q = jobSearch.trim().toLowerCase();
+    if (!q) return jobs;
+    return jobs.filter((job) => job.title.toLowerCase().includes(q));
+  }, [jobs, jobSearch]);
 
   if (isLoading) {
     return <Loading text="Carregando dashboard..." />;
@@ -51,15 +105,102 @@ export default function DashboardPage() {
   }
 
   const { overview, intelligence, performance, insights } = data;
-
   const funnelMax = Math.max(...performance.funnel.map((f) => f.count), 1);
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500 mt-1">Visão completa do seu processo de recrutamento</p>
+      {/* Header + filtro de vaga */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-500 mt-1">
+            Visão completa do seu processo de recrutamento
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-gray-600">Vaga</span>
+          <div className="relative" ref={jobFilterRef}>
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white/80 px-3 py-1.5 text-sm text-gray-900 shadow-sm hover:border-emerald-500 hover:text-emerald-700 hover:bg-white transition-colors"
+              onClick={() => {
+                setIsJobMenuOpen((open) => !open);
+              }}
+              aria-haspopup="listbox"
+              aria-expanded={isJobMenuOpen}
+            >
+              <span className="truncate max-w-[220px]">
+                {selectedJobId === 'all'
+                  ? 'Todas as vagas'
+                  : jobs.find((j) => j.id === selectedJobId)?.title || 'Selecionar vaga'}
+              </span>
+              <ChevronDown className="h-4 w-4 text-gray-400" />
+            </button>
+            <div
+              className={`absolute right-0 mt-2 w-80 rounded-xl border border-gray-200 bg-white shadow-lg ring-1 ring-black/5 max-h-80 overflow-hidden z-20 transform transition-all duration-150 ${
+                isJobMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1 pointer-events-none'
+              }`}
+            >
+              {/* Search input */}
+              <div className="px-3 pt-3 pb-2 border-b border-gray-100">
+                <input
+                  type="text"
+                  value={jobSearch}
+                  onChange={(e) => setJobSearch(e.target.value)}
+                  placeholder="Buscar vaga por título..."
+                  className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                />
+              </div>
+              <div className="py-1 text-sm max-h-52 overflow-y-auto">
+                <button
+                  type="button"
+                  className={`w-full px-3 py-2 text-left flex items-center justify-between gap-2 hover:bg-emerald-50 ${
+                    selectedJobId === 'all' ? 'text-emerald-700 font-semibold' : 'text-gray-700'
+                  }`}
+                  onClick={() => {
+                    setSelectedJobId('all');
+                    setJobSearch('');
+                    try {
+                      const url = new URL(window.location.href);
+                      url.searchParams.delete('job_id');
+                      router.replace(`${url.pathname}${url.search}`, { scroll: false });
+                    } catch {
+                      // ignore
+                    }
+                    setIsJobMenuOpen(false);
+                  }}
+                >
+                  <span>Todas as vagas</span>
+                </button>
+                {filteredJobs.map((job) => (
+                  <button
+                    key={job.id}
+                    type="button"
+                    className={`w-full px-3 py-2 text-left flex items-center justify-between gap-2 hover:bg-emerald-50 ${
+                      selectedJobId === job.id
+                        ? 'text-emerald-700 font-semibold'
+                        : 'text-gray-700'
+                    }`}
+                    onClick={() => {
+                      setSelectedJobId(job.id);
+                      setJobSearch('');
+                      try {
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('job_id', job.id);
+                        router.replace(`${url.pathname}${url.search}`, { scroll: false });
+                      } catch {
+                        // ignore
+                      }
+                      setIsJobMenuOpen(false);
+                    }}
+                  >
+                    <span className="truncate max-w-[210px]">{job.title}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ============ SEÇÃO 1: VISÃO GERAL ============ */}
@@ -99,18 +240,9 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* Pending actions detail */}
-        {(overview.pendingReview > 0 || overview.staleJobs.length > 0) && (
+        {/* Vagas paradas (detalhe quando houver) */}
+        {overview.staleJobs.length > 0 && (
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {overview.pendingReview > 0 && (
-              <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
-                <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
-                <span className="text-sm text-amber-800">
-                  <strong>{overview.pendingReview}</strong> candidatos aguardando revisão
-                </span>
-                <ChevronRight className="h-4 w-4 text-amber-400 ml-auto shrink-0" />
-              </div>
-            )}
             {overview.staleJobs.map((j) => (
               <div
                 key={j.id}

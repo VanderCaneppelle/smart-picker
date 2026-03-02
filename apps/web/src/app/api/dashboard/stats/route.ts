@@ -15,6 +15,9 @@ export async function GET(request: NextRequest) {
 
     await migrateLegacyCandidateStatusesForRecruiter(userId);
 
+    const { searchParams } = new URL(request.url);
+    const jobId = searchParams.get('job_id');
+
     const [
       jobs,
       allCandidates,
@@ -25,7 +28,11 @@ export async function GET(request: NextRequest) {
       reviewingCount,
     ] = await Promise.all([
       prisma.job.findMany({
-        where: { deleted_at: null, user_id: userId },
+        where: {
+          deleted_at: null,
+          user_id: userId,
+          ...(jobId ? { id: jobId } : {}),
+        },
         select: {
           id: true,
           title: true,
@@ -38,6 +45,7 @@ export async function GET(request: NextRequest) {
         where: {
           deleted_at: null,
           job: { user_id: userId, deleted_at: null },
+          ...(jobId ? { job_id: jobId } : {}),
         },
         select: {
           id: true,
@@ -50,19 +58,44 @@ export async function GET(request: NextRequest) {
         },
       }),
       prisma.candidate.count({
-        where: { deleted_at: null, status: 'in_validation', job: { user_id: userId, deleted_at: null } },
+        where: {
+          deleted_at: null,
+          status: 'in_validation',
+          job: { user_id: userId, deleted_at: null },
+          ...(jobId ? { job_id: jobId } : {}),
+        },
       }),
       prisma.candidate.count({
-        where: { deleted_at: null, status: 'interview', job: { user_id: userId, deleted_at: null } },
+        where: {
+          deleted_at: null,
+          status: 'interview',
+          job: { user_id: userId, deleted_at: null },
+          ...(jobId ? { job_id: jobId } : {}),
+        },
       }),
       prisma.candidate.count({
-        where: { deleted_at: null, status: 'hired', job: { user_id: userId, deleted_at: null } },
+        where: {
+          deleted_at: null,
+          status: 'hired',
+          job: { user_id: userId, deleted_at: null },
+          ...(jobId ? { job_id: jobId } : {}),
+        },
       }),
       prisma.candidate.count({
-        where: { deleted_at: null, status: 'rejected', job: { user_id: userId, deleted_at: null } },
+        where: {
+          deleted_at: null,
+          status: 'rejected',
+          job: { user_id: userId, deleted_at: null },
+          ...(jobId ? { job_id: jobId } : {}),
+        },
       }),
       prisma.candidate.count({
-        where: { deleted_at: null, status: 'reviewing', job: { user_id: userId, deleted_at: null } },
+        where: {
+          deleted_at: null,
+          status: 'reviewing',
+          job: { user_id: userId, deleted_at: null },
+          ...(jobId ? { job_id: jobId } : {}),
+        },
       }),
     ]);
 
