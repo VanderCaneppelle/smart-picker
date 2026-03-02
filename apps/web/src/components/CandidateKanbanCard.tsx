@@ -9,6 +9,8 @@ interface CandidateKanbanCardProps {
   candidate: Candidate;
   isDragOverlay?: boolean;
   onClick?: (candidate: Candidate) => void;
+  /** Destaque sutil quando a busca está ativa (feedback visual) */
+  highlight?: boolean;
 }
 
 function fitScoreColor(score: number) {
@@ -58,7 +60,7 @@ function CardContent({ candidate }: { candidate: Candidate }) {
   );
 }
 
-function CandidateKanbanCard({ candidate, isDragOverlay, onClick }: CandidateKanbanCardProps) {
+function CandidateKanbanCard({ candidate, isDragOverlay, onClick, highlight = false }: CandidateKanbanCardProps) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: candidate.id,
     data: { candidate },
@@ -101,6 +103,7 @@ function CandidateKanbanCard({ candidate, isDragOverlay, onClick }: CandidateKan
         shadow-sm hover:shadow-md transition-all duration-150
         ${hasAlert ? 'border-orange-300' : 'border-gray-200'}
         ${isDragging ? 'opacity-30' : ''}
+        ${highlight ? 'ring-2 ring-blue-200/80 ring-offset-1' : ''}
       `}
     >
       <CardContent candidate={candidate} />
@@ -111,7 +114,7 @@ function CandidateKanbanCard({ candidate, isDragOverlay, onClick }: CandidateKan
 
 function FlaggedCornerBadge() {
   return (
-    <span className="absolute top-1.5 right-1.5 flex items-center justify-center h-5 w-5 rounded-full bg-red-100">
+    <span className="absolute bottom-1.5 right-1.5 flex items-center justify-center h-5 w-5 rounded-full bg-red-100">
       <AlertTriangle className="h-3 w-3 text-red-600" />
     </span>
   );

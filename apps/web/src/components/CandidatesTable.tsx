@@ -16,6 +16,8 @@ import {
   Bookmark,
   BookmarkCheck,
   AlertCircle,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { Badge, Select, SortIcon } from '@/components/ui';
@@ -40,12 +42,13 @@ interface CandidatesTableProps {
 }
 
 const statusOptions = [
-  { value: '', label: 'Todos (excl. rejeitados)' },
+  { value: '', label: 'Todos' },
+  { value: 'active', label: 'Todos (excl. encerrados)' },
   { value: 'new', label: 'Novos' },
   { value: 'reviewing', label: 'Em análise' },
   { value: 'interview', label: 'Entrevista' },
   { value: 'in_validation', label: 'Em validação' },
-  { value: 'rejected', label: 'Rejeitados' },
+  { value: 'rejected', label: 'Encerrados' },
   { value: 'hired', label: 'Contratados' },
 ];
 
@@ -54,7 +57,7 @@ const statusUpdateOptions = [
   { value: 'reviewing', label: 'Em análise' },
   { value: 'interview', label: 'Entrevista' },
   { value: 'in_validation', label: 'Em validação' },
-  { value: 'rejected', label: 'Rejeitado' },
+  { value: 'rejected', label: 'Encerrado' },
   { value: 'hired', label: 'Contratado' },
 ];
 
@@ -64,7 +67,7 @@ const bulkStatusOptions = [
   { value: 'reviewing', label: 'Em análise' },
   { value: 'interview', label: 'Entrevista' },
   { value: 'in_validation', label: 'Em validação' },
-  { value: 'rejected', label: 'Rejeitado' },
+  { value: 'rejected', label: 'Encerrado' },
   { value: 'hired', label: 'Contratado' },
 ];
 
@@ -299,10 +302,39 @@ export default function CandidatesTable({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   const [pendingStatusChange, setPendingStatusChange] = useState<{ candidateId: string; newStatus: CandidateStatus } | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   useEffect(() => {
     if (filterControlledExternally) setSelectedIds(new Set());
   }, [statusFilter, filterControlledExternally]);
+
+  const updateScrollButtons = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 0);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 2);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    updateScrollButtons();
+    el.addEventListener('scroll', updateScrollButtons);
+    const ro = new ResizeObserver(updateScrollButtons);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener('scroll', updateScrollButtons);
+      ro.disconnect();
+    };
+  }, [updateScrollButtons]);
+
+  const scrollHorizontally = (dir: 'left' | 'right') => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir === 'left' ? -320 : 320, behavior: 'smooth' });
+  };
 
   const fetchSavedIds = useCallback(async () => {
     try {
@@ -442,10 +474,12 @@ export default function CandidatesTable({
   const filteredAndSortedCandidates = useMemo(() => {
     let result = [...candidates];
 
-    if (statusFilter) {
-      result = result.filter((c) => c.status === statusFilter);
-    } else {
+    if (statusFilter === 'active') {
+      // "Todos (excl. encerrados)"
       result = result.filter((c) => c.status !== 'rejected');
+    } else if (statusFilter && statusFilter !== 'active') {
+      // Status específico
+      result = result.filter((c) => c.status === statusFilter);
     }
 
     result.sort((a, b) => {
@@ -641,8 +675,23 @@ export default function CandidatesTable({
       </div>
 
       {/* Desktop: table - overflow-x-auto + min-width nas colunas para evitar sobreposição */}
-      <div className="hidden md:block bg-white rounded-lg border border-gray-200 overflow-x-auto">
-        <table className="w-full min-w-[960px] table-auto">
+      <div className="relative hidden md:block">
+        {canScrollLeft && (
+          <button
+            type="button"
+            onClick={() => scrollHorizontally('left')}
+            className="absolute left-0 top-0 bottom-0 z-10 w-8 flex-shrink-0 bg-gradient-to-r from-gray-50 to-transparent flex items-center justify-center text-gray-600 hover:from-gray-100 hover:text-gray-900 transition-opacity"
+            aria-label="Rolar tabela para a esquerda"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+        )}
+        <div
+          ref={scrollContainerRef}
+          className="bg-white rounded-lg border border-gray-200 overflow-x-auto"
+          style={{ scrollbarGutter: 'stable' }}
+        >
+          <table className="w-full min-w-[960px] table-auto">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th className={`${thClass} whitespace-nowrap`} style={{ minWidth: 44 }}>
@@ -904,6 +953,17 @@ export default function CandidatesTable({
             })}
           </tbody>
         </table>
+        </div>
+        {canScrollRight && (
+          <button
+            type="button"
+            onClick={() => scrollHorizontally('right')}
+            className="absolute right-0 top-0 bottom-0 z-10 w-8 flex-shrink-0 bg-gradient-to-l from-gray-50 to-transparent flex items-center justify-center text-gray-600 hover:from-gray-100 hover:text-gray-900 transition-opacity"
+            aria-label="Rolar tabela para a direita"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
       {/* Modal de confirmação de status com envio de e-mail */}

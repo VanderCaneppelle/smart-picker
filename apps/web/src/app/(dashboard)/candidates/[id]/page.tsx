@@ -26,7 +26,7 @@ const statusOptions = [
   { value: 'reviewing', label: 'Em análise' },
   { value: 'interview', label: 'Entrevista' },
   { value: 'in_validation', label: 'Em validação' },
-  { value: 'rejected', label: 'Rejeitado' },
+  { value: 'rejected', label: 'Encerrado' },
   { value: 'hired', label: 'Contratado' },
 ];
 
@@ -35,7 +35,7 @@ const STATUS_DISPLAY_LABELS: Record<string, string> = {
   reviewing: 'Em análise',
   interview: 'Entrevista',
   in_validation: 'Em validação',
-  rejected: 'Rejeitado',
+  rejected: 'Encerrado',
   hired: 'Contratado',
 };
 
@@ -240,20 +240,6 @@ export default function CandidateDetailPage() {
               </div>
             )}
 
-            {/* Schedule interview email sent */}
-            {candidate.schedule_interview_email_sent_at && (
-              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-800 text-sm">
-                <span>E-mail de agendamento (Convite Calendly) enviado em{' '}
-                  {new Date(candidate.schedule_interview_email_sent_at).toLocaleString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </span>
-              </div>
-            )}
           </div>
 
           {/* Application Answers */}
@@ -444,7 +430,9 @@ export default function CandidateDetailPage() {
                         {STATUS_DISPLAY_LABELS[event.to_status] || event.to_status}
                       </p>
                     )}
-                    {event.message && (
+                    {/* Para eventos de status, usamos apenas os rótulos em português acima.
+                        Não exibimos a mensagem original do backend para evitar textos em inglês. */}
+                    {event.message && event.event_type !== 'status_changed' && (
                       <p className="text-xs text-gray-500 mt-1">{event.message}</p>
                     )}
                   </div>

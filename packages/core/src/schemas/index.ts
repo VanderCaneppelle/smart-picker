@@ -116,6 +116,9 @@ export const UpdateJobSchema = z.object({
 // Candidate Schemas
 // ============================================
 
+/** Versão atual do texto de consentimento LGPD (termos + privacidade) exibido no formulário. */
+export const CONSENT_VERSION = '2025-03';
+
 export const CreateCandidateSchema = z.object({
   job_id: z.string().uuid(),
   name: z.string().min(1, 'Name is required').max(200),
@@ -124,6 +127,12 @@ export const CreateCandidateSchema = z.object({
   linkedin_url: z.string().url().nullable().optional().or(z.literal('')),
   resume_url: z.string().url('Resume URL is required'),
   application_answers: z.array(ApplicationAnswerSchema).optional().default([]),
+  /** Consentimento explícito obrigatório (LGPD): aceite dos termos e da política de privacidade. */
+  consent_agreed: z.literal(true, {
+    errorMap: () => ({ message: 'É necessário aceitar os Termos de Uso e a Política de Privacidade para enviar a candidatura.' }),
+  }),
+  /** Versão do consentimento aceita (registro para auditoria). */
+  consent_version: z.string().optional(),
 });
 
 export const UpdateCandidateSchema = z.object({

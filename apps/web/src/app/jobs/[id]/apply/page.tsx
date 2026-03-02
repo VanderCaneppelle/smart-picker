@@ -16,6 +16,7 @@ import {
 import { apiClient } from '@/lib/api-client';
 import { Button, Input, Textarea, Badge, Loading } from '@/components/ui';
 import type { Job, ApplicationQuestion, ApplicationAnswer } from '@hunter/core';
+import { CONSENT_VERSION } from '@hunter/core';
 
 const getStatusBadgeVariant = (status: string) => {
   switch (status) {
@@ -54,6 +55,7 @@ export default function ApplyPage() {
   const [resumeUrl, setResumeUrl] = useState('');
   const [resumeFileName, setResumeFileName] = useState('');
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [consentAgreed, setConsentAgreed] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const fetchJob = useCallback(async () => {
@@ -136,6 +138,10 @@ export default function ApplyPage() {
       }
     });
 
+    if (!consentAgreed) {
+      newErrors.consent = 'É necessário aceitar os Termos de Uso e a Política de Privacidade para enviar a candidatura.';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -144,7 +150,7 @@ export default function ApplyPage() {
     e.preventDefault();
 
     if (!validate()) {
-      toast.error('Por favor, corrija os erros antes de enviar');
+      toast.error('Por favor, revise os campos obrigatórios antes de enviar');
       return;
     }
 
@@ -166,6 +172,8 @@ export default function ApplyPage() {
         linkedin_url: linkedin.trim() || null,
         resume_url: resumeUrl,
         application_answers: applicationAnswers,
+        consent_agreed: true,
+        consent_version: CONSENT_VERSION,
       });
 
       setIsSubmitted(true);
@@ -552,6 +560,35 @@ export default function ApplyPage() {
                 </div>
               )}
 
+              {/* Consentimento LGPD - obrigatório */}
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-3">
+                <label
+                  className={`flex items-start gap-3 cursor-pointer ${errors.consent ? 'text-red-700' : 'text-gray-800'}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={consentAgreed}
+                    onChange={(e) => setConsentAgreed(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                    aria-describedby="consent-description"
+                  />
+                  <span id="consent-description" className="text-sm">
+                    Declaro que li e aceito os{' '}
+                    <Link href="/termos" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-700 font-medium underline">
+                      Termos de Uso
+                    </Link>
+                    {' '}e a{' '}
+                    <Link href="/privacidade" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-700 font-medium underline">
+                      Política de Privacidade
+                    </Link>
+                    .
+                  </span>
+                </label>
+                {errors.consent && (
+                  <p className="text-sm text-red-500 ml-7">{errors.consent}</p>
+                )}
+              </div>
+
               {/* Submit */}
               <Button
                 type="submit"
@@ -561,10 +598,6 @@ export default function ApplyPage() {
               >
                 Enviar candidatura
               </Button>
-
-              <p className="text-xs text-gray-500 text-center">
-                Ao enviar, você concorda com nossa política de privacidade e termos de uso.
-              </p>
             </form>
           </div>
 

@@ -175,6 +175,8 @@ export async function POST(request: NextRequest) {
         flagged_reason: eliminationReasons,
         disqualification_flags:
           (disqualificationFlags.length > 0 ? disqualificationFlags : []) as unknown as Prisma.InputJsonValue,
+        consent_given_at: new Date(),
+        consent_version: validation.data.consent_version ?? null,
       },
     });
 

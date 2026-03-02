@@ -35,7 +35,7 @@ const STATUS_LABELS: Record<string, string> = {
   interview: 'Entrevista',
   in_validation: 'Em Validação',
   hired: 'Contratados',
-  rejected: 'Rejeitados',
+  rejected: 'Encerrados',
 };
 
 const COLUMNS: { status: CandidateStatus; title: string; headerColor: string }[] = [
@@ -44,7 +44,7 @@ const COLUMNS: { status: CandidateStatus; title: string; headerColor: string }[]
   { status: 'interview', title: 'Entrevista', headerColor: 'bg-orange-50' },
   { status: 'in_validation', title: 'Em Validação', headerColor: 'bg-purple-50' },
   { status: 'hired', title: 'Contratados', headerColor: 'bg-green-50' },
-  { status: 'rejected', title: 'Rejeitados', headerColor: 'bg-neutral-100' },
+  { status: 'rejected', title: 'Encerrados', headerColor: 'bg-neutral-100' },
 ];
 
 const ALL_STATUSES = COLUMNS.map((c) => c.status);
@@ -52,11 +52,14 @@ const ALL_STATUSES = COLUMNS.map((c) => c.status);
 interface CandidatesKanbanBoardProps {
   candidates: Candidate[];
   setCandidates: React.Dispatch<React.SetStateAction<Candidate[]>>;
+  /** Quando preenchido, cards correspondentes podem receber destaque visual */
+  searchQuery?: string;
 }
 
 export default function CandidatesKanbanBoard({
   candidates,
   setCandidates,
+  searchQuery = '',
 }: CandidatesKanbanBoardProps) {
   const [activeDragCandidate, setActiveDragCandidate] = useState<Candidate | null>(null);
   const [drawerCandidateId, setDrawerCandidateId] = useState<string | null>(null);
@@ -201,6 +204,7 @@ export default function CandidatesKanbanBoard({
                 candidates={grouped[col.status]}
                 headerColorClass={col.headerColor}
                 onCardClick={handleCardClick}
+                highlightCards={!!searchQuery.trim()}
               />
             ))}
           </div>
