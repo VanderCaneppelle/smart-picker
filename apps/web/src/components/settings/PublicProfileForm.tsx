@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Globe, ExternalLink, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { apiClient, type RecruiterSettings } from '@/lib/api-client';
@@ -13,7 +14,7 @@ import {
   DEFAULT_REJECTION_BODY_HTML,
 } from '@/lib/emailTemplateDefaults';
 import { normalizeSlug, validateSlug } from '@/lib/slug';
-import { Button, Loading } from '@/components/ui';
+import { Button, Loading, Modal } from '@/components/ui';
 import BrandingFields from './BrandingFields';
 import EmailPersonalizationFields from './EmailPersonalizationFields';
 import EmailTemplatesSection from './EmailTemplatesSection';
@@ -49,6 +50,11 @@ export default function PublicProfileForm() {
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const originalSlug = useRef<string | null>(null);
+  const initialValues = useRef<Record<string, string | null>>({});
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const pendingNavigation = useRef<string | null>(null);
+  const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     apiClient
@@ -74,6 +80,24 @@ export default function PublicProfileForm() {
         setRejectionBodyHtml(data.rejection_body_html?.trim() || DEFAULT_REJECTION_BODY_HTML);
 
         if (data.public_slug) setSlugAvailability('current');
+
+        initialValues.current = {
+          slug: data.public_slug || '',
+          displayName: data.public_display_name || '',
+          headline: data.public_headline || '',
+          logoUrl: data.public_logo_url || '',
+          brandColor: data.brand_color || '',
+          linkedinUrl: data.public_linkedin_url || '',
+          senderName: data.email_sender_name || '',
+          replyToEmail: data.reply_to_email || '',
+          emailSignature: data.email_signature || '',
+          applicationReceivedSubject: data.application_received_subject?.trim() || DEFAULT_APPLICATION_RECEIVED_SUBJECT,
+          applicationReceivedBodyHtml: data.application_received_body_html?.trim() || DEFAULT_APPLICATION_RECEIVED_BODY_HTML,
+          scheduleInterviewSubject: data.schedule_interview_subject?.trim() || DEFAULT_SCHEDULE_INTERVIEW_SUBJECT,
+          scheduleInterviewBodyHtml: data.schedule_interview_body_html?.trim() || DEFAULT_SCHEDULE_INTERVIEW_BODY_HTML,
+          rejectionSubject: data.rejection_subject?.trim() || DEFAULT_REJECTION_SUBJECT,
+          rejectionBodyHtml: data.rejection_body_html?.trim() || DEFAULT_REJECTION_BODY_HTML,
+        };
       })
       .catch(() => toast.error('Erro ao carregar configurações'))
       .finally(() => setIsLoading(false));
@@ -129,12 +153,40 @@ export default function PublicProfileForm() {
     };
   }, [slug, checkSlug]);
 
-  const handleTogglePublicPage = (enabled: boolean) => {
+  const handleTogglePublicPage = async (enabled: boolean) => {
     if (enabled && !slug) {
       toast.error('Defina um slug antes de ativar a página pública');
       return;
     }
+    const previousValue = publicPageEnabled;
     setPublicPageEnabled(enabled);
+
+    try {
+      const effectiveSlug = slug || originalSlug.current;
+      if (enabled && !effectiveSlug) {
+        setPublicPageEnabled(previousValue);
+        toast.error('Defina um slug antes de ativar a página pública');
+        return;
+      }
+      const payload: Record<string, unknown> = {
+        public_page_enabled: enabled,
+      };
+      if (effectiveSlug && effectiveSlug !== originalSlug.current && slugAvailability === 'available') {
+        payload.public_slug = effectiveSlug;
+      }
+      const updated = await apiClient.updateRecruiterSettings(payload as Partial<RecruiterSettings>);
+      setPublicPageEnabled(updated.public_page_enabled);
+      setSettings((prev) => (prev ? { ...prev, public_page_enabled: updated.public_page_enabled } : null));
+      if (updated.public_slug) {
+        originalSlug.current = updated.public_slug;
+        setSlugAvailability('current');
+        initialValues.current.slug = updated.public_slug;
+      }
+      toast.success(enabled ? 'Página pública ativada!' : 'Página pública desativada.');
+    } catch (error) {
+      setPublicPageEnabled(previousValue);
+      toast.error(error instanceof Error ? error.message : 'Erro ao atualizar');
+    }
   };
 
   const handleSave = async () => {
@@ -172,6 +224,23 @@ export default function PublicProfileForm() {
       setPublicPageEnabled(updated.public_page_enabled);
       originalSlug.current = updated.public_slug;
       if (updated.public_slug) setSlugAvailability('current');
+      initialValues.current = {
+        slug: updated.public_slug || '',
+        displayName: updated.public_display_name || '',
+        headline: updated.public_headline || '',
+        logoUrl: updated.public_logo_url || '',
+        brandColor: updated.brand_color || '',
+        linkedinUrl: updated.public_linkedin_url || '',
+        senderName: updated.email_sender_name || '',
+        replyToEmail: updated.reply_to_email || '',
+        emailSignature: updated.email_signature || '',
+        applicationReceivedSubject: updated.application_received_subject?.trim() || DEFAULT_APPLICATION_RECEIVED_SUBJECT,
+        applicationReceivedBodyHtml: updated.application_received_body_html?.trim() || DEFAULT_APPLICATION_RECEIVED_BODY_HTML,
+        scheduleInterviewSubject: updated.schedule_interview_subject?.trim() || DEFAULT_SCHEDULE_INTERVIEW_SUBJECT,
+        scheduleInterviewBodyHtml: updated.schedule_interview_body_html?.trim() || DEFAULT_SCHEDULE_INTERVIEW_BODY_HTML,
+        rejectionSubject: updated.rejection_subject?.trim() || DEFAULT_REJECTION_SUBJECT,
+        rejectionBodyHtml: updated.rejection_body_html?.trim() || DEFAULT_REJECTION_BODY_HTML,
+      };
       toast.success('Configurações salvas!');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Erro ao salvar');
@@ -180,13 +249,111 @@ export default function PublicProfileForm() {
     }
   };
 
+  const hasUnsavedChanges = useCallback(() => {
+    const init = initialValues.current;
+    return (
+      (slug || '') !== (init.slug || '') ||
+      (displayName.trim() || '') !== (init.displayName || '') ||
+      (headline.trim() || '') !== (init.headline || '') ||
+      (logoUrl || '') !== (init.logoUrl || '') ||
+      (brandColor || '') !== (init.brandColor || '') ||
+      (linkedinUrl.trim() || '') !== (init.linkedinUrl || '') ||
+      (senderName.trim() || '') !== (init.senderName || '') ||
+      (replyToEmail.trim() || '') !== (init.replyToEmail || '') ||
+      (emailSignature.trim() || '') !== (init.emailSignature || '') ||
+      (applicationReceivedSubject.trim() || '') !== (init.applicationReceivedSubject || '') ||
+      (applicationReceivedBodyHtml.trim() || '') !== (init.applicationReceivedBodyHtml || '') ||
+      (scheduleInterviewSubject.trim() || '') !== (init.scheduleInterviewSubject || '') ||
+      (scheduleInterviewBodyHtml.trim() || '') !== (init.scheduleInterviewBodyHtml || '') ||
+      (rejectionSubject.trim() || '') !== (init.rejectionSubject || '') ||
+      (rejectionBodyHtml.trim() || '') !== (init.rejectionBodyHtml || '')
+    );
+  }, [
+    slug,
+    displayName,
+    headline,
+    logoUrl,
+    brandColor,
+    linkedinUrl,
+    senderName,
+    replyToEmail,
+    emailSignature,
+    applicationReceivedSubject,
+    applicationReceivedBodyHtml,
+    scheduleInterviewSubject,
+    scheduleInterviewBodyHtml,
+    rejectionSubject,
+    rejectionBodyHtml,
+  ]);
+
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges()) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [hasUnsavedChanges]);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (!hasUnsavedChanges()) return;
+      const target = e.target as HTMLElement;
+      const link = target.closest('a[href^="/"]');
+      if (!link || (link as HTMLAnchorElement).target === '_blank') return;
+      const href = (link as HTMLAnchorElement).getAttribute('href');
+      if (!href || href.startsWith('#')) return;
+      const hrefPath = href.split('#')[0] || href;
+      if (hrefPath === pathname) return;
+      e.preventDefault();
+      e.stopPropagation();
+      pendingNavigation.current = href;
+      setShowLeaveModal(true);
+    };
+    document.addEventListener('click', handleClick, true);
+    return () => document.removeEventListener('click', handleClick, true);
+  }, [hasUnsavedChanges, pathname]);
+
+  const handleConfirmLeave = useCallback(() => {
+    const href = pendingNavigation.current;
+    setShowLeaveModal(false);
+    pendingNavigation.current = null;
+    if (href) {
+      router.push(href);
+    }
+  }, [router]);
+
+  const handleCancelLeave = useCallback(() => {
+    setShowLeaveModal(false);
+    pendingNavigation.current = null;
+  }, []);
+
   if (isLoading) return <Loading text="Carregando configurações..." />;
   if (!settings) return <div className="text-center py-12 text-gray-500">Erro ao carregar configurações.</div>;
 
   const slugOk = slugAvailability === 'available' || slugAvailability === 'current';
 
   return (
-    <div className="space-y-8 w-full">
+    <div>
+      {/* Header com botão Salvar no topo */}
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Perfil público</h1>
+          <p className="text-gray-600 mt-1">
+            Configure sua página pública, branding e personalização de e-mails
+          </p>
+        </div>
+        <Button
+          onClick={handleSave}
+          isLoading={isSaving}
+          className="bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500 shrink-0"
+        >
+          Salvar configurações
+        </Button>
+      </div>
+
+      <div className="space-y-8 w-full">
       {/* Public Page Section */}
       <section className="bg-white rounded-xl border border-gray-200 p-6">
         <div className="flex items-center gap-3 mb-6">
@@ -341,7 +508,7 @@ export default function PublicProfileForm() {
         />
       </section>
 
-      {/* Save */}
+      {/* Save (também no rodapé) */}
       <div className="flex justify-end">
         <Button
           onClick={handleSave}
@@ -351,6 +518,33 @@ export default function PublicProfileForm() {
           Salvar configurações
         </Button>
       </div>
+      </div>
+
+      {/* Modal de confirmação ao sair com alterações não salvas */}
+      <Modal
+        isOpen={showLeaveModal}
+        onClose={handleCancelLeave}
+        title="Alterações não salvas"
+        size="sm"
+        footer={
+          <>
+            <Button variant="ghost" onClick={handleCancelLeave}>
+              Cancelar
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleConfirmLeave}
+              className="border border-amber-500 text-amber-700 hover:bg-amber-50"
+            >
+              Sair mesmo assim
+            </Button>
+          </>
+        }
+      >
+        <p className="text-gray-600">
+          Você tem alterações não salvas. Deseja sair desta página mesmo assim?
+        </p>
+      </Modal>
     </div>
   );
 }
