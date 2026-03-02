@@ -8,7 +8,7 @@ import {
   useCallback,
   ReactNode,
 } from 'react';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, AUTH_LOGOUT_EVENT } from '@/lib/api-client';
 
 interface User {
   id: string;
@@ -129,6 +129,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     apiClient.setToken(null);
     setUser(null);
   }, []);
+
+  // Escuta evento quando o refresh token falha (ex: após 401 em requisição)
+  useEffect(() => {
+    const handleAuthLogout = () => logout();
+    window.addEventListener(AUTH_LOGOUT_EVENT, handleAuthLogout);
+    return () => window.removeEventListener(AUTH_LOGOUT_EVENT, handleAuthLogout);
+  }, [logout]);
 
   return (
     <AuthContext.Provider
