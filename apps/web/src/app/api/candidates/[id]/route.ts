@@ -107,6 +107,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     if (data.experience_level !== undefined) updateData.experience_level = data.experience_level;
     if (data.needs_scoring !== undefined) updateData.needs_scoring = data.needs_scoring;
     if (data.flagged_reason !== undefined) updateData.flagged_reason = data.flagged_reason;
+    if (data.recruiter_notes !== undefined) updateData.recruiter_notes = data.recruiter_notes;
 
     const candidate = await prisma.candidate.update({
       where: { id },

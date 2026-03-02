@@ -88,17 +88,69 @@ export interface CandidateHistoryEvent {
 }
 
 const API_BASE = '/api';
+const REFRESH_TOKEN_KEY = 'hunter_refresh_token';
+const ACCESS_TOKEN_KEY = 'hunter_access_token';
+
+/** Evento disparado quando o refresh token falha - AuthContext deve fazer logout */
+export const AUTH_LOGOUT_EVENT = 'hunter:auth:logout';
 
 class ApiClient {
   private token: string | null = null;
+  private isRefreshing = false;
+  private refreshPromise: Promise<boolean> | null = null;
 
   setToken(token: string | null) {
     this.token = token;
   }
 
+  /** Faz refresh do token usando fetch direto (não passa pelo request para evitar loop) */
+  private async tryRefreshToken(): Promise<boolean> {
+    if (this.isRefreshing && this.refreshPromise) {
+      return this.refreshPromise;
+    }
+
+    this.isRefreshing = true;
+    this.refreshPromise = (async () => {
+      try {
+        const refreshToken =
+          typeof window !== 'undefined' ? localStorage.getItem(REFRESH_TOKEN_KEY) : null;
+        if (!refreshToken) return false;
+
+        const response = await fetch(`${API_BASE}/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: refreshToken }),
+        });
+
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          console.warn('Token refresh failed:', data.message || response.status);
+          return false;
+        }
+
+        const data = await response.json();
+        this.token = data.access_token;
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(ACCESS_TOKEN_KEY, data.access_token);
+          localStorage.setItem(REFRESH_TOKEN_KEY, data.refresh_token);
+        }
+        return true;
+      } catch (err) {
+        console.warn('Token refresh error:', err);
+        return false;
+      } finally {
+        this.isRefreshing = false;
+        this.refreshPromise = null;
+      }
+    })();
+
+    return this.refreshPromise;
+  }
+
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    isRetry = false
   ): Promise<T> {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -113,6 +165,16 @@ class ApiClient {
       ...options,
       headers,
     });
+
+    if (response.status === 401 && !isRetry) {
+      const refreshed = await this.tryRefreshToken();
+      if (refreshed) {
+        return this.request<T>(endpoint, options, true);
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(AUTH_LOGOUT_EVENT));
+      }
+    }
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({
@@ -347,7 +409,7 @@ class ApiClient {
   }
 
   // Upload
-  async uploadFile(file: File, bucket = 'resumes'): Promise<{
+  async uploadFile(file: File, bucket = 'resumes', isRetry = false): Promise<{
     url: string;
     fileName: string;
     originalName: string;
@@ -368,6 +430,16 @@ class ApiClient {
       headers,
       body: formData,
     });
+
+    if (response.status === 401 && !isRetry) {
+      const refreshed = await this.tryRefreshToken();
+      if (refreshed) {
+        return this.uploadFile(file, bucket, true);
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(AUTH_LOGOUT_EVENT));
+      }
+    }
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({

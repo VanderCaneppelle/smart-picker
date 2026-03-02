@@ -144,6 +144,7 @@ export const UpdateCandidateSchema = z.object({
   experience_level: z.string().nullable().optional(),
   needs_scoring: z.boolean().optional(),
   flagged_reason: z.string().nullable().optional(),
+  recruiter_notes: z.string().max(50000).nullable().optional(),
 });
 
 // ============================================
