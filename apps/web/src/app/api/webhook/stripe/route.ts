@@ -3,11 +3,15 @@ import Stripe from 'stripe';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/db';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   const body = await request.text();
   const signature = request.headers.get('stripe-signature');
 
   if (!signature) {
+    console.error('[Webhook] Missing stripe-signature header');
     return Response.json({ error: 'Missing signature' }, { status: 400 });
   }
 
@@ -15,13 +19,17 @@ export async function POST(request: NextRequest) {
 
   try {
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-    if (!webhookSecret || webhookSecret === 'whsec_placeholder') {
-      event = JSON.parse(body) as Stripe.Event;
-    } else {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+    if (!webhookSecret) {
+      console.error('[Webhook] STRIPE_WEBHOOK_SECRET is not set');
+      return Response.json({ error: 'Webhook not configured' }, { status: 500 });
     }
+    console.log('[Webhook] Secret starts with:', webhookSecret.substring(0, 10) + '...');
+    console.log('[Webhook] Body length:', body.length, 'Signature present:', !!signature);
+    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err) {
-    console.error('Webhook signature verification failed:', err);
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[Webhook] Signature verification failed:', msg);
+    console.error('[Webhook] Check that STRIPE_WEBHOOK_SECRET matches the signing secret from the Stripe Dashboard webhook endpoint.');
     return Response.json({ error: 'Invalid signature' }, { status: 400 });
   }
 

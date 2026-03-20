@@ -18,16 +18,26 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const recruiter = await prisma.recruiter.findUnique({
+  console.log('[Checkout] Looking up recruiter:', user.id);
+
+  let recruiter = await prisma.recruiter.findUnique({
     where: { id: user.id },
     select: { name: true, email: true, stripe_customer_id: true },
   });
 
   if (!recruiter) {
-    return Response.json(
-      { error: 'Not Found', message: 'Recruiter not found' },
-      { status: 404 }
-    );
+    console.warn('[Checkout] Recruiter not found, creating for user:', user.id);
+    recruiter = await prisma.recruiter.upsert({
+      where: { id: user.id },
+      create: {
+        id: user.id,
+        email: user.email,
+        name: user.email.split('@')[0],
+        subscription_status: 'trialing',
+        trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      },
+      update: {},
+    });
   }
 
   let customerId = recruiter.stripe_customer_id;
