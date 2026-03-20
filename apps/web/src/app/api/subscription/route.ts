@@ -2,44 +2,38 @@ import { NextRequest } from 'next/server';
 import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 
+async function findOrSyncRecruiter(authId: string, email: string) {
+  let recruiter = await prisma.recruiter.findUnique({ where: { id: authId } });
+
+  if (!recruiter) {
+    recruiter = await prisma.recruiter.findUnique({ where: { email } });
+
+    if (recruiter) {
+      console.log('[Subscription] Found recruiter by email, syncing ID:', recruiter.id, '->', authId);
+      recruiter = await prisma.recruiter.update({
+        where: { email },
+        data: { id: authId },
+      });
+    }
+  }
+
+  return recruiter;
+}
+
 export async function GET(request: NextRequest) {
   const user = await verifyAuth(request);
   if (!user) return unauthorizedResponse();
 
   console.log('[Subscription] Looking up recruiter:', user.id, user.email);
 
-  const recruiter = await prisma.recruiter.findUnique({
-    where: { id: user.id },
-    select: {
-      subscription_status: true,
-      subscription_plan: true,
-      trial_ends_at: true,
-      subscription_current_period_end: true,
-    },
-  });
+  const recruiter = await findOrSyncRecruiter(user.id, user.email);
 
   if (!recruiter) {
-    console.warn('[Subscription] Recruiter not found for user:', user.id, '- creating with trial defaults');
-    const trialEndsAt = new Date();
-    trialEndsAt.setDate(trialEndsAt.getDate() + 30);
-
-    const created = await prisma.recruiter.upsert({
-      where: { id: user.id },
-      create: {
-        id: user.id,
-        email: user.email,
-        name: user.email.split('@')[0],
-        subscription_status: 'trialing',
-        trial_ends_at: trialEndsAt,
-      },
-      update: {},
-    });
-
     return Response.json({
-      status: created.subscription_status,
-      plan: created.subscription_plan,
-      trialEndsAt: created.trial_ends_at?.toISOString() ?? null,
-      currentPeriodEnd: created.subscription_current_period_end?.toISOString() ?? null,
+      status: 'trialing',
+      plan: null,
+      trialEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      currentPeriodEnd: null,
     });
   }
 

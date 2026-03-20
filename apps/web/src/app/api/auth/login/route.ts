@@ -39,20 +39,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Ensure Recruiter exists (for legacy users migrated from Auth-only)
     const userId = data.user.id;
     const email = data.user.email!;
-    await prisma.recruiter.upsert({
-      where: { id: userId },
-      create: {
-        id: userId,
-        email,
-        name: data.user.user_metadata?.name || email.split('@')[0],
-        company: null,
-        phone_number: null,
-      },
-      update: {}, // Don't overwrite existing recruiter data
-    });
+
+    let recruiter = await prisma.recruiter.findUnique({ where: { id: userId } });
+
+    if (!recruiter) {
+      const byEmail = await prisma.recruiter.findUnique({ where: { email } });
+
+      if (byEmail && byEmail.id !== userId) {
+        console.log('[Login] Syncing recruiter ID from', byEmail.id, 'to Supabase Auth ID', userId);
+        await prisma.recruiter.update({
+          where: { email },
+          data: { id: userId },
+        });
+      } else if (!byEmail) {
+        const trialEndsAt = new Date();
+        trialEndsAt.setDate(trialEndsAt.getDate() + 30);
+
+        await prisma.recruiter.create({
+          data: {
+            id: userId,
+            email,
+            name: data.user.user_metadata?.name || email.split('@')[0],
+            company: null,
+            phone_number: null,
+            subscription_status: 'trialing',
+            trial_ends_at: trialEndsAt,
+          },
+        });
+      }
+    }
 
     return Response.json({
       user: {

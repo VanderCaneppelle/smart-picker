@@ -18,26 +18,37 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  console.log('[Checkout] Looking up recruiter:', user.id);
+  console.log('[Checkout] Looking up recruiter:', user.id, user.email);
 
   let recruiter = await prisma.recruiter.findUnique({
     where: { id: user.id },
-    select: { name: true, email: true, stripe_customer_id: true },
+    select: { id: true, name: true, email: true, stripe_customer_id: true },
   });
 
   if (!recruiter) {
-    console.warn('[Checkout] Recruiter not found, creating for user:', user.id);
-    recruiter = await prisma.recruiter.upsert({
-      where: { id: user.id },
-      create: {
-        id: user.id,
-        email: user.email,
-        name: user.email.split('@')[0],
-        subscription_status: 'trialing',
-        trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      },
-      update: {},
+    const byEmail = await prisma.recruiter.findUnique({
+      where: { email: user.email },
+      select: { id: true, name: true, email: true, stripe_customer_id: true },
     });
+
+    if (byEmail) {
+      console.log('[Checkout] Found recruiter by email, syncing ID:', byEmail.id, '->', user.id);
+      recruiter = await prisma.recruiter.update({
+        where: { email: user.email },
+        data: { id: user.id },
+      });
+    } else {
+      console.warn('[Checkout] Recruiter not found, creating for user:', user.id);
+      recruiter = await prisma.recruiter.create({
+        data: {
+          id: user.id,
+          email: user.email,
+          name: user.email.split('@')[0],
+          subscription_status: 'trialing',
+          trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+      });
+    }
   }
 
   let customerId = recruiter.stripe_customer_id;
