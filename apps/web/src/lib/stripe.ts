@@ -16,7 +16,7 @@ function getStripeClient(): Stripe {
 
 export const stripe = new Proxy({} as Stripe, {
   get(_, prop) {
-    return (getStripeClient() as Record<string | symbol, unknown>)[prop];
+    return (getStripeClient() as unknown as Record<string | symbol, unknown>)[prop];
   },
 });
 
