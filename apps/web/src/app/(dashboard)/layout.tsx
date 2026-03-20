@@ -36,9 +36,50 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { user, isLoading, isAuthenticated, logout } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  if (isLoading) {
+    return <Loading fullScreen text="Carregando..." />;
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  return (
+    <Suspense fallback={<Loading fullScreen text="Carregando..." />}>
+      <DashboardLayoutContent pathname={pathname} user={user} onLogout={logout} isAuthenticated={isAuthenticated}>
+        {children}
+      </DashboardLayoutContent>
+    </Suspense>
+  );
+}
+
+function DashboardLayoutContent({
+  pathname,
+  user,
+  onLogout,
+  isAuthenticated,
+  children,
+}: {
+  pathname: string | null;
+  user: { email?: string } | null;
+  onLogout: () => void;
+  isAuthenticated: boolean;
+  children: React.ReactNode;
+}) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
+  const [vagasExpanded, setVagasExpanded] = useState(() => pathname === '/jobs' || (pathname?.startsWith('/jobs/') && pathname !== '/jobs/new'));
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   const fetchSubscription = () => {
     if (isAuthenticated) {
@@ -54,81 +95,33 @@ export default function DashboardLayout({
   };
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isLoading, isAuthenticated, router]);
-
-  useEffect(() => {
     fetchSubscription();
   }, [isAuthenticated]);
 
-  // Refetch subscription when returning from Stripe checkout
   useEffect(() => {
     const subParam = searchParams?.get('subscription');
     if (subParam === 'success' && isAuthenticated) {
-      // Poll for subscription update (webhook might take a few seconds)
       let attempts = 0;
       const maxAttempts = 15;
       const pollInterval = setInterval(() => {
         attempts++;
         apiClient.getSubscription().then((sub) => {
           setSubscription(sub);
-          // Stop polling if subscription is now active
           if (sub.status === 'active' && sub.plan) {
             clearInterval(pollInterval);
           }
-        }).catch(() => {
-          // Continue polling on error
-        });
+        }).catch(() => {});
         
         if (attempts >= maxAttempts) {
           clearInterval(pollInterval);
         }
       }, 2000);
       
-      // Also try immediately after 1s
       setTimeout(() => fetchSubscription(), 1000);
       
       return () => clearInterval(pollInterval);
     }
   }, [searchParams, isAuthenticated]);
-
-  if (isLoading) {
-    return <Loading fullScreen text="Carregando..." />;
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  return (
-    <Suspense fallback={<Loading fullScreen text="Carregando..." />}>
-      <DashboardLayoutContent pathname={pathname} user={user} onLogout={logout} subscription={subscription}>
-        {children}
-      </DashboardLayoutContent>
-    </Suspense>
-  );
-}
-
-function DashboardLayoutContent({
-  pathname,
-  user,
-  onLogout,
-  subscription,
-  children,
-}: {
-  pathname: string | null;
-  user: { email?: string } | null;
-  onLogout: () => void;
-  subscription: SubscriptionInfo | null;
-  children: React.ReactNode;
-}) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [vagasExpanded, setVagasExpanded] = useState(() => pathname === '/jobs' || (pathname?.startsWith('/jobs/') && pathname !== '/jobs/new'));
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   const currentStatus = searchParams.get('status') ?? '';
   const isJobsPage = pathname === '/jobs' || (pathname?.startsWith('/jobs/') && pathname !== '/jobs/new');
