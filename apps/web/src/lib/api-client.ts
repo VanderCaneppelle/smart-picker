@@ -11,6 +11,8 @@ import type {
   CandidateFilters,
 } from '@hunter/core';
 
+import type { SubscriptionInfo } from '@/lib/subscription';
+
 export interface RecruiterSettings {
   id: string;
   name: string;
@@ -351,6 +353,24 @@ class ApiClient {
   async unsaveCandidate(candidateId: string): Promise<{ message: string }> {
     return this.request<{ message: string }>(`/saved-candidates/${candidateId}`, {
       method: 'DELETE',
+    });
+  }
+
+  // Subscription
+  async getSubscription(): Promise<SubscriptionInfo> {
+    return this.request<SubscriptionInfo>('/subscription');
+  }
+
+  async createCheckoutSession(planId: string): Promise<{ url: string }> {
+    return this.request<{ url: string }>('/subscription/checkout', {
+      method: 'POST',
+      body: JSON.stringify({ planId }),
+    });
+  }
+
+  async createPortalSession(): Promise<{ url: string }> {
+    return this.request<{ url: string }>('/subscription/portal', {
+      method: 'POST',
     });
   }
 

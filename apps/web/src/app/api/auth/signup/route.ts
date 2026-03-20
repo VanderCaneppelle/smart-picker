@@ -46,7 +46,9 @@ export async function POST(request: NextRequest) {
 
     const userId = data.user!.id;
 
-    // Create Recruiter profile (upsert in case of email confirmation flow - user may signup again)
+    const trialEndsAt = new Date();
+    trialEndsAt.setDate(trialEndsAt.getDate() + 30);
+
     await prisma.recruiter.upsert({
       where: { id: userId },
       create: {
@@ -55,6 +57,8 @@ export async function POST(request: NextRequest) {
         name,
         company: company || null,
         phone_number: phone_number || null,
+        subscription_status: 'trialing',
+        trial_ends_at: trialEndsAt,
       },
       update: {
         email,

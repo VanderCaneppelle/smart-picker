@@ -5,6 +5,13 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loading } from '@/components/ui';
+import { SubscriptionPaywall, TrialBanner, TrialSidebarBadge } from '@/components/SubscriptionPaywall';
+import { apiClient } from '@/lib/api-client';
+import {
+  type SubscriptionInfo,
+  shouldShowPaywall,
+  getTrialDaysRemaining,
+} from '@/lib/subscription';
 import { TrendingUp, LogOut, Briefcase, PlusCircle, LayoutDashboard, Users, User, ChevronDown, Menu, X, Settings } from 'lucide-react';
 
 const statusFilterOptions = [
@@ -30,12 +37,26 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const { user, isLoading, isAuthenticated, logout } = useAuth();
+  const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
     }
   }, [isLoading, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      apiClient.getSubscription().then(setSubscription).catch(() => {
+        setSubscription({
+          status: 'trialing',
+          plan: null,
+          trialEndsAt: null,
+          currentPeriodEnd: null,
+        });
+      });
+    }
+  }, [isAuthenticated]);
 
   if (isLoading) {
     return <Loading fullScreen text="Carregando..." />;
@@ -47,7 +68,7 @@ export default function DashboardLayout({
 
   return (
     <Suspense fallback={<Loading fullScreen text="Carregando..." />}>
-      <DashboardLayoutContent pathname={pathname} user={user} onLogout={logout}>
+      <DashboardLayoutContent pathname={pathname} user={user} onLogout={logout} subscription={subscription}>
         {children}
       </DashboardLayoutContent>
     </Suspense>
@@ -58,11 +79,13 @@ function DashboardLayoutContent({
   pathname,
   user,
   onLogout,
+  subscription,
   children,
 }: {
   pathname: string | null;
   user: { email?: string } | null;
   onLogout: () => void;
+  subscription: SubscriptionInfo | null;
   children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -274,6 +297,15 @@ function DashboardLayoutContent({
               <LogOut className="h-5 w-5 text-gray-500" />
               Sair
             </button>
+            {subscription && (
+              <div className="mt-2">
+                <TrialSidebarBadge
+                  daysRemaining={getTrialDaysRemaining(subscription.trialEndsAt)}
+                  status={subscription.status}
+                  plan={subscription.plan}
+                />
+              </div>
+            )}
           </div>
         </nav>
       </aside>
@@ -401,9 +433,18 @@ function DashboardLayoutContent({
         </header>
 
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 lg:py-8 overflow-y-auto overflow-x-hidden min-w-0">
+          {subscription && (
+            <div className="mb-4">
+              <TrialBanner daysRemaining={getTrialDaysRemaining(subscription.trialEndsAt)} />
+            </div>
+          )}
           {children}
         </main>
       </div>
+
+      {subscription && shouldShowPaywall(subscription) && (
+        <SubscriptionPaywall subscription={subscription} />
+      )}
     </div>
   );
 }

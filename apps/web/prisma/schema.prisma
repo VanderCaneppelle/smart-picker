@@ -20,6 +20,14 @@ model Recruiter {
   created_at   DateTime  @default(now())
   updated_at   DateTime  @updatedAt
 
+  // Subscription
+  subscription_status  String    @default("trialing") // trialing | active | past_due | canceled | unpaid
+  trial_ends_at        DateTime?
+  subscription_plan    String?   // starter | professional | enterprise
+  stripe_customer_id   String?   @unique
+  stripe_subscription_id String? @unique
+  subscription_current_period_end DateTime?
+
   // Public page
   public_slug         String?   @unique
   public_page_enabled Boolean   @default(false)
@@ -41,6 +49,8 @@ model Recruiter {
   emailPersonalization RecruiterEmailPersonalization?
 
   @@index([email])
+  @@index([subscription_status])
+  @@index([stripe_customer_id])
 }
 
 // Personalização de e-mails (remetente + modelos por tipo)
