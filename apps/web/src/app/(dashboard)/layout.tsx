@@ -12,7 +12,7 @@ import {
   shouldShowPaywall,
   getTrialDaysRemaining,
 } from '@/lib/subscription';
-import { TrendingUp, LogOut, Briefcase, PlusCircle, LayoutDashboard, Users, User, ChevronDown, Menu, X, Settings } from 'lucide-react';
+import { TrendingUp, LogOut, Briefcase, PlusCircle, LayoutDashboard, Users, User, ChevronDown, Menu, X, Settings, CreditCard } from 'lucide-react';
 
 const statusFilterOptions = [
   { value: '', label: 'Todos os status' },
@@ -36,16 +36,11 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user, isLoading, isAuthenticated, logout } = useAuth();
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isLoading, isAuthenticated, router]);
-
-  useEffect(() => {
+  const fetchSubscription = () => {
     if (isAuthenticated) {
       apiClient.getSubscription().then(setSubscription).catch(() => {
         setSubscription({
@@ -56,7 +51,48 @@ export default function DashboardLayout({
         });
       });
     }
+  };
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  useEffect(() => {
+    fetchSubscription();
   }, [isAuthenticated]);
+
+  // Refetch subscription when returning from Stripe checkout
+  useEffect(() => {
+    const subParam = searchParams?.get('subscription');
+    if (subParam === 'success' && isAuthenticated) {
+      // Poll for subscription update (webhook might take a few seconds)
+      let attempts = 0;
+      const maxAttempts = 15;
+      const pollInterval = setInterval(() => {
+        attempts++;
+        apiClient.getSubscription().then((sub) => {
+          setSubscription(sub);
+          // Stop polling if subscription is now active
+          if (sub.status === 'active' && sub.plan) {
+            clearInterval(pollInterval);
+          }
+        }).catch(() => {
+          // Continue polling on error
+        });
+        
+        if (attempts >= maxAttempts) {
+          clearInterval(pollInterval);
+        }
+      }, 2000);
+      
+      // Also try immediately after 1s
+      setTimeout(() => fetchSubscription(), 1000);
+      
+      return () => clearInterval(pollInterval);
+    }
+  }, [searchParams, isAuthenticated]);
 
   if (isLoading) {
     return <Loading fullScreen text="Carregando..." />;
@@ -135,6 +171,7 @@ function DashboardLayoutContent({
     if (href === '/dashboard') return pathname === '/dashboard';
     if (href === '/candidatos-salvos') return pathname === '/candidatos-salvos';
     if (href === '/perfil') return pathname === '/perfil';
+    if (href === '/settings/subscription') return pathname === '/settings/subscription';
     if (href === '/settings/public-profile') return pathname === '/settings/public-profile';
     return pathname === href;
   };
@@ -279,6 +316,17 @@ function DashboardLayoutContent({
               Perfil
             </Link>
             <Link
+              href="/settings/subscription"
+              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                isActive('/settings/subscription')
+                  ? 'bg-emerald-600 text-white border-l-2 border-l-emerald-700 -ml-px pl-[11px]'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+              }`}
+            >
+              <CreditCard className={`h-5 w-5 flex-shrink-0 ${isActive('/settings/subscription') ? 'text-white' : 'text-gray-500'}`} />
+              Assinatura
+            </Link>
+            <Link
               href="/settings/public-profile"
               className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive('/settings/public-profile')
@@ -402,6 +450,16 @@ function DashboardLayoutContent({
                       >
                         <User className="h-5 w-5" />
                         Perfil
+                      </Link>
+                      <Link
+                        href="/settings/subscription"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 px-3 py-3 rounded-lg ${
+                          isActive('/settings/subscription') ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        <CreditCard className="h-5 w-5" />
+                        Assinatura
                       </Link>
                       <Link
                         href="/settings/public-profile"

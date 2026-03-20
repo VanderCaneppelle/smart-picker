@@ -25,6 +25,8 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'Invalid signature' }, { status: 400 });
   }
 
+  console.log('[Webhook] Received event:', event.type, event.id);
+
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -76,8 +78,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const recruiterId = session.metadata?.recruiter_id;
   const planId = session.metadata?.plan_id;
 
+  console.log('[Webhook] checkout.session.completed', { sessionId: session.id, recruiterId, planId });
+
   if (!recruiterId || !planId) {
-    console.warn('Checkout session missing metadata:', session.id);
+    console.warn('[Webhook] Checkout session missing metadata:', session.id);
     return;
   }
 
@@ -87,11 +91,15 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         ? session.subscription
         : session.subscription.id;
 
+    console.log('[Webhook] Retrieving subscription:', subscriptionId);
+
     const sub = await stripe.subscriptions.retrieve(subscriptionId, {
       expand: ['items.data'],
     });
 
     const periodEnd = getSubscriptionPeriodEnd(sub);
+
+    console.log('[Webhook] Updating recruiter:', recruiterId, { status: 'active', plan: planId, periodEnd });
 
     await prisma.recruiter.update({
       where: { id: recruiterId },
@@ -106,6 +114,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         subscription_current_period_end: periodEnd,
       },
     });
+
+    console.log('[Webhook] Recruiter updated successfully');
+  } else {
+    console.warn('[Webhook] Checkout session has no subscription:', session.id);
   }
 }
 
