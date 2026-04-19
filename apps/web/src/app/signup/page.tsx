@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button, Input } from '@/components/ui';
@@ -10,7 +10,17 @@ import { AuthLayoutSide } from '@/components/AuthLayoutSide';
 import { TrendingUp } from 'lucide-react';
 
 export default function SignUpPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignUpContent />
+    </Suspense>
+  );
+}
+
+function SignUpContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get('session_id');
   const { signup, isAuthenticated } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -19,6 +29,21 @@ export default function SignUpPage() {
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [paidPlan, setPaidPlan] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    fetch(`/api/subscription/session-info?session_id=${encodeURIComponent(sessionId)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((info) => {
+        if (!info) return;
+        if (info.email) setEmail(info.email);
+        if (info.plan_id) setPaidPlan(info.plan_id);
+      })
+      .catch(() => {
+        // silencioso: usuário ainda pode criar conta
+      });
+  }, [sessionId]);
 
   if (isAuthenticated) {
     router.push('/dashboard');
@@ -34,13 +59,16 @@ export default function SignUpPage() {
         email,
         password,
         passwordConfirmation,
-        { name, company: company || undefined, phone_number: phoneNumber || undefined }
+        {
+          name,
+          company: company || undefined,
+          phone_number: phoneNumber || undefined,
+          session_id: sessionId || undefined,
+        }
       );
 
       if (requires_confirmation) {
-        toast.success(
-          'Conta criada! Confira seu e-mail para confirmar.'
-        );
+        toast.success('Conta criada! Confira seu e-mail para confirmar.');
         router.push('/login');
       } else {
         toast.success('Conta criada com sucesso!');
@@ -75,6 +103,15 @@ export default function SignUpPage() {
             <p className="mt-1 text-sm text-gray-500">
               Preencha os dados para começar a publicar vagas
             </p>
+
+            {paidPlan && (
+              <div className="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                <p className="font-medium">Pagamento confirmado ✓</p>
+                <p className="mt-1 text-emerald-700">
+                  Use o mesmo e-mail do pagamento para que sua assinatura seja vinculada automaticamente.
+                </p>
+              </div>
+            )}
 
             <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
               <Input

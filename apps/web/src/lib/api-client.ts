@@ -391,7 +391,7 @@ class ApiClient {
     email: string,
     password: string,
     password_confirmation: string,
-    recruiterData: { name: string; company?: string; phone_number?: string }
+    recruiterData: { name: string; company?: string; phone_number?: string; session_id?: string }
   ): Promise<{
     user: { id: string; email: string };
     access_token?: string;
@@ -409,6 +409,7 @@ class ApiClient {
         name: recruiterData.name,
         company: recruiterData.company || '',
         phone_number: recruiterData.phone_number || '',
+        session_id: recruiterData.session_id || undefined,
       }),
     });
   }

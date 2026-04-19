@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { prisma } from '@/lib/db';
 import { SignUpSchema } from '@hunter/core';
-import { ensureTrialSubscription } from '@/lib/subscription-service';
+import { ensureTrialSubscription, reconcileFromCheckoutSession } from '@/lib/subscription-service';
 
 // POST /api/auth/signup - Create new user (recruiter) and Recruiter profile
 export async function POST(request: NextRequest) {
@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { email, password, name, company, phone_number } = validation.data;
+    const sessionId = typeof body.session_id === 'string' ? body.session_id : null;
 
     const { data, error } = await supabaseAdmin.auth.signUp({
       email,
@@ -65,6 +66,14 @@ export async function POST(request: NextRequest) {
     });
 
     await ensureTrialSubscription(userId);
+
+    if (sessionId) {
+      try {
+        await reconcileFromCheckoutSession(userId, sessionId);
+      } catch (err) {
+        console.error('[Signup] Failed to reconcile Stripe session:', err);
+      }
+    }
 
     // If email confirmation is required, session may be null
     if (data.session) {

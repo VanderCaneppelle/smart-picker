@@ -116,6 +116,71 @@ async function applySubscriptionUpdate(params: {
   return updated;
 }
 
+export async function reconcileFromCheckoutSession(
+  recruiterId: string,
+  stripeSessionId: string
+): Promise<void> {
+  const session = await stripe.checkout.sessions.retrieve(stripeSessionId, {
+    expand: ['subscription.items.data', 'customer'],
+  });
+
+  if (!session.subscription) return;
+
+  const planId = session.metadata?.plan_id as PlanId | undefined;
+  const stripeSubscriptionId =
+    typeof session.subscription === 'string' ? session.subscription : session.subscription.id;
+  const stripeCustomerId =
+    typeof session.customer === 'string' ? session.customer : session.customer?.id ?? null;
+
+  const stripeSub =
+    typeof session.subscription === 'string'
+      ? await stripe.subscriptions.retrieve(stripeSubscriptionId, { expand: ['items.data'] })
+      : session.subscription;
+
+  const period = getStripePeriod(stripeSub);
+  const priceId = stripeSub.items?.data?.[0]?.price?.id ?? null;
+
+  const subscription = await ensureTrialSubscription(recruiterId);
+
+  const updated = await prisma.subscription.update({
+    where: { id: subscription.id },
+    data: {
+      status: 'active',
+      plan: planId ?? subscription.plan,
+      stripe_subscription_id: stripeSubscriptionId,
+      stripe_customer_id: stripeCustomerId,
+      stripe_price_id: priceId,
+      current_period_start: period.start,
+      current_period_end: period.end,
+      cancel_at_period_end: false,
+      canceled_at: null,
+    },
+  });
+
+  await prisma.subscriptionEvent.create({
+    data: {
+      subscription_id: subscription.id,
+      event_type: 'activated',
+      from_status: subscription.status,
+      to_status: updated.status,
+      from_plan: subscription.plan,
+      to_plan: updated.plan,
+      metadata: { source: 'pre_signup_checkout', stripe_session_id: stripeSessionId },
+    },
+  });
+
+  await prisma.recruiter.update({
+    where: { id: recruiterId },
+    data: {
+      subscription_status: 'active',
+      subscription_plan: planId ?? subscription.plan,
+      stripe_subscription_id: stripeSubscriptionId,
+      stripe_customer_id: stripeCustomerId ?? undefined,
+      subscription_current_period_end: period.end,
+    },
+  });
+}
+
 export async function handleCheckoutCompleted(
   stripeEvent: Stripe.Event,
   session: Stripe.Checkout.Session
@@ -125,7 +190,10 @@ export async function handleCheckoutCompleted(
   const recruiterId = session.metadata?.recruiter_id;
   const planId = session.metadata?.plan_id as PlanId | undefined;
 
-  if (!recruiterId || !planId || !session.subscription) return;
+  // Pre-signup checkout: reconciliação acontece no /api/auth/signup após criar o recruiter
+  if (!recruiterId) return;
+
+  if (!planId || !session.subscription) return;
 
   const stripeSubscriptionId =
     typeof session.subscription === 'string' ? session.subscription : session.subscription.id;

@@ -46,17 +46,23 @@ function PricingContent() {
   }, [isAuthenticated, router, showHidden]);
 
   const handlePlanClick = async (planId: string) => {
-    if (!isAuthenticated) {
-      router.push('/signup');
-      return;
-    }
-
     setLoadingPlan(planId);
     try {
-      const { url } = await apiClient.createCheckoutSession(planId);
-      if (url) {
-        window.location.href = url;
+      const endpoint = isAuthenticated
+        ? '/api/subscription/checkout'
+        : '/api/subscription/public-checkout';
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: isAuthenticated ? 'include' : 'omit',
+        body: JSON.stringify({ planId }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || 'Erro ao iniciar pagamento');
       }
+      const { url } = await res.json();
+      if (url) window.location.href = url;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Erro ao iniciar pagamento');
       setLoadingPlan(null);
@@ -193,10 +199,8 @@ function PricingContent() {
                       <Loader2 className="h-4 w-4 animate-spin" />
                       Redirecionando...
                     </span>
-                  ) : isAuthenticated ? (
-                    `Assinar ${plan.name}`
                   ) : (
-                    'Começar teste grátis'
+                    `Assinar ${plan.name}`
                   )}
                 </button>
               </div>

@@ -84,7 +84,7 @@ export const PLANS: Plan[] = [
 ];
 
 export const TRIAL_DURATION_DAYS = 30;
-export const TRIAL_MAX_ACTIVE_JOBS = 1;
+export const TRIAL_MAX_ACTIVE_JOBS = 10;
 
 export interface SubscriptionInfo {
   status: SubscriptionStatus;
