@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import {
   TrendingUp,
@@ -25,13 +25,17 @@ import { useAuth } from '@/contexts/AuthContext';
 export default function PricingPage() {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const showHidden = searchParams.get('test') === '1';
+  const visiblePlans = PLANS.filter((p) => showHidden || !p.hidden);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace('/dashboard/upgrade');
+      const dest = showHidden ? '/dashboard/upgrade?test=1' : '/dashboard/upgrade';
+      router.replace(dest);
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, showHidden]);
 
   const handlePlanClick = async (planId: string) => {
     if (!isAuthenticated) {
@@ -129,7 +133,7 @@ export default function PricingPage() {
 
           {/* Plans grid */}
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto items-start">
-            {PLANS.map((plan, i) => (
+            {visiblePlans.map((plan, i) => (
               <div
                 key={plan.id}
                 className={`relative rounded-2xl p-8 ${
@@ -200,7 +204,7 @@ export default function PricingPage() {
                   <tr className="border-b border-gray-200">
                     <th className="text-left py-4 pr-4 font-medium text-gray-500">Recurso</th>
                     <th className="text-center py-4 px-4 font-medium text-gray-500">Grátis</th>
-                    {PLANS.map((plan) => (
+                    {PLANS.filter((p) => !p.hidden).map((plan) => (
                       <th key={plan.id} className="text-center py-4 px-4 font-medium text-gray-500">
                         {plan.name}
                       </th>
