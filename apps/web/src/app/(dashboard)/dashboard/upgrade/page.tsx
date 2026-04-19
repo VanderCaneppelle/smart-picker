@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
@@ -16,6 +16,14 @@ import { PLANS } from '@/lib/subscription';
 import { apiClient } from '@/lib/api-client';
 
 export default function UpgradePage() {
+  return (
+    <Suspense fallback={null}>
+      <UpgradeContent />
+    </Suspense>
+  );
+}
+
+function UpgradeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const showHidden = searchParams.get('test') === '1';
