@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -8,37 +7,20 @@ import { toast } from 'sonner';
 import {
   TrendingUp,
   Check,
-  Gift,
-  ArrowRight,
+  ArrowLeft,
   Rocket,
   Crown,
   Building2,
-  CreditCard,
-  CheckCircle2,
-  ArrowLeft,
   Loader2,
 } from 'lucide-react';
-import { PLANS, TRIAL_DURATION_DAYS, TRIAL_MAX_ACTIVE_JOBS } from '@/lib/subscription';
+import { PLANS } from '@/lib/subscription';
 import { apiClient } from '@/lib/api-client';
-import { useAuth } from '@/contexts/AuthContext';
 
-export default function PricingPage() {
-  const { isAuthenticated } = useAuth();
+export default function UpgradePage() {
   const router = useRouter();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.replace('/dashboard/settings/subscription/upgrade');
-    }
-  }, [isAuthenticated, router]);
-
   const handlePlanClick = async (planId: string) => {
-    if (!isAuthenticated) {
-      router.push('/signup');
-      return;
-    }
-
     setLoadingPlan(planId);
     try {
       const { url } = await apiClient.createCheckoutSession(planId);
@@ -53,82 +35,25 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Nav */}
-      <nav className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-xl font-bold text-gray-900">Rankea</span>
-            </Link>
-            <div className="flex items-center gap-4">
-              <Link href="/login" className="text-gray-600 hover:text-gray-900 font-medium text-sm">
-                Entrar
-              </Link>
-              <Link
-                href="/signup"
-                className="px-5 py-2.5 rounded-lg font-semibold text-sm text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
-              >
-                Teste grátis
-              </Link>
-            </div>
-          </div>
+      {/* Header */}
+      <div className="border-b border-gray-200">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <button
+            onClick={() => router.back()}
+            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-4"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </button>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Atualize seu plano</h1>
+          <p className="text-gray-600">Escolha o melhor plano para seu negócio</p>
         </div>
-      </nav>
+      </div>
 
-      <div className="py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-6"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Voltar ao início
-            </Link>
-            <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-              Planos e preços
-            </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Comece grátis por {TRIAL_DURATION_DAYS} dias. Escale quando precisar.
-            </p>
-          </div>
-
-          {/* Trial card */}
-          <div className="max-w-2xl mx-auto mb-16">
-            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200 p-8 text-center">
-              <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-emerald-200 mb-4">
-                <Gift className="h-5 w-5 text-emerald-600" />
-                <span className="font-bold text-emerald-700">Teste Grátis — {TRIAL_DURATION_DAYS} dias</span>
-              </div>
-              <p className="text-gray-700 mb-4 text-lg">
-                Crie sua conta, publique <strong>{TRIAL_MAX_ACTIVE_JOBS} vaga ativa</strong> e receba <strong>candidatos ilimitados</strong> com ranking por IA.
-              </p>
-              <div className="flex items-center justify-center gap-6 mb-6 text-sm text-gray-600">
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  Sem cartão de crédito
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  Cancele quando quiser
-                </div>
-              </div>
-              <Link
-                href="/signup"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/25 transition-all"
-              >
-                Começar agora — é grátis
-                <ArrowRight className="h-5 w-5" />
-              </Link>
-            </div>
-          </div>
-
+      <div className="py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto">
           {/* Plans grid */}
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto items-start">
+          <div className="grid md:grid-cols-3 gap-8 items-start">
             {PLANS.map((plan, i) => (
               <div
                 key={plan.id}
@@ -179,12 +104,10 @@ export default function PricingPage() {
                   {loadingPlan === plan.id ? (
                     <span className="inline-flex items-center justify-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Redirecionando...
+                      Processando...
                     </span>
-                  ) : isAuthenticated ? (
-                    `Assinar ${plan.name}`
                   ) : (
-                    'Começar teste grátis'
+                    `Assinar ${plan.name}`
                   )}
                 </button>
               </div>
@@ -192,14 +115,14 @@ export default function PricingPage() {
           </div>
 
           {/* Comparison table */}
-          <div className="mt-20 max-w-4xl mx-auto">
+          <div className="mt-16">
             <h3 className="text-2xl font-bold text-gray-900 text-center mb-8">Comparação detalhada</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200">
                     <th className="text-left py-4 pr-4 font-medium text-gray-500">Recurso</th>
-                    <th className="text-center py-4 px-4 font-medium text-gray-500">Grátis</th>
+                    <th className="text-center py-4 px-4 font-medium text-gray-500">Plano Atual</th>
                     {PLANS.map((plan) => (
                       <th key={plan.id} className="text-center py-4 px-4 font-medium text-gray-500">
                         {plan.name}
@@ -235,23 +158,6 @@ export default function PricingPage() {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="py-8 px-4 sm:px-6 lg:px-8 border-t border-gray-100">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-gradient-to-br from-emerald-500 to-teal-600 rounded flex items-center justify-center">
-              <TrendingUp className="h-3.5 w-3.5 text-white" />
-            </div>
-            <span className="font-bold text-gray-900 text-sm">Rankea</span>
-          </div>
-          <div className="flex items-center gap-6 text-sm text-gray-500">
-            <Link href="/termos" className="hover:text-gray-700">Termos</Link>
-            <Link href="/privacidade" className="hover:text-gray-700">Privacidade</Link>
-            <span>© {new Date().getFullYear()} Rankea</span>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
