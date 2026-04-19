@@ -67,9 +67,21 @@ export async function POST(request: NextRequest) {
   }
 
   const lookupKey = PRICE_LOOKUP_KEYS[planId];
-  const price = await getPriceByLookupKey(lookupKey);
+  console.log('[Checkout] Looking up price with key:', lookupKey);
+
+  let price;
+  try {
+    price = await getPriceByLookupKey(lookupKey);
+  } catch (error) {
+    console.error('[Checkout] Error fetching price:', error);
+    return Response.json(
+      { error: 'Stripe Error', message: error instanceof Error ? error.message : 'Failed to fetch price' },
+      { status: 500 }
+    );
+  }
 
   if (!price) {
+    console.error('[Checkout] Price not found for lookup key:', lookupKey);
     return Response.json(
       { error: 'Not Found', message: 'Price not found. Run setup-stripe-products script.' },
       { status: 404 }
