@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { prisma } from '@/lib/db';
 import { LoginSchema } from '@hunter/core';
+import { ensureTrialSubscription } from '@/lib/subscription-service';
 
 // POST /api/auth/login - Login with email and password
 export async function POST(request: NextRequest) {
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
     const userId = data.user.id;
     const email = data.user.email!;
 
-    let recruiter = await prisma.recruiter.findUnique({ where: { id: userId } });
+    const recruiter = await prisma.recruiter.findUnique({ where: { id: userId } });
 
     if (!recruiter) {
       const byEmail = await prisma.recruiter.findUnique({ where: { email } });
@@ -54,9 +55,6 @@ export async function POST(request: NextRequest) {
           data: { id: userId },
         });
       } else if (!byEmail) {
-        const trialEndsAt = new Date();
-        trialEndsAt.setDate(trialEndsAt.getDate() + 30);
-
         await prisma.recruiter.create({
           data: {
             id: userId,
@@ -64,12 +62,12 @@ export async function POST(request: NextRequest) {
             name: data.user.user_metadata?.name || email.split('@')[0],
             company: null,
             phone_number: null,
-            subscription_status: 'trialing',
-            trial_ends_at: trialEndsAt,
           },
         });
       }
     }
+
+    await ensureTrialSubscription(userId);
 
     return Response.json({
       user: {

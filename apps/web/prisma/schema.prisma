@@ -20,7 +20,7 @@ model Recruiter {
   created_at   DateTime  @default(now())
   updated_at   DateTime  @updatedAt
 
-  // Subscription
+  // DEPRECATED: migrar para model Subscription. Mantidos temporariamente via dual-write até concluir rollout.
   subscription_status  String    @default("trialing") // trialing | active | past_due | canceled | unpaid
   trial_ends_at        DateTime?
   subscription_plan    String?   // starter | professional | enterprise
@@ -44,13 +44,66 @@ model Recruiter {
   reply_to_email      String?
   email_signature     String?   @db.Text
 
-  jobs             Job[]
-  savedCandidates  SavedCandidate[]
+  subscription         Subscription?
+  jobs                 Job[]
+  savedCandidates      SavedCandidate[]
   emailPersonalization RecruiterEmailPersonalization?
 
   @@index([email])
   @@index([subscription_status])
   @@index([stripe_customer_id])
+}
+
+model Subscription {
+  id                      String    @id @default(uuid())
+  recruiter_id            String    @unique
+
+  // Estado atual
+  status                  String    @default("trialing") // trialing | active | past_due | canceled | unpaid
+  plan                    String?   // starter | professional | enterprise
+
+  // Trial
+  trial_started_at        DateTime  @default(now())
+  trial_ends_at           DateTime?
+
+  // Stripe
+  stripe_customer_id      String?   @unique
+  stripe_subscription_id  String?   @unique
+  stripe_price_id         String?
+
+  // Billing cycle
+  current_period_start    DateTime?
+  current_period_end      DateTime?
+  cancel_at_period_end    Boolean   @default(false)
+  canceled_at             DateTime?
+
+  created_at              DateTime  @default(now())
+  updated_at              DateTime  @updatedAt
+
+  recruiter Recruiter           @relation(fields: [recruiter_id], references: [id], onDelete: Cascade)
+  events    SubscriptionEvent[]
+
+  @@index([status])
+  @@index([stripe_customer_id])
+  @@index([trial_ends_at])
+}
+
+model SubscriptionEvent {
+  id               String   @id @default(uuid())
+  subscription_id  String
+  event_type       String   // trial_started | activated | upgraded | downgraded | canceled | payment_failed | renewed | reactivated
+  from_status      String?
+  to_status        String?
+  from_plan        String?
+  to_plan          String?
+  stripe_event_id  String?  @unique // idempot\u00eancia de webhooks do Stripe
+  metadata         Json?
+  created_at       DateTime @default(now())
+
+  subscription Subscription @relation(fields: [subscription_id], references: [id], onDelete: Cascade)
+
+  @@index([subscription_id, created_at(sort: Desc)])
+  @@index([event_type])
 }
 
 // Personalização de e-mails (remetente + modelos por tipo)

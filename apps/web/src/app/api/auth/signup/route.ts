@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { prisma } from '@/lib/db';
 import { SignUpSchema } from '@hunter/core';
+import { ensureTrialSubscription } from '@/lib/subscription-service';
 
 // POST /api/auth/signup - Create new user (recruiter) and Recruiter profile
 export async function POST(request: NextRequest) {
@@ -46,9 +47,6 @@ export async function POST(request: NextRequest) {
 
     const userId = data.user!.id;
 
-    const trialEndsAt = new Date();
-    trialEndsAt.setDate(trialEndsAt.getDate() + 30);
-
     await prisma.recruiter.upsert({
       where: { id: userId },
       create: {
@@ -57,8 +55,6 @@ export async function POST(request: NextRequest) {
         name,
         company: company || null,
         phone_number: phone_number || null,
-        subscription_status: 'trialing',
-        trial_ends_at: trialEndsAt,
       },
       update: {
         email,
@@ -67,6 +63,8 @@ export async function POST(request: NextRequest) {
         phone_number: phone_number || null,
       },
     });
+
+    await ensureTrialSubscription(userId);
 
     // If email confirmation is required, session may be null
     if (data.session) {

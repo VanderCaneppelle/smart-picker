@@ -5,7 +5,7 @@ export type SubscriptionStatus =
   | 'canceled'
   | 'unpaid';
 
-export type PlanId = 'starter' | 'professional' | 'enterprise';
+export type PlanId = 'starter' | 'professional' | 'enterprise' | 'test';
 
 export interface Plan {
   id: PlanId;
@@ -16,6 +16,7 @@ export interface Plan {
   features: string[];
   maxActiveJobs: number;
   highlighted?: boolean;
+  hidden?: boolean;
 }
 
 export const PLANS: Plan[] = [
@@ -69,6 +70,16 @@ export const PLANS: Plan[] = [
       'Suporte dedicado',
       'API de integração (em breve)',
     ],
+  },
+  {
+    id: 'test',
+    name: 'Teste',
+    price: 2,
+    priceLabel: 'R$ 2',
+    description: 'Plano para teste interno do fluxo de pagamento.',
+    maxActiveJobs: 1,
+    hidden: true,
+    features: ['Apenas para testes internos'],
   },
 ];
 

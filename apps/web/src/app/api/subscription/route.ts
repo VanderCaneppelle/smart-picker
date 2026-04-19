@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { ensureTrialSubscription, getSubscriptionByRecruiterId } from '@/lib/subscription-service';
 
 async function findOrSyncRecruiter(authId: string, email: string) {
   let recruiter = await prisma.recruiter.findUnique({ where: { id: authId } });
@@ -24,8 +25,6 @@ export async function GET(request: NextRequest) {
   const user = await verifyAuth(request);
   if (!user) return unauthorizedResponse();
 
-  console.log('[Subscription] Looking up recruiter:', user.id, user.email);
-
   const recruiter = await findOrSyncRecruiter(user.id, user.email);
 
   if (!recruiter) {
@@ -37,10 +36,15 @@ export async function GET(request: NextRequest) {
     });
   }
 
+  let subscription = await getSubscriptionByRecruiterId(recruiter.id);
+  if (!subscription) {
+    subscription = await ensureTrialSubscription(recruiter.id);
+  }
+
   return Response.json({
-    status: recruiter.subscription_status,
-    plan: recruiter.subscription_plan,
-    trialEndsAt: recruiter.trial_ends_at?.toISOString() ?? null,
-    currentPeriodEnd: recruiter.subscription_current_period_end?.toISOString() ?? null,
+    status: subscription.status,
+    plan: subscription.plan,
+    trialEndsAt: subscription.trial_ends_at?.toISOString() ?? null,
+    currentPeriodEnd: subscription.current_period_end?.toISOString() ?? null,
   });
 }

@@ -24,6 +24,7 @@ export const PRICE_LOOKUP_KEYS = {
   starter: 'rankea_starter_monthly',
   professional: 'rankea_professional_monthly',
   enterprise: 'rankea_enterprise_monthly',
+  test: 'rankea_test_monthly',
 } as const;
 
 export async function getPriceByLookupKey(lookupKey: string): Promise<Stripe.Price | null> {

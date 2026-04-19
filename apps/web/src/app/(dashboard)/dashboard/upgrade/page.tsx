@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import {
   Check,
@@ -17,6 +17,9 @@ import { apiClient } from '@/lib/api-client';
 
 export default function UpgradePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const showHidden = searchParams.get('test') === '1';
+  const visiblePlans = PLANS.filter((p) => showHidden || !p.hidden);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
   const handlePlanClick = async (planId: string) => {
@@ -50,7 +53,7 @@ export default function UpgradePage() {
 
         {/* Plans grid */}
         <div className="grid md:grid-cols-3 gap-8 items-start mb-16">
-          {PLANS.map((plan, i) => (
+          {visiblePlans.map((plan, i) => (
             <div
               key={plan.id}
               className={`relative rounded-2xl p-8 ${
@@ -119,7 +122,7 @@ export default function UpgradePage() {
                 <tr className="border-b border-gray-200">
                   <th className="text-left py-4 px-6 font-medium text-gray-500">Recurso</th>
                   <th className="text-center py-4 px-6 font-medium text-gray-500">Plano Atual</th>
-                  {PLANS.map((plan) => (
+                  {PLANS.filter((p) => !p.hidden).map((plan) => (
                     <th key={plan.id} className="text-center py-4 px-6 font-medium text-gray-500">
                       {plan.name}
                     </th>

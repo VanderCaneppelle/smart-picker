@@ -3,6 +3,7 @@ import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { stripe, PRICE_LOOKUP_KEYS, getOrCreateStripeCustomer, getPriceByLookupKey } from '@/lib/stripe';
 import type { PlanId } from '@/lib/subscription';
+import { ensureTrialSubscription } from '@/lib/subscription-service';
 
 export async function POST(request: NextRequest) {
   const user = await verifyAuth(request);
@@ -22,13 +23,13 @@ export async function POST(request: NextRequest) {
 
   let recruiter = await prisma.recruiter.findUnique({
     where: { id: user.id },
-    select: { id: true, name: true, email: true, stripe_customer_id: true },
+    select: { id: true, name: true, email: true },
   });
 
   if (!recruiter) {
     const byEmail = await prisma.recruiter.findUnique({
       where: { email: user.email },
-      select: { id: true, name: true, email: true, stripe_customer_id: true },
+      select: { id: true, name: true, email: true },
     });
 
     if (byEmail) {
@@ -36,6 +37,7 @@ export async function POST(request: NextRequest) {
       recruiter = await prisma.recruiter.update({
         where: { email: user.email },
         data: { id: user.id },
+        select: { id: true, name: true, email: true },
       });
     } else {
       console.warn('[Checkout] Recruiter not found, creating for user:', user.id);
@@ -44,22 +46,23 @@ export async function POST(request: NextRequest) {
           id: user.id,
           email: user.email,
           name: user.email.split('@')[0],
-          subscription_status: 'trialing',
-          trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         },
+        select: { id: true, name: true, email: true },
       });
     }
   }
 
-  let customerId = recruiter.stripe_customer_id;
+  const subscription = await ensureTrialSubscription(recruiter.id);
+
+  let customerId = subscription.stripe_customer_id;
 
   if (!customerId) {
-    customerId = await getOrCreateStripeCustomer(
-      recruiter.email,
-      recruiter.name,
-      user.id
-    );
+    customerId = await getOrCreateStripeCustomer(recruiter.email, recruiter.name, user.id);
 
+    await prisma.subscription.update({
+      where: { id: subscription.id },
+      data: { stripe_customer_id: customerId },
+    });
     await prisma.recruiter.update({
       where: { id: user.id },
       data: { stripe_customer_id: customerId },
