@@ -29,7 +29,7 @@ export default function PricingPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace('/dashboard/settings/subscription/upgrade');
+      router.replace('/dashboard/upgrade');
     }
   }, [isAuthenticated, router]);
 

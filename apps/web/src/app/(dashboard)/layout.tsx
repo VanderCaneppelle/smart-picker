@@ -484,7 +484,7 @@ function DashboardLayoutContent({
         </header>
 
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 lg:py-8 overflow-y-auto overflow-x-hidden min-w-0">
-          {subscription && (
+          {subscription && subscription.status === 'trialing' && (
             <div className="mb-4">
               <TrialBanner daysRemaining={getTrialDaysRemaining(subscription.trialEndsAt)} />
             </div>

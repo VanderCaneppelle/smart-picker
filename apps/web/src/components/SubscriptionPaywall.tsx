@@ -135,7 +135,7 @@ export function SubscriptionPaywall({ subscription }: SubscriptionPaywallProps) 
 
           <div className="mt-6 text-center">
             <Link
-              href="/pricing"
+              href="/dashboard/upgrade"
               className="text-sm text-emerald-600 hover:text-emerald-700 font-medium inline-flex items-center gap-1"
             >
               Ver comparação completa dos planos
@@ -180,7 +180,7 @@ export function TrialBanner({ daysRemaining }: TrialBannerProps) {
         </span>
       </div>
       <Link
-        href="/pricing"
+        href="/dashboard/upgrade"
         className={`font-medium whitespace-nowrap ${
           urgency ? 'text-amber-700 hover:text-amber-900' : 'text-emerald-700 hover:text-emerald-900'
         }`}
