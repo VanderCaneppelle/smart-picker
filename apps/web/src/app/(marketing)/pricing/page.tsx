@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import {
-  TrendingUp,
   Check,
   Rocket,
   Crown,
@@ -68,32 +67,7 @@ function PricingContent() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Nav */}
-      <nav className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-xl font-bold text-gray-900">Rankea</span>
-            </Link>
-            <div className="flex items-center gap-4">
-              <Link href="/login" className="text-gray-600 hover:text-gray-900 font-medium text-sm">
-                Entrar
-              </Link>
-              <Link
-                href="/signup"
-                className="px-5 py-2.5 rounded-lg font-semibold text-sm text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
-              >
-                Teste grátis
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+    <>
       <div className="bg-gray-50 py-16 px-4 sm:px-6 lg:px-8 lg:py-20">
         <div className="mx-auto max-w-7xl">
           {/* Header */}
@@ -284,23 +258,6 @@ function PricingContent() {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="py-8 px-4 sm:px-6 lg:px-8 border-t border-gray-100">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-gradient-to-br from-emerald-500 to-teal-600 rounded flex items-center justify-center">
-              <TrendingUp className="h-3.5 w-3.5 text-white" />
-            </div>
-            <span className="font-bold text-gray-900 text-sm">Rankea</span>
-          </div>
-          <div className="flex items-center gap-6 text-sm text-gray-500">
-            <Link href="/termos" className="hover:text-gray-700">Termos</Link>
-            <Link href="/privacidade" className="hover:text-gray-700">Privacidade</Link>
-            <span>© {new Date().getFullYear()} Rankea</span>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </>
   );
 }

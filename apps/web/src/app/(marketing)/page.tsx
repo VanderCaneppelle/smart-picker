@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   ArrowRight,
   Sparkles,
-  TrendingUp,
   Shield,
   Star,
   ChevronDown,
@@ -108,60 +107,9 @@ function FAQItem({
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-xl font-bold text-gray-900">Rankea</span>
-            </div>
-            <div className="hidden sm:flex items-center gap-6">
-              <a href="#como-funciona" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">
-                Como funciona
-              </a>
-              <Link href="/pricing" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">
-                Preços
-              </Link>
-              <a href="#faq" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">
-                FAQ
-              </a>
-              <Link
-                href="/login"
-                className="text-gray-600 hover:text-gray-900 font-medium text-sm transition-colors"
-              >
-                Entrar
-              </Link>
-              <Link
-                href="/signup"
-                className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg font-semibold text-sm text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-sm transition-all"
-              >
-                Teste grátis
-              </Link>
-            </div>
-            <div className="sm:hidden flex items-center gap-3">
-              <Link
-                href="/login"
-                className="text-gray-600 hover:text-gray-900 font-medium text-sm"
-              >
-                Entrar
-              </Link>
-              <Link
-                href="/signup"
-                className="px-4 py-2 rounded-lg font-semibold text-sm text-white bg-gradient-to-r from-emerald-600 to-teal-600"
-              >
-                Teste grátis
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+    <>
       {/* Hero Section */}
-      <section className="pt-28 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section className="overflow-hidden px-4 pb-20 pt-12 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-4xl mx-auto">
             {/* Trial badge */}
@@ -610,34 +558,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-gray-100 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-xl font-bold text-gray-900">Rankea</span>
-            </div>
-            <div className="flex flex-wrap items-center justify-center gap-6">
-              <Link href="/termos" className="text-gray-500 hover:text-gray-700 text-sm">
-                Termos de Uso
-              </Link>
-              <Link href="/privacidade" className="text-gray-500 hover:text-gray-700 text-sm">
-                Política de Privacidade
-              </Link>
-              <Link href="/pricing" className="text-gray-500 hover:text-gray-700 text-sm">
-                Preços
-              </Link>
-              <p className="text-gray-400 text-sm">
-                © {new Date().getFullYear()} Rankea. Todos os direitos reservados.
-              </p>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </>
   );
 }
