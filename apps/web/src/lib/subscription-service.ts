@@ -2,7 +2,13 @@ import type { Prisma, Subscription } from '@prisma/client';
 import Stripe from 'stripe';
 import { prisma } from '@/lib/db';
 import { stripe } from '@/lib/stripe';
-import { TRIAL_DURATION_DAYS, type PlanId, type SubscriptionStatus } from '@/lib/subscription';
+import {
+  TRIAL_DURATION_DAYS,
+  TRIAL_MAX_ACTIVE_JOBS,
+  PLANS,
+  type PlanId,
+  type SubscriptionStatus,
+} from '@/lib/subscription';
 
 const STRIPE_STATUS_MAP: Record<string, SubscriptionStatus> = {
   active: 'active',
@@ -339,4 +345,58 @@ function planRank(plan: string | null): number {
   if (plan === 'professional') return 2;
   if (plan === 'enterprise') return 3;
   return 0;
+}
+
+export interface ActiveJobsLimit {
+  current: number;
+  limit: number;
+  canCreate: boolean;
+  plan: PlanId | null;
+  status: SubscriptionStatus;
+}
+
+function resolveMaxActiveJobs(sub: Subscription): number {
+  if (sub.status === 'trialing') return TRIAL_MAX_ACTIVE_JOBS;
+  if (sub.status === 'active' && sub.plan) {
+    const plan = PLANS.find((p) => p.id === sub.plan);
+    if (plan) return plan.maxActiveJobs;
+  }
+  return 0;
+}
+
+export async function getActiveJobsLimit(recruiterId: string): Promise<ActiveJobsLimit> {
+  const subscription = await ensureTrialSubscription(recruiterId);
+  const limit = resolveMaxActiveJobs(subscription);
+
+  const current = await prisma.job.count({
+    where: {
+      user_id: recruiterId,
+      status: 'active',
+      deleted_at: null,
+    },
+  });
+
+  return {
+    current,
+    limit: Number.isFinite(limit) ? limit : Number.POSITIVE_INFINITY,
+    canCreate: current < limit,
+    plan: subscription.plan as PlanId | null,
+    status: subscription.status as SubscriptionStatus,
+  };
+}
+
+export class ActiveJobsLimitReachedError extends Error {
+  readonly current: number;
+  readonly limit: number;
+  constructor(info: ActiveJobsLimit) {
+    super(`Active jobs limit reached (${info.current}/${info.limit})`);
+    this.name = 'ActiveJobsLimitReachedError';
+    this.current = info.current;
+    this.limit = info.limit;
+  }
+}
+
+export async function assertCanActivateJob(recruiterId: string): Promise<void> {
+  const info = await getActiveJobsLimit(recruiterId);
+  if (!info.canCreate) throw new ActiveJobsLimitReachedError(info);
 }

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ArrowLeft, Plus, Trash2, Brain, ShieldAlert, Info } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isPlanLimitError } from '@/lib/api-client';
 import {
   Button,
   Input,
@@ -182,7 +182,13 @@ export default function NewJobPage() {
       toast.success('Vaga criada com sucesso!');
       router.push(`/jobs/${job.id}`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Falha ao criar vaga');
+      if (isPlanLimitError(error)) {
+        toast.error(error instanceof Error ? error.message : 'Limite do plano atingido', {
+          action: { label: 'Atualizar plano', onClick: () => router.push('/dashboard/upgrade') },
+        });
+      } else {
+        toast.error(error instanceof Error ? error.message : 'Falha ao criar vaga');
+      }
     } finally {
       setIsSubmitting(false);
     }

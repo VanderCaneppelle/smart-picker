@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
 import { CreateJobSchema, JobFiltersSchema } from '@hunter/core';
 import { Prisma } from '@prisma/client';
+import { getActiveJobsLimit } from '@/lib/subscription-service';
 
 // GET /api/jobs - List jobs (protected - only own jobs)
 export async function GET(request: NextRequest) {
@@ -83,13 +84,30 @@ export async function POST(request: NextRequest) {
 
     if (!validation.success) {
       return Response.json(
-        { 
-          error: 'Bad Request', 
+        {
+          error: 'Bad Request',
           message: 'Validation failed',
           details: validation.error.flatten(),
         },
         { status: 400 }
       );
+    }
+
+    if (validation.data.status === 'active') {
+      const info = await getActiveJobsLimit(user.id);
+      if (!info.canCreate) {
+        return Response.json(
+          {
+            error: 'Plan Limit Reached',
+            message: `Você atingiu o limite de ${info.limit} vaga(s) ativa(s) do seu plano.`,
+            current: info.current,
+            limit: info.limit,
+            plan: info.plan,
+            status: info.status,
+          },
+          { status: 402 }
+        );
+      }
     }
 
     const job = await prisma.job.create({

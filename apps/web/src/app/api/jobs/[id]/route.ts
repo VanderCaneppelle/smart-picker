@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyAuth, unauthorizedResponse, jobBelongsToUser } from '@/lib/auth';
 import { UpdateJobSchema } from '@hunter/core';
+import { getActiveJobsLimit } from '@/lib/subscription-service';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -92,6 +93,26 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         { error: 'Not Found', message: 'Job not found' },
         { status: 404 }
       );
+    }
+
+    if (
+      validation.data.status === 'active' &&
+      existingJob.status !== 'active'
+    ) {
+      const info = await getActiveJobsLimit(user.id);
+      if (!info.canCreate) {
+        return Response.json(
+          {
+            error: 'Plan Limit Reached',
+            message: `Você atingiu o limite de ${info.limit} vaga(s) ativa(s) do seu plano.`,
+            current: info.current,
+            limit: info.limit,
+            plan: info.plan,
+            status: info.status,
+          },
+          { status: 402 }
+        );
+      }
     }
 
     // Build update data - only include fields that are present

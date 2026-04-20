@@ -13,6 +13,21 @@ import type {
 
 import type { SubscriptionInfo } from '@/lib/subscription';
 
+export class ApiError extends Error {
+  readonly status: number;
+  readonly data: Record<string, unknown>;
+  constructor(message: string, status: number, data: Record<string, unknown> = {}) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.data = data;
+  }
+}
+
+export function isPlanLimitError(err: unknown): boolean {
+  return err instanceof ApiError && err.status === 402;
+}
+
 export interface RecruiterSettings {
   id: string;
   name: string;
@@ -182,7 +197,11 @@ class ApiClient {
       const error = await response.json().catch(() => ({
         message: 'An error occurred',
       }));
-      throw new Error(error.message || `HTTP ${response.status}`);
+      throw new ApiError(
+        error.message || `HTTP ${response.status}`,
+        response.status,
+        error
+      );
     }
 
     return response.json();
@@ -354,6 +373,17 @@ class ApiClient {
     return this.request<{ message: string }>(`/saved-candidates/${candidateId}`, {
       method: 'DELETE',
     });
+  }
+
+  // Jobs limits
+  async getJobsLimits(): Promise<{
+    current: number;
+    limit: number | null;
+    canCreate: boolean;
+    plan: string | null;
+    status: string;
+  }> {
+    return this.request('/jobs/limits');
   }
 
   // Subscription
