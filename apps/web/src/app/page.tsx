@@ -126,9 +126,9 @@ export default function LandingPage() {
               <a href="#como-funciona" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">
                 Como funciona
               </a>
-              <a href="#precos" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">
+              <Link href="/pricing" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">
                 Preços
-              </a>
+              </Link>
               <a href="#faq" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">
                 FAQ
               </a>
@@ -519,7 +519,7 @@ export default function LandingPage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto items-start">
-            {PLANS.map((plan, i) => (
+            {PLANS.filter((p) => !p.hidden).map((plan, i) => (
               <PricingCard key={plan.id} plan={plan} index={i} />
             ))}
           </div>
@@ -617,9 +617,9 @@ export default function LandingPage() {
               <Link href="/privacidade" className="text-gray-500 hover:text-gray-700 text-sm">
                 Política de Privacidade
               </Link>
-              <a href="#precos" className="text-gray-500 hover:text-gray-700 text-sm">
+              <Link href="/pricing" className="text-gray-500 hover:text-gray-700 text-sm">
                 Preços
-              </a>
+              </Link>
               <p className="text-gray-400 text-sm">
                 © {new Date().getFullYear()} Rankea. Todos os direitos reservados.
               </p>
