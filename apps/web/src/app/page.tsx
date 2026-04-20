@@ -60,7 +60,7 @@ function PricingCard({
         <span className="text-4xl font-bold text-gray-900">{plan.priceLabel}</span>
         <span className="text-gray-500 ml-1">/mês</span>
       </div>
-      <ul className="space-y-3 mb-8">
+      <ul className="space-y-3">
         {plan.features.map((feature, i) => (
           <li key={i} className="flex items-start gap-2.5">
             <Check className="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" />
@@ -68,16 +68,6 @@ function PricingCard({
           </li>
         ))}
       </ul>
-      <Link
-        href="/signup"
-        className={`block w-full text-center py-3 px-6 rounded-xl font-semibold transition-all ${
-          plan.highlighted
-            ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/25'
-            : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-        }`}
-      >
-        Começar teste grátis
-      </Link>
     </div>
   );
 }
@@ -504,24 +494,20 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* Trial highlight */}
-          <div className="max-w-2xl mx-auto mb-12">
-            <div className="bg-white rounded-2xl border-2 border-dashed border-emerald-300 p-6 text-center">
-              <div className="inline-flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full mb-4">
-                <Gift className="h-5 w-5 text-emerald-600" />
-                <span className="font-bold text-emerald-700">Teste Grátis — {TRIAL_DURATION_DAYS} dias</span>
-              </div>
-              <p className="text-gray-600 mb-2">
-                Crie sua conta, publique <strong>1 vaga ativa</strong> e receba <strong>candidatos ilimitados</strong> com ranking por IA.
-              </p>
-              <p className="text-sm text-gray-400">Sem cartão de crédito. Cancele quando quiser.</p>
-            </div>
-          </div>
-
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto items-start">
             {PLANS.filter((p) => !p.hidden).map((plan, i) => (
               <PricingCard key={plan.id} plan={plan} index={i} />
             ))}
+          </div>
+
+          <div className="mt-12 flex justify-center">
+            <Link
+              href="/pricing"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/25 transition-all"
+            >
+              Ver todos os planos
+              <ArrowRight className="h-5 w-5" />
+            </Link>
           </div>
         </div>
       </section>
