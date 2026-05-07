@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { Share2, Files, Eye, MapPin, Briefcase, Users, Pencil } from 'lucide-react';
+import { Share2, Files, Eye, MapPin, Briefcase, Users, Pencil, DollarSign } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { Button, Badge, SearchFilter, Loading, EmptyState } from '@/components/ui';
 import type { Job, JobStatus, EmploymentType } from '@hunter/core';
