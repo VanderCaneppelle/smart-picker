@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { apiClient, type DashboardStatsResponse } from '@/lib/api-client';
 import { Loading } from '@/components/ui';
+import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
 import type { Job } from '@hunter/core';
 
 export default function DashboardPage() {
@@ -121,6 +122,9 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      {/* Onboarding checklist — only visible while there are pending steps */}
+      <OnboardingChecklist />
+
       {/* Header + filtro de vaga */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

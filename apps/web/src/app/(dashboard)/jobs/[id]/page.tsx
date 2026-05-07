@@ -551,7 +551,7 @@ export default function JobDetailPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={handleShare} title="Compartilhar link da vaga">
+            <Button data-onboarding-id="onb-job-share" variant="ghost" size="sm" onClick={handleShare} title="Compartilhar link da vaga">
               <Share2 className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="sm" onClick={handleDuplicate} title="Duplicar vaga">
@@ -710,7 +710,7 @@ export default function JobDetailPage() {
           </div>
 
           {/* Application Questions */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div data-onboarding-id="onb-job-questions" className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="mb-4">
               <h2 className="text-lg font-semibold text-gray-900">Perguntas da Aplicação</h2>
               <p className="text-sm text-gray-500">Perguntas personalizadas para os candidatos</p>

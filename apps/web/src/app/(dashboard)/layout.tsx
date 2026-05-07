@@ -14,6 +14,8 @@ import {
   getTrialDaysRemaining,
 } from '@/lib/subscription';
 import { TrendingUp, LogOut, Briefcase, PlusCircle, LayoutDashboard, Users, User, ChevronDown, Menu, X, Settings, CreditCard } from 'lucide-react';
+import { OnboardingProvider } from '@/contexts/OnboardingContext';
+import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 
 const statusFilterOptions = [
   { value: '', label: 'Todos os status' },
@@ -54,11 +56,14 @@ export default function DashboardLayout({
   }
 
   return (
-    <Suspense fallback={<Loading fullScreen text="Carregando..." />}>
-      <DashboardLayoutContent pathname={pathname} user={user} onLogout={logout} isAuthenticated={isAuthenticated}>
-        {children}
-      </DashboardLayoutContent>
-    </Suspense>
+    <OnboardingProvider>
+      <Suspense fallback={<Loading fullScreen text="Carregando..." />}>
+        <DashboardLayoutContent pathname={pathname} user={user} onLogout={logout} isAuthenticated={isAuthenticated}>
+          {children}
+        </DashboardLayoutContent>
+        <OnboardingTour />
+      </Suspense>
+    </OnboardingProvider>
   );
 }
 
@@ -195,6 +200,7 @@ function DashboardLayoutContent({
                 <div key={href}>
                   <Link
                     href={targetHref}
+                    data-onboarding-id="onb-nav-criar-vaga"
                     title={blocked ? 'Limite de vagas atingido — atualize seu plano' : undefined}
                     className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                       primary
@@ -314,6 +320,7 @@ function DashboardLayoutContent({
           <div className="mt-auto pt-4 border-t border-gray-100 space-y-0.5 flex-shrink-0 bg-white">
             <Link
               href="/perfil"
+              data-onboarding-id="onb-nav-perfil"
               className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive('/perfil')
                   ? 'bg-emerald-600 text-white border-l-2 border-l-emerald-700 -ml-px pl-[11px]'

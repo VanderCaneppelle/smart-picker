@@ -18,8 +18,10 @@ import { Button, Loading, Modal } from '@/components/ui';
 import BrandingFields from './BrandingFields';
 import EmailPersonalizationFields from './EmailPersonalizationFields';
 import EmailTemplatesSection from './EmailTemplatesSection';
+import { useOnboarding } from '@/contexts/OnboardingContext';
 
 export default function PublicProfileForm() {
+  const { resetOnboarding } = useOnboarding();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [settings, setSettings] = useState<RecruiterSettings | null>(null);
@@ -521,6 +523,25 @@ export default function PublicProfileForm() {
       </div>
 
       {/* Modal de confirmação ao sair com alterações não salvas */}
+      {/* Onboarding reset */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-1">Tutorial guiado</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Reinicie o tutorial de primeiros passos para rever o guia interativo desde o início.
+        </p>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => {
+            resetOnboarding();
+            toast.success('Tutorial reiniciado! Acesse o Dashboard para começar.');
+          }}
+          className="border border-gray-200 text-gray-700 hover:bg-gray-50"
+        >
+          Reiniciar tutorial de boas-vindas
+        </Button>
+      </div>
+
       <Modal
         isOpen={showLeaveModal}
         onClose={handleCancelLeave}
