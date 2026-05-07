@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { Share2, Copy, Eye, MapPin, Briefcase, Users, DollarSign, Pencil } from 'lucide-react';
+import { Share2, Files, Eye, MapPin, Briefcase, Users, Pencil } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { Button, Badge, SearchFilter, Loading, EmptyState } from '@/components/ui';
 import type { Job, JobStatus, EmploymentType } from '@hunter/core';
@@ -85,13 +85,7 @@ function JobsPageContent() {
   const handleDuplicate = useCallback(async (job: Job) => {
     try {
       const duplicated = await apiClient.duplicateJob(job.id);
-      if (duplicated.status === 'draft') {
-        toast.success('Vaga duplicada como rascunho (limite de ativas atingido)', {
-          action: { label: 'Atualizar plano', onClick: () => router.push('/dashboard/upgrade') },
-        });
-      } else {
-        toast.success('Vaga duplicada com sucesso!');
-      }
+      toast.success('Vaga duplicada como rascunho. Revise e publique quando estiver pronta.');
       router.push(`/jobs/${duplicated.id}`);
     } catch (error) {
       toast.error('Falha ao duplicar vaga');
@@ -187,46 +181,47 @@ function JobsPageContent() {
                 </div>
               </div>
 
-              {/* Card Actions - tudo dentro do card */}
+              {/* Card Actions */}
               <div
-                className="flex flex-wrap items-center gap-2 pt-3 border-t border-gray-100 min-w-0 mt-auto"
+                className="flex items-center gap-0.5 pt-3 border-t border-gray-100 mt-auto min-w-0"
                 onClick={(e) => e.stopPropagation()}
               >
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <button
+                  type="button"
                   onClick={() => handleShare(job)}
-                  title="Compartilhar"
-                  className="shrink-0"
+                  title="Compartilhar link"
+                  className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors shrink-0"
                 >
-                  <Share2 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
+                  <Share2 className="h-3.5 w-3.5 shrink-0" />
+                  <span className="hidden 2xl:inline">Compartilhar</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => handleDuplicate(job)}
-                  title="Duplicar"
-                  className="shrink-0"
+                  title="Duplicar vaga"
+                  className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors shrink-0"
                 >
-                  <Copy className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
+                  <Files className="h-3.5 w-3.5 shrink-0" />
+                  <span className="hidden 2xl:inline">Duplicar</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => router.push(`/jobs/${job.id}?tab=details&edit=1`)}
-                  title="Editar detalhes da vaga"
-                  className="shrink-0 text-gray-500 hover:text-gray-700"
+                  title="Editar vaga"
+                  className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors shrink-0"
                 >
-                  <Pencil className="h-4 w-4" />
-                </Button>
+                  <Pencil className="h-3.5 w-3.5 shrink-0" />
+                  <span className="hidden 2xl:inline">Editar</span>
+                </button>
                 <Button
                   variant="secondary"
                   size="sm"
                   onClick={() => router.push(`/jobs/${job.id}`)}
-                  leftIcon={<Eye className="h-4 w-4 shrink-0" />}
-                  className="shrink-0 ml-auto"
+                  leftIcon={<Eye className="h-3.5 w-3.5 shrink-0" />}
+                  className="shrink-0 ml-auto text-xs"
                 >
-                  Ver candidatos
+                  <span className="hidden xl:inline">Ver candidatos</span>
+                  <span className="xl:hidden">Ver</span>
                 </Button>
               </div>
             </div>

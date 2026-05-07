@@ -18,8 +18,10 @@ import { Button, Loading, Modal } from '@/components/ui';
 import BrandingFields from './BrandingFields';
 import EmailPersonalizationFields from './EmailPersonalizationFields';
 import EmailTemplatesSection from './EmailTemplatesSection';
+import { useOnboarding } from '@/contexts/OnboardingContext';
 
 export default function PublicProfileForm() {
+  const { resetOnboarding, completeStep } = useOnboarding();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [settings, setSettings] = useState<RecruiterSettings | null>(null);
@@ -241,6 +243,7 @@ export default function PublicProfileForm() {
         rejectionSubject: updated.rejection_subject?.trim() || DEFAULT_REJECTION_SUBJECT,
         rejectionBodyHtml: updated.rejection_body_html?.trim() || DEFAULT_REJECTION_BODY_HTML,
       };
+      completeStep('settings');
       toast.success('Configurações salvas!');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Erro ao salvar');
@@ -520,7 +523,25 @@ export default function PublicProfileForm() {
       </div>
       </div>
 
-      {/* Modal de confirmação ao sair com alterações não salvas */}
+      {/* Onboarding reset */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6 mt-8">
+        <h2 className="text-lg font-semibold text-gray-900 mb-1">Tutorial guiado</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Reinicie o tutorial de primeiros passos para rever o guia interativo desde o início.
+        </p>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => {
+            resetOnboarding();
+            router.push('/perfil');
+          }}
+          className="border border-gray-200 text-gray-700 hover:bg-gray-50"
+        >
+          Reiniciar tutorial de boas-vindas
+        </Button>
+      </div>
+
       <Modal
         isOpen={showLeaveModal}
         onClose={handleCancelLeave}

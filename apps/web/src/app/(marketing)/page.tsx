@@ -116,7 +116,7 @@ export default function LandingPage() {
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200 mb-8">
               <Gift className="h-4 w-4 text-emerald-600" />
               <span className="text-sm font-medium text-emerald-700">
-                {TRIAL_DURATION_DAYS} dias grátis — sem cartão de crédito
+                {TRIAL_DURATION_DAYS} dias grátis, sem cartão de crédito
               </span>
             </div>
 
@@ -149,7 +149,7 @@ export default function LandingPage() {
             <div className="flex items-center justify-center gap-6 mt-6 text-sm text-gray-500">
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                <span>{TRIAL_MAX_ACTIVE_JOBS} vaga ativa grátis</span>
+                <span>{TRIAL_MAX_ACTIVE_JOBS} vagas ativas grátis</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="h-4 w-4 text-emerald-500" />
@@ -170,7 +170,7 @@ export default function LandingPage() {
                 <div className="w-3 h-3 rounded-full bg-red-500" />
                 <div className="w-3 h-3 rounded-full bg-yellow-500" />
                 <div className="w-3 h-3 rounded-full bg-green-500" />
-                <span className="ml-3 text-xs text-gray-500 font-mono">rankea.ai — Desenvolvedor Full Stack Senior</span>
+                <span className="ml-3 text-xs text-gray-500 font-mono">rankea.ai · Desenvolvedor Full Stack Senior</span>
               </div>
               <div className="space-y-3">
                 {[
@@ -497,7 +497,7 @@ export default function LandingPage() {
           <div className="divide-y divide-gray-200">
             <FAQItem
               question="O que está incluso no teste grátis?"
-              answer="Você pode criar 1 vaga ativa, receber candidatos ilimitados e ter acesso completo ao ranking por IA. Sem cartão de crédito, sem compromisso."
+              answer="Você pode criar até 10 vagas ativas, receber candidatos ilimitados e ter acesso completo ao ranking por IA. Sem cartão de crédito, sem compromisso."
             />
             <FAQItem
               question="Preciso de cartão de crédito para começar?"

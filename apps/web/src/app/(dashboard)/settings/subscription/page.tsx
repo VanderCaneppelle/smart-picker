@@ -163,7 +163,7 @@ export default function SubscriptionPage() {
           <div className="mt-4 space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Plano atual</span>
-              <span className="font-medium text-gray-900">{plan.name} — {plan.priceLabel}/mês</span>
+              <span className="font-medium text-gray-900">{plan.name} · {plan.priceLabel}/mês</span>
             </div>
             {nextBillingDate && (
               <div className="flex items-center justify-between text-sm">

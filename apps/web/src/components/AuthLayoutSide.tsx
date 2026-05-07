@@ -25,7 +25,7 @@ export function AuthLayoutSide() {
             </h1>
             <p className="mt-4 text-emerald-100 text-lg">
               Publique vagas, receba candidatos e deixe a IA ranquear os melhores.
-              Comece grátis — 1 vaga ativa, candidatos ilimitados.
+              Comece grátis: 10 vagas ativas e candidatos ilimitados.
             </p>
           </div>
           <ul className="space-y-4">

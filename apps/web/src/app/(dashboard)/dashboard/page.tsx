@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { apiClient, type DashboardStatsResponse } from '@/lib/api-client';
 import { Loading } from '@/components/ui';
+import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
 import type { Job } from '@hunter/core';
 
 export default function DashboardPage() {
@@ -121,6 +122,9 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      {/* Onboarding checklist — only visible while there are pending steps */}
+      <OnboardingChecklist />
+
       {/* Header + filtro de vaga */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -263,7 +267,7 @@ export default function DashboardPage() {
               >
                 <Clock className="h-4 w-4 text-orange-600 shrink-0" />
                 <span className="text-sm text-orange-800 truncate">
-                  <strong>{j.title}</strong> — sem candidatos há +14 dias
+                  <strong>{j.title}</strong>: sem candidatos há mais de 14 dias
                 </span>
                 <ChevronRight className="h-4 w-4 text-orange-400 ml-auto shrink-0" />
               </div>

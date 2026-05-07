@@ -180,7 +180,7 @@ export default function CandidatesKanbanBoard({
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="relative flex items-stretch">
+        <div data-onboarding-id="onb-candidates-kanban" className="relative flex items-stretch">
           {canScrollLeft && (
             <button
               type="button"
