@@ -5,7 +5,15 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loading } from '@/components/ui';
-import { TrendingUp, LogOut, Briefcase, PlusCircle, LayoutDashboard, Users, User, ChevronDown, Menu, X, Settings } from 'lucide-react';
+import { SubscriptionPaywall, TrialBanner, TrialSidebarBadge } from '@/components/SubscriptionPaywall';
+import { apiClient } from '@/lib/api-client';
+import { useActiveJobsLimit } from '@/hooks/useActiveJobsLimit';
+import {
+  type SubscriptionInfo,
+  shouldShowPaywall,
+  getTrialDaysRemaining,
+} from '@/lib/subscription';
+import { TrendingUp, LogOut, Briefcase, PlusCircle, LayoutDashboard, Users, User, ChevronDown, Menu, X, Settings, CreditCard } from 'lucide-react';
 
 const statusFilterOptions = [
   { value: '', label: 'Todos os status' },
@@ -47,7 +55,7 @@ export default function DashboardLayout({
 
   return (
     <Suspense fallback={<Loading fullScreen text="Carregando..." />}>
-      <DashboardLayoutContent pathname={pathname} user={user} onLogout={logout}>
+      <DashboardLayoutContent pathname={pathname} user={user} onLogout={logout} isAuthenticated={isAuthenticated}>
         {children}
       </DashboardLayoutContent>
     </Suspense>
@@ -58,18 +66,64 @@ function DashboardLayoutContent({
   pathname,
   user,
   onLogout,
+  isAuthenticated,
   children,
 }: {
   pathname: string | null;
   user: { email?: string } | null;
   onLogout: () => void;
+  isAuthenticated: boolean;
   children: React.ReactNode;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
+  const { data: jobsLimit } = useActiveJobsLimit();
   const [vagasExpanded, setVagasExpanded] = useState(() => pathname === '/jobs' || (pathname?.startsWith('/jobs/') && pathname !== '/jobs/new'));
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+
+  const fetchSubscription = () => {
+    if (isAuthenticated) {
+      apiClient.getSubscription().then(setSubscription).catch(() => {
+        setSubscription({
+          status: 'trialing',
+          plan: null,
+          trialEndsAt: null,
+          currentPeriodEnd: null,
+        });
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchSubscription();
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    const subParam = searchParams?.get('subscription');
+    if (subParam === 'success' && isAuthenticated) {
+      let attempts = 0;
+      const maxAttempts = 15;
+      const pollInterval = setInterval(() => {
+        attempts++;
+        apiClient.getSubscription().then((sub) => {
+          setSubscription(sub);
+          if (sub.status === 'active' && sub.plan) {
+            clearInterval(pollInterval);
+          }
+        }).catch(() => {});
+        
+        if (attempts >= maxAttempts) {
+          clearInterval(pollInterval);
+        }
+      }, 2000);
+      
+      setTimeout(() => fetchSubscription(), 1000);
+      
+      return () => clearInterval(pollInterval);
+    }
+  }, [searchParams, isAuthenticated]);
 
   const currentStatus = searchParams.get('status') ?? '';
   const isJobsPage = pathname === '/jobs' || (pathname?.startsWith('/jobs/') && pathname !== '/jobs/new');
@@ -112,6 +166,7 @@ function DashboardLayoutContent({
     if (href === '/dashboard') return pathname === '/dashboard';
     if (href === '/candidatos-salvos') return pathname === '/candidatos-salvos';
     if (href === '/perfil') return pathname === '/perfil';
+    if (href === '/settings/subscription') return pathname === '/settings/subscription';
     if (href === '/settings/public-profile') return pathname === '/settings/public-profile';
     return pathname === href;
   };
@@ -132,27 +187,40 @@ function DashboardLayoutContent({
           <div className="space-y-0.5 mb-3 pb-3 border-b border-gray-100">
             {mainNavItems.slice(0, 1).map(({ href, label, icon: Icon, primary }) => {
               const active = isActive(href);
+              const limit = jobsLimit?.limit;
+              const hasLimit = typeof limit === 'number';
+              const blocked = jobsLimit ? !jobsLimit.canCreate : false;
+              const targetHref = blocked ? '/dashboard/upgrade' : href;
               return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    primary
-                      ? active
-                        ? 'bg-emerald-600 text-white border-l-2 border-l-emerald-700 -ml-px pl-[11px]'
-                        : 'text-emerald-600 hover:bg-emerald-50 border border-emerald-200 hover:border-emerald-300'
-                      : active
-                        ? 'bg-emerald-600 text-white border-l-2 border-l-emerald-700 -ml-px pl-[11px]'
-                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                  }`}
-                >
-                  <Icon
-                    className={`h-5 w-5 flex-shrink-0 ${
-                      active ? 'text-white' : primary ? 'text-emerald-600' : 'text-gray-500'
+                <div key={href}>
+                  <Link
+                    href={targetHref}
+                    title={blocked ? 'Limite de vagas atingido — atualize seu plano' : undefined}
+                    className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                      primary
+                        ? active
+                          ? 'bg-emerald-600 text-white border-l-2 border-l-emerald-700 -ml-px pl-[11px]'
+                          : blocked
+                            ? 'text-gray-400 border border-gray-200 cursor-help'
+                            : 'text-emerald-600 hover:bg-emerald-50 border border-emerald-200 hover:border-emerald-300'
+                        : active
+                          ? 'bg-emerald-600 text-white border-l-2 border-l-emerald-700 -ml-px pl-[11px]'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`}
-                  />
-                  {label}
-                </Link>
+                  >
+                    <Icon
+                      className={`h-5 w-5 flex-shrink-0 ${
+                        active ? 'text-white' : blocked ? 'text-gray-400' : primary ? 'text-emerald-600' : 'text-gray-500'
+                      }`}
+                    />
+                    {label}
+                  </Link>
+                  {jobsLimit && (
+                    <p className={`mt-1.5 px-3 text-xs ${blocked ? 'text-amber-700' : 'text-gray-500'}`}>
+                      {hasLimit ? `${jobsLimit.current}/${limit} vagas ativas` : `${jobsLimit.current} vagas ativas`}
+                    </p>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -256,6 +324,17 @@ function DashboardLayoutContent({
               Perfil
             </Link>
             <Link
+              href="/settings/subscription"
+              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                isActive('/settings/subscription')
+                  ? 'bg-emerald-600 text-white border-l-2 border-l-emerald-700 -ml-px pl-[11px]'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+              }`}
+            >
+              <CreditCard className={`h-5 w-5 flex-shrink-0 ${isActive('/settings/subscription') ? 'text-white' : 'text-gray-500'}`} />
+              Assinatura
+            </Link>
+            <Link
               href="/settings/public-profile"
               className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive('/settings/public-profile')
@@ -274,6 +353,15 @@ function DashboardLayoutContent({
               <LogOut className="h-5 w-5 text-gray-500" />
               Sair
             </button>
+            {subscription && (
+              <div className="mt-2">
+                <TrialSidebarBadge
+                  daysRemaining={getTrialDaysRemaining(subscription.trialEndsAt)}
+                  status={subscription.status}
+                  plan={subscription.plan}
+                />
+              </div>
+            )}
           </div>
         </nav>
       </aside>
@@ -322,14 +410,33 @@ function DashboardLayoutContent({
                     {user?.email}
                   </div>
                   <nav className="flex-1 overflow-auto py-4 px-3 space-y-1">
-                    <Link
-                      href="/jobs/new"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-3 px-3 py-3 rounded-lg text-emerald-600 bg-emerald-50 border border-emerald-200 font-medium"
-                    >
-                      <PlusCircle className="h-5 w-5" />
-                      Criar vaga
-                    </Link>
+                    {(() => {
+                      const blocked = jobsLimit ? !jobsLimit.canCreate : false;
+                      const limit = jobsLimit?.limit;
+                      const hasLimit = typeof limit === 'number';
+                      return (
+                        <>
+                          <Link
+                            href={blocked ? '/dashboard/upgrade' : '/jobs/new'}
+                            onClick={() => setMobileMenuOpen(false)}
+                            title={blocked ? 'Limite de vagas atingido — atualize seu plano' : undefined}
+                            className={`flex items-center gap-3 px-3 py-3 rounded-lg font-medium ${
+                              blocked
+                                ? 'text-gray-400 border border-gray-200'
+                                : 'text-emerald-600 bg-emerald-50 border border-emerald-200'
+                            }`}
+                          >
+                            <PlusCircle className="h-5 w-5" />
+                            Criar vaga
+                          </Link>
+                          {jobsLimit && (
+                            <p className={`px-3 text-xs ${blocked ? 'text-amber-700' : 'text-gray-500'}`}>
+                              {hasLimit ? `${jobsLimit.current}/${limit} vagas ativas` : `${jobsLimit.current} vagas ativas`}
+                            </p>
+                          )}
+                        </>
+                      );
+                    })()}
                     <Link
                       href="/dashboard"
                       onClick={() => setMobileMenuOpen(false)}
@@ -372,6 +479,16 @@ function DashboardLayoutContent({
                         Perfil
                       </Link>
                       <Link
+                        href="/settings/subscription"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 px-3 py-3 rounded-lg ${
+                          isActive('/settings/subscription') ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        <CreditCard className="h-5 w-5" />
+                        Assinatura
+                      </Link>
+                      <Link
                         href="/settings/public-profile"
                         onClick={() => setMobileMenuOpen(false)}
                         className={`flex items-center gap-3 px-3 py-3 rounded-lg ${
@@ -401,9 +518,18 @@ function DashboardLayoutContent({
         </header>
 
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 lg:py-8 overflow-y-auto overflow-x-hidden min-w-0">
+          {subscription && subscription.status === 'trialing' && (
+            <div className="mb-4">
+              <TrialBanner daysRemaining={getTrialDaysRemaining(subscription.trialEndsAt)} />
+            </div>
+          )}
           {children}
         </main>
       </div>
+
+      {subscription && shouldShowPaywall(subscription) && (
+        <SubscriptionPaywall subscription={subscription} />
+      )}
     </div>
   );
 }

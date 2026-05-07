@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { prisma } from '@/lib/db';
 import { LoginSchema } from '@hunter/core';
+import { ensureTrialSubscription } from '@/lib/subscription-service';
 
 // POST /api/auth/login - Login with email and password
 export async function POST(request: NextRequest) {
@@ -39,20 +40,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Ensure Recruiter exists (for legacy users migrated from Auth-only)
     const userId = data.user.id;
     const email = data.user.email!;
-    await prisma.recruiter.upsert({
-      where: { id: userId },
-      create: {
-        id: userId,
-        email,
-        name: data.user.user_metadata?.name || email.split('@')[0],
-        company: null,
-        phone_number: null,
-      },
-      update: {}, // Don't overwrite existing recruiter data
-    });
+
+    const recruiter = await prisma.recruiter.findUnique({ where: { id: userId } });
+
+    if (!recruiter) {
+      const byEmail = await prisma.recruiter.findUnique({ where: { email } });
+
+      if (byEmail && byEmail.id !== userId) {
+        console.log('[Login] Syncing recruiter ID from', byEmail.id, 'to Supabase Auth ID', userId);
+        await prisma.recruiter.update({
+          where: { email },
+          data: { id: userId },
+        });
+      } else if (!byEmail) {
+        await prisma.recruiter.create({
+          data: {
+            id: userId,
+            email,
+            name: data.user.user_metadata?.name || email.split('@')[0],
+            company: null,
+            phone_number: null,
+          },
+        });
+      }
+    }
+
+    await ensureTrialSubscription(userId);
 
     return Response.json({
       user: {

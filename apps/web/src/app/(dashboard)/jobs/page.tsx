@@ -85,7 +85,13 @@ function JobsPageContent() {
   const handleDuplicate = useCallback(async (job: Job) => {
     try {
       const duplicated = await apiClient.duplicateJob(job.id);
-      toast.success('Vaga duplicada com sucesso!');
+      if (duplicated.status === 'draft') {
+        toast.success('Vaga duplicada como rascunho (limite de ativas atingido)', {
+          action: { label: 'Atualizar plano', onClick: () => router.push('/dashboard/upgrade') },
+        });
+      } else {
+        toast.success('Vaga duplicada com sucesso!');
+      }
       router.push(`/jobs/${duplicated.id}`);
     } catch (error) {
       toast.error('Falha ao duplicar vaga');

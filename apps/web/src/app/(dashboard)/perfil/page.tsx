@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
 import { Button, Input, Loading } from '@/components/ui';
@@ -76,6 +77,15 @@ export default function PerfilPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Perfil</h1>
         <p className="text-gray-600 mt-1">Suas informações de recrutador</p>
+      </div>
+
+      <div className="mb-6">
+        <Link
+          href="/settings/subscription"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm font-medium text-emerald-700 hover:bg-emerald-100 transition-colors"
+        >
+          <span>Gerenciar assinatura</span>
+        </Link>
       </div>
 
       <form onSubmit={handleSubmit} className="max-w-md space-y-6">

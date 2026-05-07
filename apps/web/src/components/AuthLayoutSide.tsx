@@ -1,11 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { TrendingUp, CheckCircle2 } from 'lucide-react';
+import { TrendingUp, CheckCircle2, Gift } from 'lucide-react';
 
-/**
- * Painel esquerdo verde (informativo) usado em login, signup, forgot-password e reset-password.
- */
 export function AuthLayoutSide() {
   return (
     <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-emerald-700 via-emerald-800 to-teal-900 text-white overflow-hidden">
@@ -19,20 +16,24 @@ export function AuthLayoutSide() {
         </Link>
         <div className="space-y-8">
           <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm mb-4">
+              <Gift className="h-4 w-4 text-emerald-300" />
+              <span className="text-sm font-medium text-emerald-200">30 dias grátis</span>
+            </div>
             <h1 className="text-3xl xl:text-4xl font-bold leading-tight">
               Contrate com inteligência.
             </h1>
             <p className="mt-4 text-emerald-100 text-lg">
               Publique vagas, receba candidatos e deixe a IA ranquear os melhores.
-              Menos tempo triando, mais tempo escolhendo.
+              Comece grátis — 1 vaga ativa, candidatos ilimitados.
             </p>
           </div>
           <ul className="space-y-4">
             {[
+              '30 dias de teste grátis, sem cartão',
               'Ranking automático por fit com a vaga',
               'Resumos e notas gerados por IA',
-              'Um lugar para todas as vagas e candidatos',
-              'Notificações por e-mail a cada nova aplicação',
+              'Candidatos não precisam criar conta',
             ].map((item, i) => (
               <li key={i} className="flex items-center gap-3">
                 <span className="flex-shrink-0 w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
@@ -44,7 +45,7 @@ export function AuthLayoutSide() {
           </ul>
         </div>
         <p className="text-sm text-emerald-200/80">
-          Candidatos não precisam criar conta. Só você gerencia tudo.
+          Sem compromisso. Cancele quando quiser.
         </p>
       </div>
     </div>

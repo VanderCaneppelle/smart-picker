@@ -11,6 +11,23 @@ import type {
   CandidateFilters,
 } from '@hunter/core';
 
+import type { SubscriptionInfo } from '@/lib/subscription';
+
+export class ApiError extends Error {
+  readonly status: number;
+  readonly data: Record<string, unknown>;
+  constructor(message: string, status: number, data: Record<string, unknown> = {}) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.data = data;
+  }
+}
+
+export function isPlanLimitError(err: unknown): boolean {
+  return err instanceof ApiError && err.status === 402;
+}
+
 export interface RecruiterSettings {
   id: string;
   name: string;
@@ -180,7 +197,11 @@ class ApiClient {
       const error = await response.json().catch(() => ({
         message: 'An error occurred',
       }));
-      throw new Error(error.message || `HTTP ${response.status}`);
+      throw new ApiError(
+        error.message || `HTTP ${response.status}`,
+        response.status,
+        error
+      );
     }
 
     return response.json();
@@ -354,6 +375,35 @@ class ApiClient {
     });
   }
 
+  // Jobs limits
+  async getJobsLimits(): Promise<{
+    current: number;
+    limit: number | null;
+    canCreate: boolean;
+    plan: string | null;
+    status: string;
+  }> {
+    return this.request('/jobs/limits');
+  }
+
+  // Subscription
+  async getSubscription(): Promise<SubscriptionInfo> {
+    return this.request<SubscriptionInfo>('/subscription');
+  }
+
+  async createCheckoutSession(planId: string): Promise<{ url: string }> {
+    return this.request<{ url: string }>('/subscription/checkout', {
+      method: 'POST',
+      body: JSON.stringify({ planId }),
+    });
+  }
+
+  async createPortalSession(): Promise<{ url: string }> {
+    return this.request<{ url: string }>('/subscription/portal', {
+      method: 'POST',
+    });
+  }
+
   // Auth
   async login(email: string, password: string): Promise<{
     user: { id: string; email: string };
@@ -371,7 +421,7 @@ class ApiClient {
     email: string,
     password: string,
     password_confirmation: string,
-    recruiterData: { name: string; company?: string; phone_number?: string }
+    recruiterData: { name: string; company?: string; phone_number?: string; session_id?: string }
   ): Promise<{
     user: { id: string; email: string };
     access_token?: string;
@@ -389,6 +439,7 @@ class ApiClient {
         name: recruiterData.name,
         company: recruiterData.company || '',
         phone_number: recruiterData.phone_number || '',
+        session_id: recruiterData.session_id || undefined,
       }),
     });
   }

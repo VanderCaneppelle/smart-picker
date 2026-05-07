@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
 import {
   Briefcase,
   Users,
@@ -55,6 +56,17 @@ export default function DashboardPage() {
       cancelled = true;
     };
   }, [selectedJobId]);
+
+  useEffect(() => {
+    const sub = searchParams.get('subscription');
+    if (sub === 'success') {
+      toast.success('Assinatura ativada com sucesso! Bem-vindo ao Rankea.');
+      router.replace('/dashboard', { scroll: false });
+    } else if (sub === 'canceled') {
+      toast.info('Assinatura cancelada. Você pode assinar a qualquer momento.');
+      router.replace('/dashboard', { scroll: false });
+    }
+  }, [searchParams, router]);
 
   useEffect(() => {
     let cancelled = false;

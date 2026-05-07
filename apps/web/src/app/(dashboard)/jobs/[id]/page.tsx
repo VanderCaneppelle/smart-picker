@@ -20,7 +20,7 @@ import {
   X,
 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isPlanLimitError } from '@/lib/api-client';
 import {
   Button,
   Badge,
@@ -302,7 +302,13 @@ export default function JobDetailPage() {
       setIsEditing(false);
       runPendingAction();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Falha ao atualizar vaga');
+      if (isPlanLimitError(error)) {
+        toast.error(error instanceof Error ? error.message : 'Limite do plano atingido', {
+          action: { label: 'Atualizar plano', onClick: () => router.push('/dashboard/upgrade') },
+        });
+      } else {
+        toast.error(error instanceof Error ? error.message : 'Falha ao atualizar vaga');
+      }
     } finally {
       setIsSaving(false);
     }
@@ -358,7 +364,13 @@ export default function JobDetailPage() {
   const handleDuplicate = async () => {
     try {
       const duplicated = await apiClient.duplicateJob(jobId);
-      toast.success('Vaga duplicada com sucesso!');
+      if (duplicated.status === 'draft') {
+        toast.success('Vaga duplicada como rascunho (limite de ativas atingido)', {
+          action: { label: 'Atualizar plano', onClick: () => router.push('/dashboard/upgrade') },
+        });
+      } else {
+        toast.success('Vaga duplicada com sucesso!');
+      }
       router.push(`/jobs/${duplicated.id}`);
     } catch (error) {
       toast.error('Falha ao duplicar vaga');
@@ -416,7 +428,13 @@ export default function JobDetailPage() {
         // Ignora falhas ao manipular URL (ex: em ambientes sem window)
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Falha ao atualizar vaga');
+      if (isPlanLimitError(error)) {
+        toast.error(error instanceof Error ? error.message : 'Limite do plano atingido', {
+          action: { label: 'Atualizar plano', onClick: () => router.push('/dashboard/upgrade') },
+        });
+      } else {
+        toast.error(error instanceof Error ? error.message : 'Falha ao atualizar vaga');
+      }
     } finally {
       setIsSaving(false);
     }
