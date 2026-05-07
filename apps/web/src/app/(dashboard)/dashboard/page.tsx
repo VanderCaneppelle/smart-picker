@@ -267,7 +267,7 @@ export default function DashboardPage() {
               >
                 <Clock className="h-4 w-4 text-orange-600 shrink-0" />
                 <span className="text-sm text-orange-800 truncate">
-                  <strong>{j.title}</strong> — sem candidatos há +14 dias
+                  <strong>{j.title}</strong>: sem candidatos há mais de 14 dias
                 </span>
                 <ChevronRight className="h-4 w-4 text-orange-400 ml-auto shrink-0" />
               </div>

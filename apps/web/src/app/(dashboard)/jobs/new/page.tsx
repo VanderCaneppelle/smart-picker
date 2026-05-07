@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { ArrowLeft, Plus, Trash2, Brain, ShieldAlert, Info } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Brain, ShieldAlert, Info, Share2, ClipboardCopy, Check, ExternalLink } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { apiClient, isPlanLimitError } from '@/lib/api-client';
+import { useOnboarding } from '@/contexts/OnboardingContext';
 import {
   Button,
   Input,
@@ -53,7 +54,10 @@ const ELIMINATORY_ALLOWED_TYPES = ['yes_no', 'select', 'multiselect', 'number'];
 
 export default function NewJobPage() {
   const router = useRouter();
+  const { completeStep } = useOnboarding();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [shareJob, setShareJob] = useState<{ id: string; title: string; status: string } | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   // Form state
   const [title, setTitle] = useState('');
@@ -179,8 +183,14 @@ export default function NewJobPage() {
         scoring_instructions: scoringInstructions.trim() || null,
       });
 
-      toast.success('Vaga criada com sucesso!');
-      router.push(`/jobs/${job.id}`);
+      completeStep('create-job');
+      if (applicationQuestions.filter((q) => q.question.trim()).length > 0) {
+        completeStep('add-questions');
+      }
+      if (scoringInstructions.trim() || resumeWeight !== 5 || answersWeight !== 5) {
+        completeStep('ia-config');
+      }
+      setShareJob({ id: job.id, title: job.title, status: job.status });
     } catch (error) {
       if (isPlanLimitError(error)) {
         toast.error(error instanceof Error ? error.message : 'Limite do plano atingido', {
@@ -194,8 +204,76 @@ export default function NewJobPage() {
     }
   };
 
+  const shareUrl = shareJob ? `${typeof window !== 'undefined' ? window.location.origin : ''}/jobs/${shareJob.id}/apply` : '';
+
+  const handleCopyLink = async () => {
+    if (!shareUrl) return;
+    await navigator.clipboard.writeText(shareUrl);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
+
   return (
     <div>
+      {/* Share modal shown after job creation */}
+      {shareJob && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white/20">
+                  <Share2 className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-emerald-100 text-xs font-semibold uppercase tracking-widest">Vaga criada!</p>
+                  <h2 className="text-white font-bold text-lg leading-tight">{shareJob.title}</h2>
+                </div>
+              </div>
+            </div>
+            {/* Body */}
+            <div className="px-6 py-5">
+              <p className="text-gray-600 text-sm mb-4">
+                {shareJob?.status === 'active'
+                  ? 'Sua vaga está ativa e aceitando candidaturas. Copie o link e compartilhe!'
+                  : 'Vaga criada como rascunho. Ative-a quando estiver pronta e compartilhe o link para receber candidatos.'}
+              </p>
+              <div className="flex items-center gap-2 bg-gray-50 rounded-xl border border-gray-200 px-4 py-3">
+                <span className="text-sm text-gray-500 flex-1 truncate">{shareUrl}</span>
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className={`flex items-center gap-1.5 shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                    linkCopied
+                      ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+                      : 'border-emerald-300 bg-white text-emerald-700 hover:bg-emerald-50'
+                  }`}
+                >
+                  {linkCopied ? <><Check className="h-3.5 w-3.5" />Copiado!</> : <><ClipboardCopy className="h-3.5 w-3.5" />Copiar link</>}
+                </button>
+              </div>
+            </div>
+            {/* Footer */}
+            <div className="px-6 pb-5 flex items-center gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => router.push('/jobs')}
+                className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                Ver vagas
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push(`/jobs/${shareJob.id}?tab=details`)}
+                className="flex items-center gap-1.5 px-5 py-2.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-semibold shadow-sm"
+              >
+                Ver vaga <ExternalLink className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <Button
@@ -294,7 +372,7 @@ export default function NewJobPage() {
         </div>
 
         {/* Application Questions */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div data-onboarding-id="onb-job-questions" className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="mb-4">
             <h2 className="text-lg font-semibold text-gray-900">Perguntas da Aplicação</h2>
             <p className="text-sm text-gray-500">Perguntas personalizadas para os candidatos</p>
@@ -590,7 +668,7 @@ export default function NewJobPage() {
         </div>
 
         {/* AI Scoring Settings */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div data-onboarding-id="onb-job-ia" className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center gap-2 mb-4">
             <Brain className="h-5 w-5 text-emerald-600" />
             <h2 className="text-lg font-semibold text-gray-900">Configuração da Avaliação por IA</h2>

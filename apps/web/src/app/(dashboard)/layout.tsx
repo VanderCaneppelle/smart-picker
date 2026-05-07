@@ -201,7 +201,7 @@ function DashboardLayoutContent({
                   <Link
                     href={targetHref}
                     data-onboarding-id="onb-nav-criar-vaga"
-                    title={blocked ? 'Limite de vagas atingido — atualize seu plano' : undefined}
+                    title={blocked ? 'Limite de vagas atingido. Atualize seu plano.' : undefined}
                     className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                       primary
                         ? active
@@ -343,6 +343,7 @@ function DashboardLayoutContent({
             </Link>
             <Link
               href="/settings/public-profile"
+              data-onboarding-id="onb-nav-configuracoes"
               className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive('/settings/public-profile')
                   ? 'bg-emerald-600 text-white border-l-2 border-l-emerald-700 -ml-px pl-[11px]'
@@ -426,7 +427,7 @@ function DashboardLayoutContent({
                           <Link
                             href={blocked ? '/dashboard/upgrade' : '/jobs/new'}
                             onClick={() => setMobileMenuOpen(false)}
-                            title={blocked ? 'Limite de vagas atingido — atualize seu plano' : undefined}
+                            title={blocked ? 'Limite de vagas atingido. Atualize seu plano.' : undefined}
                             className={`flex items-center gap-3 px-3 py-3 rounded-lg font-medium ${
                               blocked
                                 ? 'text-gray-400 border border-gray-200'

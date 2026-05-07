@@ -2,7 +2,6 @@ import { NextRequest } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { verifyAuth, unauthorizedResponse, jobBelongsToUser } from '@/lib/auth';
-import { getActiveJobsLimit } from '@/lib/subscription-service';
 import { v4 as uuidv4 } from 'uuid';
 import type { ApplicationQuestion } from '@hunter/core';
 
@@ -32,8 +31,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const limitInfo = await getActiveJobsLimit(user.id);
-    const duplicateStatus = limitInfo.canCreate ? 'active' : 'draft';
+    // Duplicated jobs always start as draft — user must review before publishing
 
     // Generate new IDs for application questions
     const originalQuestions = originalJob.application_questions as unknown as ApplicationQuestion[];
@@ -61,7 +59,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         resume_weight: originalJob.resume_weight,
         answers_weight: originalJob.answers_weight,
         scoring_instructions: originalJob.scoring_instructions,
-        status: duplicateStatus,
+        status: 'draft',
       },
       include: {
         _count: {

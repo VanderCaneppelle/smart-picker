@@ -6,8 +6,10 @@ import { apiClient } from '@/lib/api-client';
 
 export type OnboardingStepId =
   | 'profile'
+  | 'settings'
   | 'create-job'
   | 'add-questions'
+  | 'ia-config'
   | 'share-job'
   | 'review-candidates';
 
@@ -18,7 +20,9 @@ export interface OnboardingStep {
   targetId: string;
   tooltipPosition: 'top' | 'bottom' | 'left' | 'right';
   actionLabel: string;
-  href?: string;
+  /** URL to navigate to when this step becomes active (forward or backward) */
+  navigateTo?: string;
+  scrollToTarget?: boolean;
 }
 
 export const ONBOARDING_STEPS: OnboardingStep[] = [
@@ -28,44 +32,63 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     description: 'Comece configurando seu perfil e identidade como recrutador.',
     targetId: 'onb-nav-perfil',
     tooltipPosition: 'right',
-    actionLabel: 'Ir para Perfil',
-    href: '/perfil',
+    actionLabel: 'Próximo',
+    // No navigateTo — "Iniciar guia" navigates to /perfil manually
+  },
+  {
+    id: 'settings',
+    title: 'Configure seu perfil público',
+    description: 'Personalize sua página pública, branding e como os candidatos vão te encontrar.',
+    targetId: 'onb-nav-configuracoes',
+    tooltipPosition: 'right',
+    actionLabel: 'Próximo',
+    navigateTo: '/settings/public-profile',
   },
   {
     id: 'create-job',
     title: 'Crie sua primeira vaga',
-    description: 'Crie sua primeira vaga para começar a receber candidatos.',
+    description: 'Clique em "Criar vaga" na sidebar para abrir o formulário de criação.',
     targetId: 'onb-nav-criar-vaga',
     tooltipPosition: 'right',
-    actionLabel: 'Criar Vaga',
-    href: '/jobs/new',
+    actionLabel: 'Próximo',
+    navigateTo: '/jobs/new',
   },
   {
     id: 'add-questions',
-    title: 'Configure as perguntas',
-    description: 'Adicione perguntas estratégicas para automatizar sua triagem de candidatos.',
+    title: 'Adicione perguntas à vaga',
+    description: 'Perguntas estratégicas automatizam sua triagem. A IA usa as respostas para pontuar cada candidato.',
     targetId: 'onb-job-questions',
     tooltipPosition: 'top',
-    actionLabel: 'Entendi',
-    href: '/jobs',
+    actionLabel: 'Próximo',
+    scrollToTarget: true,
+    navigateTo: '/jobs/new',
+  },
+  {
+    id: 'ia-config',
+    title: 'Configure a avaliação por IA',
+    description: 'Defina o peso do currículo vs. respostas e dê instruções extras para a IA priorizar o que importa para a vaga.',
+    targetId: 'onb-job-ia',
+    tooltipPosition: 'top',
+    actionLabel: 'Próximo',
+    scrollToTarget: true,
+    // No navigateTo — same page as add-questions (/jobs/new)
   },
   {
     id: 'share-job',
     title: 'Compartilhe sua vaga',
-    description: 'Compartilhe este link para começar a receber candidatos.',
+    description: 'Cada vaga tem um link único. Compartilhe nas redes ou envie direto para candidatos, sem cadastro obrigatório.',
     targetId: 'onb-job-share',
     tooltipPosition: 'bottom',
-    actionLabel: 'Continuar',
-    href: '/jobs',
+    actionLabel: 'Próximo',
+    navigateTo: '/jobs',
   },
   {
     id: 'review-candidates',
     title: 'Acompanhe os candidatos',
-    description: 'Organize seu processo seletivo movendo candidatos entre as etapas do Kanban.',
+    description: 'Os candidatos chegam ranqueados pela IA. Mova-os pelo Kanban conforme avança no processo seletivo.',
     targetId: 'onb-candidates-kanban',
     tooltipPosition: 'top',
     actionLabel: 'Concluir!',
-    href: '/jobs',
   },
 ];
 
@@ -126,29 +149,26 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     hasStarted: false,
   });
 
-  // Load from localStorage and auto-start for new users
   useEffect(() => {
     if (!isAuthenticated || !user?.id) return;
     const saved = loadState(user.id);
     const { _isNew, ...base } = saved;
-
     if (_isNew) {
-      // First ever access — start tour
       const fresh: OnboardingState = { ...base, hasStarted: true, activeTourStep: 0 };
       setState(fresh);
       persist(user.id, fresh);
     } else {
-      setState({ ...base, activeTourStep: null }); // never restore mid-tour on page load
+      setState({ ...base, activeTourStep: null });
     }
   }, [isAuthenticated, user?.id]);
 
-  // Auto-detect completed steps from API data
   useEffect(() => {
     if (!isAuthenticated || !user?.id) return;
 
     const detect = async () => {
-      const [profileRes, jobsRes] = await Promise.allSettled([
+      const [profileRes, settingsRes, jobsRes] = await Promise.allSettled([
         apiClient.getRecruiterProfile(),
+        apiClient.getRecruiterSettings(),
         apiClient.getJobs(),
       ]);
 
@@ -159,12 +179,24 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         if (p.name && p.company) auto.push('profile');
       }
 
+      if (settingsRes.status === 'fulfilled') {
+        const s = settingsRes.value;
+        if (s.public_slug || s.public_display_name || s.brand_color) auto.push('settings');
+      }
+
       if (jobsRes.status === 'fulfilled') {
         const jobs = jobsRes.value.jobs;
         if (jobs.length > 0) {
           auto.push('create-job');
           if (jobs.some((j) => j.application_questions && j.application_questions.length > 0)) {
             auto.push('add-questions');
+          }
+          if (jobs.some((j) =>
+            (j.resume_weight != null && j.resume_weight !== 5) ||
+            (j.answers_weight != null && j.answers_weight !== 5) ||
+            !!j.scoring_instructions
+          )) {
+            auto.push('ia-config');
           }
           const totalCandidates = jobs.reduce((n, j) => n + (j._count?.candidates ?? 0), 0);
           if (totalCandidates > 0) {
@@ -235,10 +267,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     });
   }, [update]);
 
-  const skipTour = useCallback(
-    () => update((p) => ({ ...p, activeTourStep: null })),
-    [update],
-  );
+  const skipTour = useCallback(() => update((p) => ({ ...p, activeTourStep: null })), [update]);
 
   const dismissOnboarding = useCallback(
     () => update((p) => ({ ...p, dismissed: true, activeTourStep: null })),
@@ -246,12 +275,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   );
 
   const resetOnboarding = useCallback(() => {
-    update(() => ({
-      completedSteps: [],
-      dismissed: false,
-      activeTourStep: 0,
-      hasStarted: true,
-    }));
+    update(() => ({ completedSteps: [], dismissed: false, activeTourStep: 0, hasStarted: true }));
   }, [update]);
 
   const completedCount = state.completedSteps.length;
@@ -275,18 +299,8 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       activeTourStepData,
     }),
     [
-      state,
-      isStepCompleted,
-      completeStep,
-      startTour,
-      nextTourStep,
-      prevTourStep,
-      skipTour,
-      dismissOnboarding,
-      resetOnboarding,
-      completedCount,
-      totalSteps,
-      activeTourStepData,
+      state, isStepCompleted, completeStep, startTour, nextTourStep, prevTourStep,
+      skipTour, dismissOnboarding, resetOnboarding, completedCount, totalSteps, activeTourStepData,
     ],
   );
 

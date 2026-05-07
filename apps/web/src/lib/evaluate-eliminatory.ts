@@ -32,7 +32,7 @@ export function evaluateEliminatoryQuestions(
           question_text: question.question,
           candidate_answer: answerValue,
           severity: 'eliminated',
-          reason: `Resposta "${answerValue}" — esperado "${criteria.expected_answer}"`,
+          reason: `Resposta "${answerValue}", esperado: "${criteria.expected_answer}"`,
         });
       }
     }
@@ -95,7 +95,7 @@ export function evaluateEliminatoryQuestions(
 
         if (numericValue <= hardLimit) {
           severity = 'warning';
-          reason = `Valor ${formatNumber(numericValue)} acima do máximo ${formatNumber(range_max)}, mas dentro da tolerância de ${tolerance_percent}% — negociável`;
+          reason = `Valor ${formatNumber(numericValue)} acima do máximo ${formatNumber(range_max)}, mas dentro da tolerância de ${tolerance_percent}%. Negociável.`;
         } else {
           severity = 'eliminated';
           reason = `Valor ${formatNumber(numericValue)} muito acima do máximo ${formatNumber(range_max)} (tolerância ${tolerance_percent}% excedida)`;
@@ -116,7 +116,7 @@ export function evaluateEliminatoryQuestions(
 
         if (numericValue >= hardLimit) {
           severity = 'warning';
-          reason = `Valor ${formatNumber(numericValue)} abaixo do mínimo ${formatNumber(range_min)}, mas dentro da tolerância de ${tolerance_percent}% — negociável`;
+          reason = `Valor ${formatNumber(numericValue)} abaixo do mínimo ${formatNumber(range_min)}, mas dentro da tolerância de ${tolerance_percent}%. Negociável.`;
         } else {
           severity = 'eliminated';
           reason = `Valor ${formatNumber(numericValue)} muito abaixo do mínimo ${formatNumber(range_min)} (tolerância ${tolerance_percent}% excedida)`;

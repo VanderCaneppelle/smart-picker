@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import {
   ArrowLeft,
   Share2,
-  Copy,
+  Files,
   Trash2,
   Save,
   MapPin,
@@ -364,13 +364,7 @@ export default function JobDetailPage() {
   const handleDuplicate = async () => {
     try {
       const duplicated = await apiClient.duplicateJob(jobId);
-      if (duplicated.status === 'draft') {
-        toast.success('Vaga duplicada como rascunho (limite de ativas atingido)', {
-          action: { label: 'Atualizar plano', onClick: () => router.push('/dashboard/upgrade') },
-        });
-      } else {
-        toast.success('Vaga duplicada com sucesso!');
-      }
+      toast.success('Vaga duplicada como rascunho. Revise e publique quando estiver pronta.');
       router.push(`/jobs/${duplicated.id}`);
     } catch (error) {
       toast.error('Falha ao duplicar vaga');
@@ -550,21 +544,25 @@ export default function JobDetailPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button data-onboarding-id="onb-job-share" variant="ghost" size="sm" onClick={handleShare} title="Compartilhar link da vaga">
+          <div className="flex items-center gap-1">
+            <Button data-onboarding-id="onb-job-share" variant="ghost" size="sm" onClick={handleShare}
+              className="flex items-center gap-1.5 text-gray-600 hover:text-gray-900">
               <Share2 className="h-4 w-4" />
+              <span className="hidden sm:inline text-sm">Compartilhar</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleDuplicate} title="Duplicar vaga">
-              <Copy className="h-4 w-4" />
+            <Button variant="ghost" size="sm" onClick={handleDuplicate}
+              className="flex items-center gap-1.5 text-gray-600 hover:text-gray-900">
+              <Files className="h-4 w-4" />
+              <span className="hidden sm:inline text-sm">Duplicar</span>
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowDeleteModal(true)}
-              className="text-red-500 hover:text-red-700 hover:bg-red-50"
-              title="Excluir vaga"
+              className="flex items-center gap-1.5 text-red-500 hover:text-red-700 hover:bg-red-50"
             >
               <Trash2 className="h-4 w-4" />
+              <span className="hidden sm:inline text-sm">Excluir</span>
             </Button>
             {activeTab === 'details' && !isEditing && (
               <Button
@@ -1021,7 +1019,7 @@ export default function JobDetailPage() {
           </div>
 
           {/* AI Scoring Settings */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div data-onboarding-id="onb-job-ia" className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center gap-2 mb-4">
               <Brain className="h-5 w-5 text-emerald-600" />
               <h2 className="text-lg font-semibold text-gray-900">Configuração da Avaliação por IA</h2>
