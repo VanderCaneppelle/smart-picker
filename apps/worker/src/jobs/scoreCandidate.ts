@@ -36,15 +36,15 @@ export async function scoreCandidate(candidate: CandidateWithJob): Promise<Scori
       fit_score: 50,
       resume_rating: 3,
       answer_quality_rating: 3,
-      resume_summary: 'AI scoring not available.',
-      experience_level: 'Unknown',
+      resume_summary: 'Avaliação por IA não disponível.',
+      experience_level: 'Não identificado',
     };
   }
 
   try {
     // Parse resume (PDF and Word .docx/.doc; malformed/failed fetch → we evaluate from answers)
     const resumeFallbackMessage =
-      '[The resume could not be read automatically. Possible causes: PDF is image-only (scanned/exported as image), malformed PDF, or the file could not be fetched. Please base your evaluation mainly on the application answers below.]';
+      '[O currículo não pôde ser lido automaticamente. Possíveis causas: PDF gerado como imagem (escaneado), PDF malformado ou falha ao buscar o arquivo. Baseie a avaliação principalmente nas respostas da candidatura abaixo.]';
     let resumeText = '';
     let resumeUnparseable = false;
     const resumeUrlLower = candidate.resume_url.toLowerCase();
@@ -63,7 +63,7 @@ export async function scoreCandidate(candidate: CandidateWithJob): Promise<Scori
         resumeUnparseable = true;
       }
     } else {
-      resumeText = 'Resume format not supported for parsing.';
+      resumeText = 'Formato de currículo não suportado para leitura automática.';
       resumeUnparseable = true;
     }
 
@@ -74,7 +74,7 @@ export async function scoreCandidate(candidate: CandidateWithJob): Promise<Scori
     const answersText = questions
       .map((q) => {
         const answer = answers.find((a) => a.question_id === q.id);
-        return `Q: ${q.question}\nA: ${answer?.answer || 'No answer provided'}`;
+        return `P: ${q.question}\nR: ${answer?.answer || 'Sem resposta'}`;
       })
       .join('\n\n');
 
@@ -82,45 +82,47 @@ export async function scoreCandidate(candidate: CandidateWithJob): Promise<Scori
     const resumeWeight = candidate.job.resume_weight ?? 5;
     const answersWeight = candidate.job.answers_weight ?? 5;
     const scoringInstructions = candidate.job.scoring_instructions;
-    
+
     const totalWeight = resumeWeight + answersWeight;
     const resumePercent = Math.round((resumeWeight / totalWeight) * 100);
     const answersPercent = Math.round((answersWeight / totalWeight) * 100);
 
     // Create the prompt
-    const prompt = `You are an expert recruiter evaluating a job candidate. Analyze the following information and provide a detailed evaluation.
+    const prompt = `Você é um recrutador especialista avaliando um candidato. Analise as informações abaixo e forneça uma avaliação detalhada.
 
-JOB TITLE: ${candidate.job.title}
+IMPORTANTE: Responda SEMPRE em português brasileiro (PT-BR), independentemente do idioma do currículo ou das respostas do candidato.
 
-JOB DESCRIPTION:
+TÍTULO DA VAGA: ${candidate.job.title}
+
+DESCRIÇÃO DA VAGA:
 ${candidate.job.description}
 
-CANDIDATE NAME: ${candidate.name}
+NOME DO CANDIDATO: ${candidate.name}
 
-RESUME:
-${resumeText.substring(0, 5000)} ${resumeText.length > 5000 ? '...(truncated)' : ''}
+CURRÍCULO:
+${resumeText.substring(0, 5000)} ${resumeText.length > 5000 ? '...(truncado)' : ''}
 
-APPLICATION ANSWERS:
-${answersText || 'No application questions.'}
+RESPOSTAS DA CANDIDATURA:
+${answersText || 'Sem perguntas de candidatura.'}
 
-EVALUATION WEIGHTS:
-- Resume evaluation weight: ${resumePercent}%
-- Application answers weight: ${answersPercent}%
-${scoringInstructions ? `\nADDITIONAL INSTRUCTIONS FROM RECRUITER:\n${scoringInstructions}` : ''}
+PESOS DA AVALIAÇÃO:
+- Peso do currículo: ${resumePercent}%
+- Peso das respostas: ${answersPercent}%
+${scoringInstructions ? `\nINSTRUÇÕES ADICIONAIS DO RECRUTADOR:\n${scoringInstructions}` : ''}
 
-Please evaluate this candidate and provide:
-1. resume_rating: A score from 1-5 rating the quality and relevance of the resume (if the resume could not be read, use 3 and explain in resume_summary)
-2. answer_quality_rating: A score from 1-5 rating the quality of their application answers
-3. resume_summary: A brief 2-3 sentence summary. If the resume text was not available or could not be parsed, write something like: "Currículo não pôde ser lido automaticamente (pode ser PDF só com imagem). Avaliação baseada nas respostas da candidatura." Then briefly summarize what you can infer from the application answers.
-4. experience_level: One of: "Entry Level", "Junior", "Mid-Level", "Senior", "Lead", "Executive" (if unknown, infer from answers or use "Unknown")
+Avalie o candidato e forneça:
+1. resume_rating: Nota de 1 a 5 pela qualidade e relevância do currículo (se não foi possível ler, use 3 e explique no resume_summary)
+2. answer_quality_rating: Nota de 1 a 5 pela qualidade das respostas da candidatura
+3. resume_summary: Resumo breve de 2 a 3 frases em PT-BR. Se o currículo não pôde ser lido, escreva: "Currículo não pôde ser lido automaticamente (pode ser PDF gerado como imagem). Avaliação baseada nas respostas da candidatura." e resuma o que é possível inferir das respostas.
+4. experience_level: Um dos seguintes valores: "Estágio", "Júnior", "Pleno", "Sênior", "Líder", "Executivo" (se não for possível identificar, use "Não identificado")
 
-IMPORTANT: Consider the evaluation weights when assessing the candidate. If the resume could not be read, base your evaluation primarily on the application answers and do not penalize the candidate for the parsing issue.
+IMPORTANTE: Considere os pesos na avaliação. Se o currículo não pôde ser lido, baseie-se nas respostas e não penalize o candidato pelo problema de leitura. Responda SOMENTE em português brasileiro.
 
-Respond in JSON format only:
+Responda apenas em formato JSON:
 {
-  "resume_rating": <number 1-5>,
-  "answer_quality_rating": <number 1-5>,
-  "resume_summary": "<string>",
+  "resume_rating": <número 1-5>,
+  "answer_quality_rating": <número 1-5>,
+  "resume_summary": "<string em PT-BR>",
   "experience_level": "<string>"
 }`;
 
@@ -129,7 +131,7 @@ Respond in JSON format only:
       messages: [
         {
           role: 'system',
-          content: 'You are an expert recruiter. Respond only with valid JSON.',
+          content: 'Você é um recrutador especialista. Responda sempre em português brasileiro (PT-BR) e apenas com JSON válido.',
         },
         {
           role: 'user',
@@ -164,8 +166,8 @@ Respond in JSON format only:
       fit_score: Math.min(100, Math.max(0, weightedFitScore)),
       resume_rating: resumeRating,
       answer_quality_rating: answerRating,
-      resume_summary: result.resume_summary || 'No summary available.',
-      experience_level: result.experience_level || 'Unknown',
+      resume_summary: result.resume_summary || 'Resumo não disponível.',
+      experience_level: result.experience_level || 'Não identificado',
     };
   } catch (error) {
     console.error('Error scoring candidate:', error);
@@ -175,8 +177,8 @@ Respond in JSON format only:
       fit_score: 50,
       resume_rating: 3,
       answer_quality_rating: 3,
-      resume_summary: 'Error during AI evaluation.',
-      experience_level: 'Unknown',
+      resume_summary: 'Erro durante a avaliação por IA.',
+      experience_level: 'Não identificado',
     };
   }
 }
