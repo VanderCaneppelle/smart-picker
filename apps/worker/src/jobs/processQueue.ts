@@ -1,8 +1,58 @@
 import { prisma } from '../lib/db.js';
 import { scoreCandidate } from './scoreCandidate.js';
 import { sendEmails } from './sendEmails.js';
+import type { ResumeIntegrityResult } from '../lib/resumeIntegrity.js';
 
 const BATCH_SIZE = parseInt(process.env.BATCH_SIZE || '5', 10);
+
+/** Identificador do flag de integridade, para não duplicar ao recalcular a nota. */
+const INTEGRITY_FLAG_ID = 'resume_integrity';
+
+interface ExistingFlag {
+  question_id?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Monta os campos de alerta a partir da checagem de integridade do currículo,
+ * preservando os flags já gravados pelas perguntas eliminatórias e substituindo
+ * apenas o flag de integridade anterior (caso a nota esteja sendo recalculada).
+ */
+function buildIntegrityUpdate(
+  candidate: { disqualification_flags: unknown; flagged_reason: string | null },
+  integrity: ResumeIntegrityResult
+) {
+  const previous = Array.isArray(candidate.disqualification_flags)
+    ? (candidate.disqualification_flags as ExistingFlag[])
+    : [];
+  const withoutIntegrity = previous.filter((f) => f?.question_id !== INTEGRITY_FLAG_ID);
+
+  // Remove o texto de integridade anterior para não acumular a cada recálculo.
+  const previousReason = (candidate.flagged_reason ?? '')
+    .split(' | ')
+    .filter((part) => part && !part.startsWith('Possível manipulação da triagem:'))
+    .join(' | ');
+
+  if (!integrity.manipulated) {
+    return {
+      disqualification_flags: withoutIntegrity as never,
+      flagged_reason: previousReason || null,
+    };
+  }
+
+  const integrityFlags = integrity.signals.map((signal) => ({
+    question_id: INTEGRITY_FLAG_ID,
+    question_text: 'Integridade do currículo',
+    candidate_answer: signal.excerpt,
+    severity: integrity.severity,
+    reason: signal.label,
+  }));
+
+  return {
+    disqualification_flags: [...withoutIntegrity, ...integrityFlags] as never,
+    flagged_reason: [previousReason, integrity.summary].filter(Boolean).join(' | '),
+  };
+}
 
 export interface ProcessCandidateOptions {
   /** When true, only recalculate score; do not send "candidatura recebida" or recruiter notification. Used for "recalcular nota". */
@@ -53,6 +103,7 @@ export async function processCandidate(
         resume_summary: scores.resume_summary,
         experience_level: scores.experience_level,
         needs_scoring: false,
+        ...buildIntegrityUpdate(candidate, scores.integrity),
       },
     });
 
@@ -124,6 +175,7 @@ export async function processQueue() {
           resume_summary: scores.resume_summary,
           experience_level: scores.experience_level,
           needs_scoring: false,
+          ...buildIntegrityUpdate(candidate, scores.integrity),
         },
       });
 
