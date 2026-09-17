@@ -165,5 +165,30 @@
     "titulo": "Rankea | Screen less, decide better",
     "descricao": "Cut screening time and hire on evidence with automatic AI ranking of every applicant. Built for recruiters and staffing agencies.",
     "ogDescricao": "Automatic AI ranking of job applicants. Built for independent recruiters."
+  },
+  "app": {
+    "nav": {
+      "criarVaga": "New role",
+      "dashboard": "Dashboard",
+      "vagas": "Roles",
+      "candidatosSalvos": "Saved candidates",
+      "perfil": "Profile",
+      "assinatura": "Subscription",
+      "configuracoes": "Settings",
+      "sair": "Sign out"
+    },
+    "status": {
+      "todos": "All statuses",
+      "rascunho": "Draft",
+      "ativa": "Active",
+      "fechada": "Closed",
+      "pausada": "On hold"
+    },
+    "idioma": {
+      "titulo": "Language",
+      "descricao": "Applies to the interface, to the automatic emails, and to the summary the AI writes about each candidate.",
+      "salvo": "Language updated.",
+      "erro": "Could not save the language."
+    }
   }
 }

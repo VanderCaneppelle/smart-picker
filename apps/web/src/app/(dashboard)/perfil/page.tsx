@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
 import { Button, Input, Loading } from '@/components/ui';
+import { LanguageSetting } from '@/components/settings/LanguageSetting';
 
 interface RecruiterProfile {
   id: string;
@@ -77,6 +78,10 @@ export default function PerfilPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Perfil</h1>
         <p className="text-gray-600 mt-1">Suas informações de recrutador</p>
+      </div>
+
+      <div className="mb-6">
+        <LanguageSetting />
       </div>
 
       <div className="mb-6">

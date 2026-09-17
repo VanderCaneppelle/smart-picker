@@ -165,5 +165,30 @@
     "titulo": "Rankea | Seleção simples, decisão inteligente",
     "descricao": "Reduza o tempo de triagem e aumente a precisão da sua seleção com ranking automatizado por IA. Feito para consultores de RH.",
     "ogDescricao": "Ranking automatizado de candidatos por IA. Feito para consultores de RH independentes."
+  },
+  "app": {
+    "nav": {
+      "criarVaga": "Criar vaga",
+      "dashboard": "Painel",
+      "vagas": "Vagas",
+      "candidatosSalvos": "Candidatos salvos",
+      "perfil": "Perfil",
+      "assinatura": "Assinatura",
+      "configuracoes": "Configurações",
+      "sair": "Sair"
+    },
+    "status": {
+      "todos": "Todos os status",
+      "rascunho": "Rascunho",
+      "ativa": "Ativa",
+      "fechada": "Fechada",
+      "pausada": "Pausada"
+    },
+    "idioma": {
+      "titulo": "Idioma",
+      "descricao": "Vale para a interface, para os e-mails automáticos e para o resumo que a IA escreve sobre cada candidato.",
+      "salvo": "Idioma atualizado.",
+      "erro": "Não consegui salvar o idioma."
+    }
   }
 }

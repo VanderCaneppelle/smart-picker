@@ -5,6 +5,7 @@
  */
 
 export type TrialEmailKind = 'trial_d7' | 'trial_d1' | 'trial_expired';
+export type TrialLocale = 'pt' | 'en';
 
 export interface TrialEmailData {
   /** Primeiro nome, para a saudação. */
@@ -13,18 +14,24 @@ export interface TrialEmailData {
   candidatosAvaliados: number;
   vagasCriadas: number;
   appUrl: string;
+  locale: TrialLocale;
 }
 
 function botao(url: string, texto: string): string {
   return `<p style="margin:0 0 28px"><a href="${url}" style="display:inline-block;background-color:#059669;color:#ffffff;text-decoration:none;font-weight:500;font-size:15px;padding:12px 22px;border-radius:6px">${texto}</a></p>`;
 }
 
-function moldura(conteudo: string): string {
+const RODAPE: Record<TrialLocale, string> = {
+  pt: 'Rankea, seleção simples e decisão inteligente.<br>Você recebe este aviso porque tem uma conta em rankea.ai.',
+  en: 'Rankea, screen less and decide better.<br>You are getting this note because you have an account at rankea.ai.',
+};
+
+function moldura(conteudo: string, locale: TrialLocale): string {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:24px;background-color:#f9fafb">
 <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#1f2937;max-width:560px;margin:0 auto;background-color:#ffffff;padding:32px;border-radius:8px;border:1px solid #e5e7eb">
 ${conteudo}
-<p style="margin:28px 0 0;padding-top:16px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.5;color:#9ca3af">Rankea, seleção simples e decisão inteligente.<br>Você recebe este aviso porque tem uma conta em rankea.ai.</p>
+<p style="margin:28px 0 0;padding-top:16px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.5;color:#9ca3af">${RODAPE[locale]}</p>
 </div></body></html>`;
 }
 
@@ -34,13 +41,62 @@ ${conteudo}
  */
 function resumoDeUso(d: TrialEmailData): string {
   if (d.candidatosAvaliados === 0) return '';
+  if (d.locale === 'en') {
+    const cand = d.candidatosAvaliados === 1 ? '1 candidate' : `${d.candidatosAvaliados} candidates`;
+    const vagas = d.vagasCriadas === 1 ? '1 role' : `${d.vagasCriadas} roles`;
+    return `<p style="margin:0 0 16px">So far the AI has reviewed <strong>${cand}</strong> across ${vagas} of yours. That work stays in your account.</p>`;
+  }
   const cand = d.candidatosAvaliados === 1 ? '1 candidato' : `${d.candidatosAvaliados} candidatos`;
   const vagas = d.vagasCriadas === 1 ? '1 vaga' : `${d.vagasCriadas} vagas`;
   return `<p style="margin:0 0 16px">Até aqui a IA já avaliou <strong>${cand}</strong> em ${vagas} suas. Esse trabalho fica salvo na sua conta.</p>`;
 }
 
+function conteudoEmIngles(kind: TrialEmailKind, d: TrialEmailData, planos: string) {
+  const uso = resumoDeUso(d);
+  if (kind === 'trial_d7') {
+    const dias = d.diasRestantes === 1 ? '1 day' : `${d.diasRestantes} days`;
+    return {
+      subject: `Your Rankea trial ends in ${dias}`,
+      corpo: `
+<p style="margin:0 0 16px">Hi ${d.nome},</p>
+<p style="margin:0 0 16px">Your trial ends in <strong>${dias}</strong>.</p>
+${uso}
+<p style="margin:0 0 24px">To keep going, just pick a plan. It takes a minute and nothing you have done is lost.</p>
+${botao(planos, 'See plans')}
+<p style="margin:0">Any question, reply to this email and I read it.</p>`,
+    };
+  }
+  if (kind === 'trial_d1') {
+    return {
+      subject: 'Your Rankea trial ends tomorrow',
+      corpo: `
+<p style="margin:0 0 16px">Hi ${d.nome},</p>
+<p style="margin:0 0 16px">Your trial ends <strong>tomorrow</strong>. After that your roles stop accepting new applications and the dashboard is locked until you subscribe.</p>
+${uso}
+<p style="margin:0 0 24px">Nothing gets deleted. The moment you subscribe, everything is back exactly as it is now.</p>
+${botao(planos, 'Choose a plan')}
+<p style="margin:0">If something did not work the way you expected, tell me by replying. I want to know.</p>`,
+    };
+  }
+  return {
+    subject: 'Your Rankea trial has ended',
+    corpo: `
+<p style="margin:0 0 16px">Hi ${d.nome},</p>
+<p style="margin:0 0 16px">Your trial has ended. Your roles stopped accepting new applications and the dashboard is locked.</p>
+${uso}
+<p style="margin:0 0 24px">Your data is still there. Subscribe and everything comes back in place, with nothing to redo.</p>
+${botao(planos, 'Reactivate my account')}
+<p style="margin:0">And if Rankea did not solve your problem, I would like to understand why. One line in reply already helps me a lot.</p>`,
+  };
+}
+
 export function montarTrialEmail(kind: TrialEmailKind, d: TrialEmailData): { subject: string; html: string } {
   const planos = `${d.appUrl}/dashboard/upgrade`;
+
+  if (d.locale === 'en') {
+    const { subject, corpo } = conteudoEmIngles(kind, d, planos);
+    return { subject, html: moldura(corpo, 'en') };
+  }
 
   if (kind === 'trial_d7') {
     const dias = d.diasRestantes === 1 ? '1 dia' : `${d.diasRestantes} dias`;
@@ -52,7 +108,7 @@ export function montarTrialEmail(kind: TrialEmailKind, d: TrialEmailData): { sub
 ${resumoDeUso(d)}
 <p style="margin:0 0 24px">Se quiser continuar, é só escolher um plano. Leva um minuto e nada do que você já fez se perde.</p>
 ${botao(planos, 'Ver planos')}
-<p style="margin:0">Qualquer dúvida, responde este e-mail que eu leio.</p>`),
+<p style="margin:0">Qualquer dúvida, responde este e-mail que eu leio.</p>`, 'pt'),
     };
   }
 
@@ -65,7 +121,7 @@ ${botao(planos, 'Ver planos')}
 ${resumoDeUso(d)}
 <p style="margin:0 0 24px">Nada é apagado. Assim que assinar, tudo volta exatamente como está.</p>
 ${botao(planos, 'Escolher um plano')}
-<p style="margin:0">Se algo não funcionou como você esperava, me conta respondendo este e-mail. Quero saber.</p>`),
+<p style="margin:0">Se algo não funcionou como você esperava, me conta respondendo este e-mail. Quero saber.</p>`, 'pt'),
     };
   }
 
@@ -77,6 +133,6 @@ ${botao(planos, 'Escolher um plano')}
 ${resumoDeUso(d)}
 <p style="margin:0 0 24px">Seus dados continuam salvos. Se assinar, tudo volta no mesmo lugar, sem precisar refazer nada.</p>
 ${botao(planos, 'Reativar minha conta')}
-<p style="margin:0">E se o Rankea não resolveu o seu problema, eu gostaria de entender por quê. Responde este e-mail em uma linha que já me ajuda muito.</p>`),
+<p style="margin:0">E se o Rankea não resolveu o seu problema, eu gostaria de entender por quê. Responde este e-mail em uma linha que já me ajuda muito.</p>`, 'pt'),
   };
 }

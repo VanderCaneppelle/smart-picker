@@ -17,6 +17,12 @@ model Recruiter {
   name         String
   company      String?
   phone_number String?
+
+  /**
+   * Idioma do recrutador: pt | en. Vive no banco, e não só no navegador, porque o
+   * worker manda e-mail e monta o prompt da IA sem nenhum navegador por perto.
+   */
+  locale       String    @default("pt")
   created_at   DateTime  @default(now())
   updated_at   DateTime  @updatedAt
 

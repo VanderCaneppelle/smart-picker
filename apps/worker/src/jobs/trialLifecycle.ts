@@ -1,7 +1,7 @@
 import { prisma } from '../lib/db.js';
 import { resend, FROM_EMAIL } from '../lib/resend.js';
 import { withResendRateLimit } from '../lib/resendRateLimit.js';
-import { montarTrialEmail, type TrialEmailKind } from '../lib/trialEmails.js';
+import { montarTrialEmail, type TrialEmailKind, type TrialLocale } from '../lib/trialEmails.js';
 
 const APP_URL = process.env.APP_URL || 'https://www.rankea.ai';
 const REMETENTE = `Rankea <${FROM_EMAIL}>`;
@@ -40,6 +40,7 @@ interface Alvo {
   email: string;
   nome: string | null;
   trialEndsAt: Date;
+  locale: TrialLocale;
 }
 
 /**
@@ -72,7 +73,7 @@ async function buscarAlvos(kind: TrialEmailKind, agora: Date): Promise<Alvo[]> {
     select: {
       recruiter_id: true,
       trial_ends_at: true,
-      recruiter: { select: { email: true, name: true } },
+      recruiter: { select: { email: true, name: true, locale: true } },
     },
     take: 500,
   });
@@ -84,6 +85,7 @@ async function buscarAlvos(kind: TrialEmailKind, agora: Date): Promise<Alvo[]> {
       email: s.recruiter!.email,
       nome: s.recruiter!.name,
       trialEndsAt: s.trial_ends_at!,
+      locale: (s.recruiter!.locale === 'en' ? 'en' : 'pt') as TrialLocale,
     }));
 }
 
@@ -124,6 +126,7 @@ async function enviar(kind: TrialEmailKind, alvo: Alvo, agora: Date): Promise<bo
     candidatosAvaliados: uso.candidatosAvaliados,
     vagasCriadas: uso.vagasCriadas,
     appUrl: APP_URL,
+    locale: alvo.locale,
   });
 
   // Grava ANTES de enviar. Se o envio falhar, a pessoa perde um lembrete; se gravasse
