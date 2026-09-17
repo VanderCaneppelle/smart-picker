@@ -15,44 +15,49 @@ import {
   RichTextEditor,
 } from '@/components/ui';
 import type { ApplicationQuestion, QuestionType, EliminatoryCriteria } from '@hunter/core';
+import { useTranslations } from 'next-intl';
 
 const employmentTypeOptions = [
-  { value: 'full_time', label: 'Tempo integral' },
-  { value: 'part_time', label: 'Meio período' },
-  { value: 'contract', label: 'Contrato' },
-  { value: 'internship', label: 'Estágio' },
-  { value: 'freelance', label: 'Freelance' },
+  { value: 'full_time', labelKey: 'formVaga.contrato.full_time' },
+  { value: 'part_time', labelKey: 'formVaga.contrato.part_time' },
+  { value: 'contract', labelKey: 'formVaga.contrato.contract' },
+  { value: 'internship', labelKey: 'formVaga.contrato.internship' },
+  { value: 'freelance', labelKey: 'formVaga.contrato.freelance' },
 ];
 
 const statusOptions = [
-  { value: 'draft', label: 'Rascunho' },
-  { value: 'active', label: 'Ativa' },
-  { value: 'on_hold', label: 'Pausada' },
+  { value: 'draft', labelKey: 'formVaga.statusOpcoes.draft' },
+  { value: 'active', labelKey: 'formVaga.statusOpcoes.active' },
+  { value: 'on_hold', labelKey: 'formVaga.statusOpcoes.on_hold' },
 ];
 
 const currencyOptions = [
-  { value: '', label: 'Selecione a moeda' },
-  { value: 'AED', label: 'AED - Dirham dos EAU' },
-  { value: 'BRL', label: 'BRL - Real Brasileiro' },
-  { value: 'EUR', label: 'EUR - Euro' },
-  { value: 'GBP', label: 'GBP - Libra Esterlina' },
-  { value: 'INR', label: 'INR - Rúpia Indiana' },
-  { value: 'SAR', label: 'SAR - Riyal Saudita' },
-  { value: 'USD', label: 'USD - Dólar Americano' },
+  { value: '', labelKey: 'formVaga.selecioneMoeda' },
+  { value: 'AED', labelKey: 'formVaga.moedas.AED' },
+  { value: 'BRL', labelKey: 'formVaga.moedas.BRL' },
+  { value: 'EUR', labelKey: 'formVaga.moedas.EUR' },
+  { value: 'GBP', labelKey: 'formVaga.moedas.GBP' },
+  { value: 'INR', labelKey: 'formVaga.moedas.INR' },
+  { value: 'SAR', labelKey: 'formVaga.moedas.SAR' },
+  { value: 'USD', labelKey: 'formVaga.moedas.USD' },
 ];
 
 const questionTypeOptions = [
-  { value: 'text', label: 'Texto curto' },
-  { value: 'textarea', label: 'Texto longo' },
-  { value: 'number', label: 'Número' },
-  { value: 'yes_no', label: 'Sim / Não' },
-  { value: 'select', label: 'Escolha única' },
-  { value: 'multiselect', label: 'Múltipla escolha' },
+  { value: 'text', labelKey: 'formVaga.tiposPergunta.text' },
+  { value: 'textarea', labelKey: 'formVaga.tiposPergunta.textarea' },
+  { value: 'number', labelKey: 'formVaga.tiposPergunta.number' },
+  { value: 'yes_no', labelKey: 'formVaga.tiposPergunta.yes_no' },
+  { value: 'select', labelKey: 'formVaga.tiposPergunta.select' },
+  { value: 'multiselect', labelKey: 'formVaga.tiposPergunta.multiselect' },
 ];
 
 const ELIMINATORY_ALLOWED_TYPES = ['yes_no', 'select', 'multiselect', 'number'];
 
 export default function NewJobPage() {
+  const t = useTranslations();
+  /** As listas de opções guardam a chave, não o texto: o rótulo é resolvido na hora de renderizar. */
+  const opcoes = (lista: { value: string; labelKey: string }[]) =>
+    lista.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   const router = useRouter();
   const { completeStep } = useOnboarding();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -143,12 +148,12 @@ export default function NewJobPage() {
   const validate = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!title.trim()) newErrors.title = 'Título é obrigatório';
-    if (!location.trim()) newErrors.location = 'Localização é obrigatória';
-    if (!description.trim()) newErrors.description = 'Descrição é obrigatória';
+    if (!title.trim()) newErrors.title = t('formVaga.erros.titulo');
+    if (!location.trim()) newErrors.location = t('formVaga.erros.localizacao');
+    if (!description.trim()) newErrors.description = t('formVaga.erros.descricao');
 
     if (calendlyLink && !calendlyLink.startsWith('http')) {
-      newErrors.calendlyLink = 'Insira uma URL válida';
+      newErrors.calendlyLink = t('formVaga.erros.url');
     }
 
     setErrors(newErrors);
@@ -226,7 +231,7 @@ export default function NewJobPage() {
                   <Share2 className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-emerald-100 text-xs font-semibold uppercase tracking-widest">Vaga criada!</p>
+                  <p className="text-emerald-100 text-xs font-semibold uppercase tracking-widest">{t('formVaga.vagaCriada')}</p>
                   <h2 className="text-white font-bold text-lg leading-tight">{shareJob.title}</h2>
                 </div>
               </div>
@@ -236,7 +241,7 @@ export default function NewJobPage() {
               <p className="text-gray-600 text-sm mb-4">
                 {shareJob?.status === 'active'
                   ? 'Sua vaga está ativa e aceitando candidaturas. Copie o link e compartilhe!'
-                  : 'Vaga criada como rascunho. Ative-a quando estiver pronta e compartilhe o link para receber candidatos.'}
+                  : t('formVaga.criadaRascunho')}
               </p>
               <div className="flex items-center gap-2 bg-gray-50 rounded-xl border border-gray-200 px-4 py-3">
                 <span className="text-sm text-gray-500 flex-1 truncate">{shareUrl}</span>
@@ -249,7 +254,7 @@ export default function NewJobPage() {
                       : 'border-emerald-300 bg-white text-emerald-700 hover:bg-emerald-50'
                   }`}
                 >
-                  {linkCopied ? <><Check className="h-3.5 w-3.5" />Copiado!</> : <><ClipboardCopy className="h-3.5 w-3.5" />Copiar link</>}
+                  {linkCopied ? <><Check className="h-3.5 w-3.5" />{t('formVaga.copiado')}</> : <><ClipboardCopy className="h-3.5 w-3.5" />{t('formVaga.copiarLink')}</>}
                 </button>
               </div>
             </div>
@@ -259,15 +264,12 @@ export default function NewJobPage() {
                 type="button"
                 onClick={() => router.push('/jobs')}
                 className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                Ver vagas
-              </button>
+              >{t('formVaga.verVagas')}</button>
               <button
                 type="button"
                 onClick={() => router.push(`/jobs/${shareJob.id}?tab=details`)}
                 className="flex items-center gap-1.5 px-5 py-2.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-semibold shadow-sm"
-              >
-                Ver vaga <ExternalLink className="h-3.5 w-3.5" />
+              >{t('formVaga.verVaga')}<ExternalLink className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>
@@ -281,12 +283,10 @@ export default function NewJobPage() {
           size="sm"
           onClick={() => router.push('/jobs')}
           leftIcon={<ArrowLeft className="h-4 w-4" />}
-        >
-          Voltar
-        </Button>
+        >{t('formVaga.voltar')}</Button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Criar Vaga</h1>
-          <p className="text-gray-600 mt-1">Preencha os detalhes da nova vaga</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('formVaga.titulo')}</h1>
+          <p className="text-gray-600 mt-1">{t('formVaga.subtitulo')}</p>
         </div>
       </div>
 
@@ -294,34 +294,34 @@ export default function NewJobPage() {
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Basic Info */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Informações Básicas</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('formVaga.secaoBasico')}</h2>
           <div className="grid gap-4 md:grid-cols-2">
             <Input
-              label="Título da Vaga"
+              label={t('formVaga.tituloVaga')}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               error={errors.title}
               required
-              placeholder="Ex: Desenvolvedor Full Stack Sênior"
+              placeholder={t('formVaga.tituloPlaceholder')}
             />
             <Input
-              label="Localização"
+              label={t('formVaga.localizacao')}
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               error={errors.location}
               required
-              placeholder="Ex: São Paulo, SP ou Remoto"
+              placeholder={t('formVaga.localizacaoPlaceholder')}
             />
             <Select
-              label="Tipo de Contratação"
-              options={employmentTypeOptions}
+              label={t('formVaga.tipoContratacao')}
+              options={opcoes(employmentTypeOptions)}
               value={employmentType}
               onChange={(e) => setEmploymentType(e.target.value)}
               required
             />
             <Select
-              label="Status"
-              options={statusOptions}
+              label={t('formVaga.status')}
+              options={opcoes(statusOptions)}
               value={status}
               onChange={(e) => setStatus(e.target.value)}
               required
@@ -331,18 +331,18 @@ export default function NewJobPage() {
 
         {/* Compensation */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Remuneração</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('formVaga.secaoRemuneracao')}</h2>
           <div className="grid gap-4 md:grid-cols-2">
             <Input
-              label="Faixa Salarial"
+              label={t('formVaga.faixaSalarial')}
               value={salaryRange}
               onChange={(e) => setSalaryRange(e.target.value)}
-              placeholder="Ex: 5.000 - 8.000"
-              helperText="Controle interno. Só será exibida aos candidatos se você marcar a opção abaixo."
+              placeholder={t('formVaga.faixaPlaceholder')}
+              helperText={t('formVaga.faixaAjuda')}
             />
             <Select
-              label="Moeda"
-              options={currencyOptions}
+              label={t('formVaga.moeda')}
+              options={opcoes(currencyOptions)}
               value={currencyCode}
               onChange={(e) => setCurrencyCode(e.target.value)}
             />
@@ -354,20 +354,20 @@ export default function NewJobPage() {
               onChange={(e) => setShowSalaryToCandidates(e.target.checked)}
               className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
             />
-            <span>Exibir faixa salarial para os candidatos na página da vaga</span>
+            <span>{t('formVaga.exibirSalario')}</span>
           </label>
         </div>
 
         {/* Description */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Descrição da Vaga</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('formVaga.secaoDescricao')}</h2>
           <RichTextEditor
-            label="Descrição"
+            label={t('formVaga.descricao')}
             value={description}
             onChange={setDescription}
             error={errors.description}
             required
-            placeholder="Descreva a vaga, responsabilidades, requisitos..."
+            placeholder={t('formVaga.descricaoPlaceholder')}
             aiPolish
             aiContext={title}
           />
@@ -376,8 +376,8 @@ export default function NewJobPage() {
         {/* Application Questions */}
         <div data-onboarding-id="onb-job-questions" className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Perguntas da Aplicação</h2>
-            <p className="text-sm text-gray-500">Perguntas personalizadas para os candidatos</p>
+            <h2 className="text-lg font-semibold text-gray-900">{t('formVaga.secaoPerguntas')}</h2>
+            <p className="text-sm text-gray-500">{t('formVaga.perguntasSub')}</p>
           </div>
 
           {applicationQuestions.length === 0 ? (
@@ -403,13 +403,13 @@ export default function NewJobPage() {
                         onChange={(e) =>
                           updateQuestion(index, { question: e.target.value })
                         }
-                        placeholder="Digite sua pergunta"
+                        placeholder={t('formVaga.digitePergunta')}
                       />
                       <div className="flex items-center gap-4 flex-wrap">
                         <Select
                           id={`question-${index}-type`}
-                          label="Tipo de resposta"
-                          options={questionTypeOptions}
+                          label={t('formVaga.tipoResposta')}
+                          options={opcoes(questionTypeOptions)}
                           value={question.type}
                           onChange={(e) =>
                             updateQuestion(index, { type: e.target.value as QuestionType })
@@ -424,9 +424,7 @@ export default function NewJobPage() {
                               updateQuestion(index, { required: e.target.checked })
                             }
                             className="rounded border-gray-300"
-                          />
-                          Obrigatória
-                        </label>
+                          />{t('formVaga.obrigatoria')}</label>
                         {ELIMINATORY_ALLOWED_TYPES.includes(question.type) && (
                           <label className="flex items-center gap-2 text-sm">
                             <input
@@ -456,9 +454,7 @@ export default function NewJobPage() {
                               className="rounded border-amber-400 text-amber-600 focus:ring-amber-500"
                             />
                             <span className="flex items-center gap-1 text-amber-700">
-                              <ShieldAlert className="h-3.5 w-3.5" />
-                              Eliminatória
-                            </span>
+                              <ShieldAlert className="h-3.5 w-3.5" />{t('formVaga.eliminatoria')}</span>
                           </label>
                         )}
                       </div>
@@ -466,7 +462,7 @@ export default function NewJobPage() {
                       {/* Opções para select e multiselect */}
                       {(question.type === 'select' || question.type === 'multiselect') && (
                         <div className="mt-3 pl-4 border-l-2 border-gray-200">
-                          <p className="text-sm font-medium text-gray-700 mb-2">Opções de resposta:</p>
+                          <p className="text-sm font-medium text-gray-700 mb-2">{t('formVaga.opcoesResposta')}</p>
                           <div className="space-y-2">
                             {(question.options || []).map((option, optIndex) => (
                               <div key={optIndex} className="flex items-center gap-2">
@@ -496,17 +492,14 @@ export default function NewJobPage() {
                             onClick={() => addOption(index)}
                             leftIcon={<Plus className="h-3 w-3" />}
                             className="mt-2 text-emerald-600 hover:text-emerald-700"
-                          >
-                            Adicionar opção
-                          </Button>
+                          >{t('formVaga.adicionarOpcao')}</Button>
                         </div>
                       )}
 
                       {/* Mostrar opções fixas para yes_no */}
                       {question.type === 'yes_no' && (
                         <div className="mt-3 pl-4 border-l-2 border-gray-200">
-                          <p className="text-sm text-gray-500">
-                            Opções: <span className="font-medium">Sim</span> / <span className="font-medium">Não</span>
+                          <p className="text-sm text-gray-500">{t('formVaga.opcoes')}<span className="font-medium">Sim</span> / <span className="font-medium">Não</span>
                           </p>
                         </div>
                       )}
@@ -515,15 +508,11 @@ export default function NewJobPage() {
                       {question.is_eliminatory && (
                         <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg space-y-3">
                           <p className="text-xs font-semibold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
-                            <ShieldAlert className="h-3.5 w-3.5" />
-                            Critérios eliminatórios
-                          </p>
+                            <ShieldAlert className="h-3.5 w-3.5" />{t('formVaga.criteriosEliminatorios')}</p>
 
                           {question.type === 'yes_no' && (
                             <div>
-                              <label className="block text-sm text-gray-700 mb-1">
-                                Resposta esperada (resposta diferente elimina o candidato):
-                              </label>
+                              <label className="block text-sm text-gray-700 mb-1">{t('formVaga.respostaEsperada')}</label>
                               <select
                                 value={question.eliminatory_criteria?.expected_answer || 'Sim'}
                                 onChange={(e) =>
@@ -544,9 +533,7 @@ export default function NewJobPage() {
 
                           {(question.type === 'select' || question.type === 'multiselect') && (
                             <div>
-                              <label className="block text-sm text-gray-700 mb-2">
-                                Respostas aceitas (outras opções eliminam):
-                              </label>
+                              <label className="block text-sm text-gray-700 mb-2">{t('formVaga.respostasAceitas')}</label>
                               <div className="space-y-1.5">
                                 {(question.options || []).map((option, optIdx) => (
                                   <label key={optIdx} className="flex items-center gap-2 text-sm">
@@ -583,7 +570,7 @@ export default function NewJobPage() {
                               </p>
                               <div className="grid grid-cols-3 gap-3">
                                 <div>
-                                  <label className="block text-xs font-medium text-gray-600 mb-1">Mínimo</label>
+                                  <label className="block text-xs font-medium text-gray-600 mb-1">{t('formVaga.minimo')}</label>
                                   <input
                                     type="number"
                                     value={question.eliminatory_criteria?.range_min ?? ''}
@@ -595,12 +582,12 @@ export default function NewJobPage() {
                                         },
                                       })
                                     }
-                                    placeholder="Ex: 3000"
+                                    placeholder={t('formVaga.exMin')}
                                     className="w-full text-sm border border-amber-300 rounded-md px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-xs font-medium text-gray-600 mb-1">Máximo</label>
+                                  <label className="block text-xs font-medium text-gray-600 mb-1">{t('formVaga.maximo')}</label>
                                   <input
                                     type="number"
                                     value={question.eliminatory_criteria?.range_max ?? ''}
@@ -612,12 +599,12 @@ export default function NewJobPage() {
                                         },
                                       })
                                     }
-                                    placeholder="Ex: 8000"
+                                    placeholder={t('formVaga.exMax')}
                                     className="w-full text-sm border border-amber-300 rounded-md px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-xs font-medium text-gray-600 mb-1">Tolerância %</label>
+                                  <label className="block text-xs font-medium text-gray-600 mb-1">{t('formVaga.tolerancia')}</label>
                                   <input
                                     type="number"
                                     min="0"
@@ -665,9 +652,7 @@ export default function NewJobPage() {
               size="sm"
               onClick={addQuestion}
               leftIcon={<Plus className="h-4 w-4" />}
-            >
-              Adicionar pergunta
-            </Button>
+            >{t('formVaga.adicionarPergunta')}</Button>
           </div>
         </div>
 
@@ -675,7 +660,7 @@ export default function NewJobPage() {
         <div data-onboarding-id="onb-job-ia" className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center gap-2 mb-4">
             <Brain className="h-5 w-5 text-emerald-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Configuração da Avaliação por IA</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t('formVaga.secaoIA')}</h2>
           </div>
           <p className="text-sm text-gray-500 mb-6">
             Defina como a IA deve ponderar cada aspecto na avaliação dos candidatos.
@@ -685,9 +670,7 @@ export default function NewJobPage() {
             {/* Resume Weight */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Peso do Currículo
-                </label>
+                <label className="text-sm font-medium text-gray-700">{t('formVaga.pesoCurriculo')}</label>
                 <span className="text-sm font-semibold text-emerald-600">{resumeWeight}/10</span>
               </div>
               <input
@@ -698,17 +681,13 @@ export default function NewJobPage() {
                 onChange={(e) => setResumeWeight(Number(e.target.value))}
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Experiência, formação e habilidades do currículo
-              </p>
+              <p className="text-xs text-gray-500 mt-1">{t('formVaga.pesoCurriculoSub')}</p>
             </div>
 
             {/* Answers Weight */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Peso das Respostas
-                </label>
+                <label className="text-sm font-medium text-gray-700">{t('formVaga.pesoRespostas')}</label>
                 <span className="text-sm font-semibold text-emerald-600">{answersWeight}/10</span>
               </div>
               <input
@@ -719,14 +698,12 @@ export default function NewJobPage() {
                 onChange={(e) => setAnswersWeight(Number(e.target.value))}
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Qualidade das respostas às perguntas da aplicação
-              </p>
+              <p className="text-xs text-gray-500 mt-1">{t('formVaga.pesoRespostasSub')}</p>
             </div>
 
             {/* Weight Distribution Preview */}
             <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-sm font-medium text-gray-700 mb-3">Distribuição dos pesos:</p>
+              <p className="text-sm font-medium text-gray-700 mb-3">{t('formVaga.distribuicaoPesos')}</p>
               <div className="flex items-center gap-2">
                 <div 
                   className="h-3 bg-emerald-500 rounded-l-full transition-all"
@@ -745,11 +722,11 @@ export default function NewJobPage() {
 
             {/* Scoring Instructions */}
             <Textarea
-              label="Instruções adicionais para a IA (opcional)"
+              label={t('formVaga.instrucoesIA')}
               value={scoringInstructions}
               onChange={(e) => setScoringInstructions(e.target.value)}
-              placeholder="Ex: Priorize candidatos com experiência em React. Valorize certificações AWS. Candidatos com inglês fluente devem ter pontuação maior..."
-              helperText="Instruções específicas para guiar a avaliação da IA"
+              placeholder={t('formVaga.iaExemplo')}
+              helperText={t('formVaga.instrucoesIAPlaceholder')}
               rows={3}
             />
           </div>
@@ -757,19 +734,19 @@ export default function NewJobPage() {
 
         {/* Agendamento de entrevista */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Agendamento de entrevista</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('formVaga.agendamento')}</h2>
           <Input
-            label="Link do Calendly"
+            label={t('formVaga.linkCalendly')}
             value={calendlyLink}
             onChange={(e) => setCalendlyLink(e.target.value)}
             error={errors.calendlyLink}
-            placeholder="https://calendly.com/seu-link"
-            helperText="Opcional. Se não preencher, o agendamento deverá ser feito manualmente."
+            placeholder={t('formVaga.calendlyPlaceholder')}
+            helperText={t('formVaga.calendlyAjuda')}
           />
           <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex gap-3">
             <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
             <div className="text-sm text-blue-800">
-              <p className="font-medium mb-1">Envio automático de e-mail</p>
+              <p className="font-medium mb-1">{t('formVaga.envioEmail')}</p>
               <p>
                 Se você preencher o link do Calendly acima, ao mover um candidato para &quot;Entrevista&quot;
                 será enviado automaticamente um e-mail com o link para ele agendar. Caso não preencha,
@@ -781,13 +758,13 @@ export default function NewJobPage() {
 
         {/* Anotações internas */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Anotações internas</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('formVaga.anotacoes')}</h2>
           <p className="text-sm text-gray-500 mb-4">Visível apenas para recrutadores. Use para perguntas da entrevista ou observações.</p>
           <Textarea
-            label="Perguntas da entrevista / notas"
+            label={t('formVaga.perguntasEntrevista')}
             value={interviewQuestions}
             onChange={(e) => setInterviewQuestions(e.target.value)}
-            placeholder="Perguntas para fazer durante a entrevista ou anotações internas..."
+            placeholder={t('formVaga.perguntasEntrevistaPlaceholder')}
             rows={4}
           />
         </div>
@@ -798,12 +775,8 @@ export default function NewJobPage() {
             type="button"
             variant="secondary"
             onClick={() => router.push('/jobs')}
-          >
-            Cancelar
-          </Button>
-          <Button type="submit" isLoading={isSubmitting}>
-            Criar Vaga
-          </Button>
+          >{t('formVaga.cancelar')}</Button>
+          <Button type="submit" isLoading={isSubmitting}>{t('formVaga.titulo')}</Button>
         </div>
       </form>
     </div>

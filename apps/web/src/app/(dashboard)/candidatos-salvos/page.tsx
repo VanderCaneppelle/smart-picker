@@ -7,6 +7,7 @@ import { Mail, ExternalLink, Eye, BookmarkCheck } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { Badge, Select, Loading, EmptyState } from '@/components/ui';
 import type { Candidate, CandidateStatus } from '@hunter/core';
+import { useTranslations } from 'next-intl';
 
 type CandidateWithJob = Candidate & { job?: { id: string; title: string } };
 
@@ -49,6 +50,7 @@ const getStatusBadgeVariant = (status: string) => {
 };
 
 export default function CandidatosSalvosPage() {
+  const t = useTranslations();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [candidates, setCandidates] = useState<CandidateWithJob[]>([]);
@@ -92,8 +94,8 @@ export default function CandidatosSalvosPage() {
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Candidatos Salvos</h1>
-          <p className="text-gray-600 mt-1">Candidatos que você salvou para revisar depois</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('salvos.titulo')}</h1>
+          <p className="text-gray-600 mt-1">{t('salvos.subtitulo')}</p>
         </div>
       </div>
 
@@ -107,10 +109,10 @@ export default function CandidatosSalvosPage() {
       </div>
 
       {isLoading ? (
-        <Loading text="Carregando candidatos..." />
+        <Loading text={t('salvos.carregando')} />
       ) : filtered.length === 0 ? (
         <EmptyState
-          title="Nenhum candidato salvo"
+          title={t('salvos.nenhum')}
           description={
             statusFilter
               ? 'Tente outro filtro de status'
@@ -123,24 +125,12 @@ export default function CandidatosSalvosPage() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Nome
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    E-mail
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Vaga
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Fit
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Ação
-                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('salvos.nome')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('salvos.email')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('salvos.vaga')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('salvos.fit')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('salvos.status')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('salvos.acao')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -197,18 +187,16 @@ export default function CandidatosSalvosPage() {
                         onClick={() => router.push(`/candidates/${c.id}`)}
                         className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm font-medium"
                       >
-                        <Eye className="h-4 w-4" />
-                        Ver
-                      </button>
+                        <Eye className="h-4 w-4" />{t('salvos.ver')}</button>
                       <button
                         type="button"
                         onClick={() => handleRemoveSaved(c.id)}
                         disabled={removingId === c.id}
                         className="text-gray-500 hover:text-red-600 flex items-center gap-1 text-sm disabled:opacity-50"
-                        title="Remover dos salvos"
+                        title={t('salvos.remover')}
                       >
                         <BookmarkCheck className="h-4 w-4" />
-                        {removingId === c.id ? 'Removendo...' : 'Remover dos salvos'}
+                        {removingId === c.id ? 'Removendo...' : t('salvos.remover')}
                       </button>
                     </td>
                   </tr>

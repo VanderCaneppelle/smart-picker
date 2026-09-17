@@ -7,6 +7,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Loading } from '@/components/ui';
 import { SubscriptionPaywall, TrialBanner, TrialSidebarBadge } from '@/components/SubscriptionPaywall';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
+import { AppIntlProvider } from '@/components/AppIntlProvider';
+import { useTranslations } from 'next-intl';
 import { apiClient } from '@/lib/api-client';
 import { useActiveJobsLimit } from '@/hooks/useActiveJobsLimit';
 import {
@@ -19,21 +21,21 @@ import { OnboardingProvider } from '@/contexts/OnboardingContext';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 
 const statusFilterOptions = [
-  { value: '', label: 'Todos os status' },
-  { value: 'draft', label: 'Rascunho' },
-  { value: 'active', label: 'Ativa' },
-  { value: 'closed', label: 'Fechada' },
-  { value: 'on_hold', label: 'Pausada' },
+  { value: '', labelKey: 'app.status.todos' },
+  { value: 'draft', labelKey: 'app.status.rascunho' },
+  { value: 'active', labelKey: 'app.status.ativa' },
+  { value: 'closed', labelKey: 'app.status.fechada' },
+  { value: 'on_hold', labelKey: 'app.status.pausada' },
 ];
 
 const mainNavItems = [
-  { href: '/jobs/new', label: 'Criar vaga', icon: PlusCircle, primary: true },
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/jobs', label: 'Vagas', icon: Briefcase },
-  { href: '/candidatos-salvos', label: 'Candidatos Salvos', icon: Users },
+  { href: '/jobs/new', labelKey: 'app.nav.criarVaga', icon: PlusCircle, primary: true },
+  { href: '/dashboard', labelKey: 'app.nav.dashboard', icon: LayoutDashboard },
+  { href: '/jobs', labelKey: 'app.nav.vagas', icon: Briefcase },
+  { href: '/candidatos-salvos', labelKey: 'app.nav.candidatosSalvos', icon: Users },
 ];
 
-export default function DashboardLayout({
+function DashboardShell({
   children,
 }: {
   children: React.ReactNode;
@@ -81,6 +83,7 @@ function DashboardLayoutContent({
   isAuthenticated: boolean;
   children: React.ReactNode;
 }) {
+  const t = useTranslations();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
@@ -191,7 +194,7 @@ function DashboardLayoutContent({
         <nav className="flex-1 flex flex-col min-h-0 py-4 px-3">
           <div className="flex-1 overflow-y-auto min-h-0 space-y-0.5">
           <div className="space-y-0.5 mb-3 pb-3 border-b border-gray-100">
-            {mainNavItems.slice(0, 1).map(({ href, label, icon: Icon, primary }) => {
+            {mainNavItems.slice(0, 1).map(({ href, labelKey, icon: Icon, primary }) => {
               const active = isActive(href);
               const limit = jobsLimit?.limit;
               const hasLimit = typeof limit === 'number';
@@ -220,7 +223,7 @@ function DashboardLayoutContent({
                         active ? 'text-white' : blocked ? 'text-gray-400' : primary ? 'text-emerald-600' : 'text-gray-500'
                       }`}
                     />
-                    {label}
+                    {t(labelKey)}
                   </Link>
                   {jobsLimit && (
                     <p className={`mt-1.5 px-3 text-xs ${blocked ? 'text-amber-700' : 'text-gray-500'}`}>
@@ -232,7 +235,7 @@ function DashboardLayoutContent({
             })}
           </div>
           <div className="space-y-0.5">
-            {mainNavItems.slice(1).map(({ href, label, icon: Icon, primary }) => {
+            {mainNavItems.slice(1).map(({ href, labelKey, icon: Icon, primary }) => {
               if (href === '/jobs') {
                 const active = isActive(href);
                 return (
@@ -253,7 +256,7 @@ function DashboardLayoutContent({
                         }`}
                       >
                         <Briefcase className={`h-5 w-5 flex-shrink-0 ${active ? 'text-white' : 'text-gray-500'}`} />
-                        {label}
+                        {t(labelKey)}
                       </Link>
                       <button
                         type="button"
@@ -273,7 +276,7 @@ function DashboardLayoutContent({
                     >
                       <div className="min-h-0 overflow-hidden">
                         <div className="mt-0.5 ml-2 pl-4 border-l border-gray-200 space-y-0.5">
-                        {statusFilterOptions.map(({ value, label: optLabel }) => (
+                        {statusFilterOptions.map(({ value, labelKey: optKey }) => (
                           <Link
                             key={value || 'status-all'}
                             href={jobsHref(value)}
@@ -283,7 +286,7 @@ function DashboardLayoutContent({
                                 : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                             }`}
                           >
-                            {optLabel}
+                            {t(optKey)}
                           </Link>
                         ))}
                         </div>
@@ -312,7 +315,7 @@ function DashboardLayoutContent({
                       active ? 'text-white' : primary ? 'text-emerald-600' : 'text-gray-500'
                     }`}
                   />
-                  {label}
+                  {t(labelKey)}
                 </Link>
               );
             })}
@@ -329,7 +332,7 @@ function DashboardLayoutContent({
               }`}
             >
               <User className={`h-5 w-5 flex-shrink-0 ${isActive('/perfil') ? 'text-white' : 'text-gray-500'}`} />
-              Perfil
+              {t('app.nav.perfil')}
             </Link>
             <Link
               href="/settings/subscription"
@@ -340,7 +343,7 @@ function DashboardLayoutContent({
               }`}
             >
               <CreditCard className={`h-5 w-5 flex-shrink-0 ${isActive('/settings/subscription') ? 'text-white' : 'text-gray-500'}`} />
-              Assinatura
+              {t('app.nav.assinatura')}
             </Link>
             <Link
               href="/settings/public-profile"
@@ -352,7 +355,7 @@ function DashboardLayoutContent({
               }`}
             >
               <Settings className={`h-5 w-5 flex-shrink-0 ${isActive('/settings/public-profile') ? 'text-white' : 'text-gray-500'}`} />
-              Configurações
+              {t('app.nav.configuracoes')}
             </Link>
             <button
               type="button"
@@ -360,7 +363,7 @@ function DashboardLayoutContent({
               className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
             >
               <LogOut className="h-5 w-5 text-gray-500" />
-              Sair
+              {t('app.nav.sair')}
             </button>
             {subscription && (
               <div className="mt-2">
@@ -474,7 +477,7 @@ function DashboardLayoutContent({
                       }`}
                     >
                       <Users className="h-5 w-5" />
-                      Candidatos Salvos
+                      {t('app.nav.candidatosSalvos')}
                     </Link>
                     <div className="pt-4 mt-4 border-t border-gray-200 space-y-1">
                       <Link
@@ -485,7 +488,7 @@ function DashboardLayoutContent({
                         }`}
                       >
                         <User className="h-5 w-5" />
-                        Perfil
+                        {t('app.nav.perfil')}
                       </Link>
                       <Link
                         href="/settings/subscription"
@@ -495,7 +498,7 @@ function DashboardLayoutContent({
                         }`}
                       >
                         <CreditCard className="h-5 w-5" />
-                        Assinatura
+                        {t('app.nav.assinatura')}
                       </Link>
                       <Link
                         href="/settings/public-profile"
@@ -505,7 +508,7 @@ function DashboardLayoutContent({
                         }`}
                       >
                         <Settings className="h-5 w-5" />
-                        Configurações
+                        {t('app.nav.configuracoes')}
                       </Link>
                       <button
                         type="button"
@@ -516,7 +519,7 @@ function DashboardLayoutContent({
                         className="flex items-center gap-3 w-full px-3 py-3 rounded-lg text-gray-700 hover:bg-red-50 hover:text-red-700"
                       >
                         <LogOut className="h-5 w-5" />
-                        Sair
+                        {t('app.nav.sair')}
                       </button>
                     </div>
                   </nav>
@@ -542,5 +545,17 @@ function DashboardLayoutContent({
       )}
 
     </div>
+  );
+}
+
+/**
+ * O provider de idioma fica por fora da casca: assim tudo dentro do painel, inclusive
+ * as telas filhas, lê a preferência que o recrutador salvou, e não o idioma da URL.
+ */
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <AppIntlProvider>
+      <DashboardShell>{children}</DashboardShell>
+    </AppIntlProvider>
   );
 }

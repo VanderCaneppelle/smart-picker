@@ -26,8 +26,10 @@ import { apiClient, type DashboardStatsResponse } from '@/lib/api-client';
 import { Loading } from '@/components/ui';
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
 import type { Job } from '@hunter/core';
+import { useTranslations } from 'next-intl';
 
 export default function DashboardPage() {
+  const t = useTranslations();
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialJobId = searchParams.get('job_id');
@@ -61,10 +63,10 @@ export default function DashboardPage() {
   useEffect(() => {
     const sub = searchParams.get('subscription');
     if (sub === 'success') {
-      toast.success('Assinatura ativada com sucesso! Bem-vindo ao Rankea.');
+      toast.success(t('painel.assinaturaAtivada'));
       router.replace('/dashboard', { scroll: false });
     } else if (sub === 'canceled') {
-      toast.info('Assinatura cancelada. Você pode assinar a qualquer momento.');
+      toast.info(t('painel.assinaturaCancelada'));
       router.replace('/dashboard', { scroll: false });
     }
   }, [searchParams, router]);
@@ -106,13 +108,13 @@ export default function DashboardPage() {
   }, [jobs, jobSearch]);
 
   if (isLoading) {
-    return <Loading text="Carregando dashboard..." />;
+    return <Loading text={t('painel.carregando')} />;
   }
 
   if (!data) {
     return (
       <div className="text-center py-20">
-        <p className="text-gray-500">Erro ao carregar dados do dashboard.</p>
+        <p className="text-gray-500">{t('painel.erro')}</p>
       </div>
     );
   }
@@ -128,13 +130,13 @@ export default function DashboardPage() {
       {/* Header + filtro de vaga */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('painel.titulo')}</h1>
           <p className="text-gray-500 mt-1">
-            Visão completa do seu processo de recrutamento
+            {t('painel.subtitulo')}
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-600">Vaga</span>
+          <span className="text-sm text-gray-600">{t('painel.vaga')}</span>
           <div className="relative" ref={jobFilterRef}>
             <button
               type="button"
@@ -147,8 +149,8 @@ export default function DashboardPage() {
             >
               <span className="truncate max-w-[220px]">
                 {selectedJobId === 'all'
-                  ? 'Todas as vagas'
-                  : jobs.find((j) => j.id === selectedJobId)?.title || 'Selecionar vaga'}
+                  ? t('painel.todasVagas')
+                  : jobs.find((j) => j.id === selectedJobId)?.title || t('painel.selecionarVaga')}
               </span>
               <ChevronDown className="h-4 w-4 text-gray-400" />
             </button>
@@ -163,7 +165,7 @@ export default function DashboardPage() {
                   type="text"
                   value={jobSearch}
                   onChange={(e) => setJobSearch(e.target.value)}
-                  placeholder="Buscar vaga por título..."
+                  placeholder={t('painel.buscarVaga')}
                   className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 />
               </div>
@@ -186,7 +188,7 @@ export default function DashboardPage() {
                     setIsJobMenuOpen(false);
                   }}
                 >
-                  <span>Todas as vagas</span>
+                  <span>{t('painel.todasVagas')}</span>
                 </button>
                 {filteredJobs.map((job) => (
                   <button
@@ -221,32 +223,32 @@ export default function DashboardPage() {
 
       {/* ============ SEÇÃO 1: VISÃO GERAL ============ */}
       <section>
-        <SectionHeader icon={BarChart3} title="Visão Geral" />
+        <SectionHeader icon={BarChart3} title={t('painel.secaoVisaoGeral')} />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mt-4">
           <MetricCard
-            title="Vagas ativas"
+            title={t('painel.vagasAtivas')}
             value={overview.openJobs}
-            subtitle={`de ${overview.totalJobs} no total`}
+            subtitle={t('painel.deTotal', { n: overview.totalJobs })}
             icon={Briefcase}
             onClick={() => router.push('/jobs?status=active')}
           />
           <MetricCard
-            title="Candidatos ativos"
+            title={t('painel.candidatosAtivos')}
             value={overview.activeCandidates}
-            subtitle={`${overview.totalCandidates} no total`}
+            subtitle={t('painel.totalCandidatos', { n: overview.totalCandidates })}
             icon={Users}
           />
           <MetricCard
-            title="Em entrevista"
+            title={t('painel.emEntrevista')}
             value={overview.interviewCount}
-            subtitle="agendados ou em andamento"
+            subtitle={t('painel.agendadosAndamento')}
             icon={UserCheck}
           />
           <MetricCard
-            title="Ações pendentes"
+            title={t('painel.acoesPendentes')}
             value={overview.pendingReview + overview.staleJobsCount}
-            subtitle={`${overview.pendingReview} revisões · ${overview.staleJobsCount} vagas paradas`}
+            subtitle={t('painel.revisoesParadas', { revisoes: overview.pendingReview, paradas: overview.staleJobsCount })}
             icon={Clock}
             tone={overview.pendingReview + overview.staleJobsCount > 0 ? 'warning' : 'default'}
             pulse={overview.pendingReview > 0}
@@ -264,7 +266,7 @@ export default function DashboardPage() {
               >
                 <Clock className="h-4 w-4 text-orange-600 shrink-0" />
                 <span className="text-sm text-orange-800 truncate">
-                  <strong>{j.title}</strong>: sem candidatos há mais de 14 dias
+                  <strong>{j.title}</strong>{t('painel.semCandidatos')}
                 </span>
                 <ChevronRight className="h-4 w-4 text-orange-400 ml-auto shrink-0" />
               </div>
@@ -275,32 +277,32 @@ export default function DashboardPage() {
 
       {/* ============ SEÇÃO 2: INTELIGÊNCIA E AUTOMAÇÃO ============ */}
       <section>
-        <SectionHeader icon={Brain} title="Inteligência & Automação" badge="IA" />
+        <SectionHeader icon={Brain} title={t('painel.secaoInteligencia')} badge="IA" />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mt-4">
           <MetricCard
-            title="Filtrados automaticamente"
+            title={t('painel.filtrados')}
             value={`${intelligence.autoFilteredPercent}%`}
-            subtitle={`${intelligence.eliminatedCount} candidatos eliminados`}
+            subtitle={t('painel.eliminados', { n: intelligence.eliminatedCount })}
             icon={ShieldAlert}
           />
           <MetricCard
-            title="Com alerta para revisão"
+            title={t('painel.comAlerta')}
             value={`${intelligence.flaggedForReviewPercent}%`}
-            subtitle={`${intelligence.warningCount} com alertas`}
+            subtitle={t('painel.comAlertas', { n: intelligence.warningCount })}
             icon={AlertTriangle}
             tone={intelligence.warningCount > 0 ? 'warning' : 'default'}
           />
           <MetricCard
-            title="Score médio global"
+            title={t('painel.scoreMedio')}
             value={`${intelligence.avgGlobalScore}%`}
-            subtitle="fit score médio de todos"
+            subtitle={t('painel.scoreMedioSub')}
             icon={TrendingUp}
           />
           <MetricCard
-            title="Melhor score atual"
+            title={t('painel.melhorScore')}
             value={`${intelligence.bestScore}%`}
-            subtitle="candidato com maior nota"
+            subtitle={t('painel.melhorScoreSub')}
             icon={Award}
             highlight={intelligence.bestScore >= 85}
           />
@@ -313,7 +315,7 @@ export default function DashboardPage() {
             <div className="bg-white rounded-xl border border-gray-200 p-5">
               <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                 <Star className="h-4 w-4 text-violet-500" />
-                Score médio por vaga
+                {t('painel.scorePorVaga')}
               </h3>
               <div className="space-y-3">
                 {intelligence.avgScorePerJob.map((job) => (
@@ -346,7 +348,7 @@ export default function DashboardPage() {
             <div className="bg-white rounded-xl border border-gray-200 p-5">
               <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                 <ShieldAlert className="h-4 w-4 text-red-500" />
-                Critérios mais recorrentes de eliminação
+                {t('painel.criteriosEliminacao')}
               </h3>
               <div className="space-y-3">
                 {intelligence.topCriteria.map((c, i) => (
@@ -368,12 +370,12 @@ export default function DashboardPage() {
 
       {/* ============ SEÇÃO 3: PERFORMANCE DO PROCESSO ============ */}
       <section>
-        <SectionHeader icon={Target} title="Performance do Processo" />
+        <SectionHeader icon={Target} title={t('painel.secaoPerformance')} />
 
         <div className="mt-4 grid gap-4 lg:grid-cols-3">
           {/* Funnel visual */}
           <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-5">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">Funil de conversão</h3>
+            <h3 className="text-sm font-semibold text-gray-700 mb-4">{t('painel.funil')}</h3>
             <div className="space-y-3">
               {performance.funnel.map((step, i) => {
                 const pct = funnelMax > 0 ? (step.count / funnelMax) * 100 : 0;
@@ -405,20 +407,20 @@ export default function DashboardPage() {
           {/* Time metrics + alerts */}
           <div className="space-y-4">
             <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">Tempo médio</h3>
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('painel.tempoMedio')}</h3>
               <div className="space-y-4">
                 <div>
-                  <p className="text-xs text-gray-500 uppercase tracking-wider">Até validação</p>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider">{t('painel.ateValidacao')}</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">
                     {performance.avgDaysToValidation}
-                    <span className="text-sm font-normal text-gray-500 ml-1">dias</span>
+                    <span className="text-sm font-normal text-gray-500 ml-1">{t('painel.dias')}</span>
                   </p>
                 </div>
                 <div className="border-t pt-4">
-                  <p className="text-xs text-gray-500 uppercase tracking-wider">Até contratação</p>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider">{t('painel.ateContratacao')}</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">
                     {performance.avgDaysToHire}
-                    <span className="text-sm font-normal text-gray-500 ml-1">dias</span>
+                    <span className="text-sm font-normal text-gray-500 ml-1">{t('painel.dias')}</span>
                   </p>
                 </div>
               </div>
@@ -428,7 +430,7 @@ export default function DashboardPage() {
               <div className="bg-red-50 rounded-xl border border-red-200 p-5">
                 <h3 className="text-sm font-semibold text-red-700 mb-2 flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4" />
-                  Baixa conversão
+                  {t('painel.baixaConversao')}
                 </h3>
                 <div className="space-y-2">
                   {performance.lowConversionJobs.map((j) => (
@@ -451,7 +453,7 @@ export default function DashboardPage() {
 
       {/* ============ SEÇÃO 4: INSIGHTS DA SEMANA ============ */}
       <section>
-        <SectionHeader icon={Lightbulb} title="Insights da Semana" />
+        <SectionHeader icon={Lightbulb} title={t('painel.secaoInsights')} />
 
         <div className="mt-4 space-y-3">
           {insights.map((insight, i) => (

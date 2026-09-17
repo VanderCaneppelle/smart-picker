@@ -17,6 +17,12 @@ model Recruiter {
   name         String
   company      String?
   phone_number String?
+
+  /**
+   * Idioma do recrutador: pt | en. Vive no banco, e não só no navegador, porque o
+   * worker manda e-mail e monta o prompt da IA sem nenhum navegador por perto.
+   */
+  locale       String    @default("pt")
   created_at   DateTime  @default(now())
   updated_at   DateTime  @updatedAt
 
@@ -156,6 +162,14 @@ model Job {
   currency_code              String?
   show_salary_to_candidates  Boolean   @default(false)
   calendly_link              String?
+  /**
+   * Idioma da vaga: pt | en. Herda o idioma do recrutador na criação e fica congelado
+   * ali. Define a língua da página de candidatura e dos e-mails enviados ao candidato.
+   *
+   * Congelado de propósito: se o recrutador trocar o próprio idioma depois, uma vaga
+   * já divulgada não pode mudar de língua debaixo dos candidatos que já se inscreveram.
+   */
+  locale                String      @default("pt")
   application_questions Json        @default("[]")
   interview_questions   String?     @db.Text
   status                String      @default("draft")

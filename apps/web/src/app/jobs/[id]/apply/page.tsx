@@ -17,6 +17,31 @@ import { apiClient } from '@/lib/api-client';
 import { Button, Input, Textarea, Badge, Loading } from '@/components/ui';
 import type { Job, ApplicationQuestion, ApplicationAnswer } from '@hunter/core';
 import { CONSENT_VERSION } from '@hunter/core';
+import ptMsgs from '../../../../../messages/pt.json';
+import enMsgs from '../../../../../messages/en.json';
+
+const DICIONARIOS: Record<string, unknown> = { pt: ptMsgs, en: enMsgs };
+
+/**
+ * Tradutor local em vez do hook do next-intl.
+ *
+ * O idioma desta página não vem da URL nem da preferência de quem está olhando: vem
+ * da VAGA, que só é conhecida depois do fetch. Empresa brasileira contratando no
+ * Brasil precisa mostrar o formulário em português mesmo para um candidato com o
+ * navegador em inglês. Trocar o provider no meio da árvore depois do carregamento
+ * daria um remonte desnecessário num formulário que a pessoa pode já estar
+ * preenchendo, então resolvemos com uma função simples.
+ */
+function criarTradutor(locale: string) {
+  const dict = DICIONARIOS[locale] ?? DICIONARIOS.pt;
+  return (chave: string): string => {
+    const valor = chave.split('.').reduce<unknown>(
+      (obj, parte) => (obj && typeof obj === 'object' ? (obj as Record<string, unknown>)[parte] : undefined),
+      dict
+    );
+    return typeof valor === 'string' ? valor : chave;
+  };
+}
 
 const getStatusBadgeVariant = (status: string) => {
   switch (status) {
@@ -42,6 +67,9 @@ export default function ApplyPage() {
   const jobId = params.id as string;
 
   const [job, setJob] = useState<Job | null>(null);
+  // O idioma segue a vaga. Antes do fetch cai no padrão, que só afeta a tela de
+  // carregamento.
+  const t = criarTradutor(job?.locale ?? 'pt');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -92,13 +120,13 @@ export default function ApplyPage() {
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     ];
     if (!allowedTypes.includes(file.type)) {
-      toast.error('Por favor, envie um arquivo PDF ou Word');
+      toast.error(t('candidatura.erros.arquivoTipo'));
       return;
     }
 
     // Validate file size (10MB)
     if (file.size > 10 * 1024 * 1024) {
-      toast.error('O arquivo deve ter no máximo 10MB');
+      toast.error(t('candidatura.erros.arquivoTamanho'));
       return;
     }
 
@@ -107,9 +135,9 @@ export default function ApplyPage() {
       const result = await apiClient.uploadFile(file);
       setResumeUrl(result.url);
       setResumeFileName(result.originalName);
-      toast.success('Currículo enviado com sucesso');
+      toast.success(t('candidatura.sucessoUpload'));
     } catch (error) {
-      toast.error('Falha ao enviar currículo');
+      toast.error(t('candidatura.erros.falhaUpload'));
       console.error(error);
     } finally {
       setIsUploading(false);
@@ -119,27 +147,27 @@ export default function ApplyPage() {
   const validate = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!name.trim()) newErrors.name = 'Nome é obrigatório';
-    if (!email.trim()) newErrors.email = 'E-mail é obrigatório';
+    if (!name.trim()) newErrors.name = t('candidatura.erros.nome');
+    if (!email.trim()) newErrors.email = t('candidatura.erros.email');
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'Por favor, insira um e-mail válido';
+      newErrors.email = t('candidatura.erros.emailInvalido');
     }
-    if (!resumeUrl) newErrors.resume = 'Currículo é obrigatório';
+    if (!resumeUrl) newErrors.resume = t('candidatura.erros.curriculo');
 
     if (linkedin && !linkedin.startsWith('http')) {
-      newErrors.linkedin = 'Por favor, insira uma URL válida';
+      newErrors.linkedin = t('candidatura.erros.urlInvalida');
     }
 
     // Validate required questions
     const questions = (job?.application_questions || []) as ApplicationQuestion[];
     questions.forEach((q) => {
       if (q.required && !answers[q.id]?.trim()) {
-        newErrors[`question_${q.id}`] = 'Esta pergunta é obrigatória';
+        newErrors[`question_${q.id}`] = t('candidatura.erros.perguntaObrigatoria');
       }
     });
 
     if (!consentAgreed) {
-      newErrors.consent = 'É necessário aceitar os Termos de Uso e a Política de Privacidade para enviar a candidatura.';
+      newErrors.consent = t('candidatura.erros.consentimento');
     }
 
     setErrors(newErrors);
@@ -150,7 +178,7 @@ export default function ApplyPage() {
     e.preventDefault();
 
     if (!validate()) {
-      toast.error('Por favor, revise os campos obrigatórios antes de enviar');
+      toast.error(t('candidatura.erros.revise'));
       return;
     }
 
@@ -178,7 +206,7 @@ export default function ApplyPage() {
 
       setIsSubmitted(true);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Falha ao enviar candidatura');
+      toast.error(error instanceof Error ? error.message : t('candidatura.erros.falhaEnvio'));
     } finally {
       setIsSubmitting(false);
     }
@@ -205,7 +233,7 @@ export default function ApplyPage() {
       <div className="min-h-screen bg-gray-50">
         <Header />
         <div className="flex items-center justify-center py-32">
-          <Loading text="Carregando vaga..." />
+          <Loading text={t('candidatura.carregando')} />
         </div>
       </div>
     );
@@ -256,7 +284,7 @@ export default function ApplyPage() {
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-3">Candidatura enviada!</h1>
             <p className="text-gray-600 mb-4">
-              Obrigado por se candidatar para a vaga de <strong>{job.title}</strong>.
+              {t('candidatura.obrigado')} <strong>{job.title}</strong>.
               Analisaremos sua candidatura e entraremos em contato em breve.
             </p>
             <p className="text-sm text-gray-500 bg-gray-100 rounded-lg px-4 py-3">
@@ -302,7 +330,7 @@ export default function ApplyPage() {
 
             {/* Job Description */}
             <div className="border-t border-gray-100 pt-6 mt-6">
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Sobre a vaga</h2>
+              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">{t('candidatura.sobreVaga')}</h2>
               <div
                 className="prose prose-sm max-w-none text-gray-700 rich-content"
                 dangerouslySetInnerHTML={{ __html: job.description }}
@@ -317,8 +345,8 @@ export default function ApplyPage() {
                 <Briefcase className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">Candidate-se</h2>
-                <p className="text-sm text-gray-500">Preencha os dados abaixo</p>
+                <h2 className="text-lg font-semibold text-gray-900">{t('candidatura.candidateSe')}</h2>
+                <p className="text-sm text-gray-500">{t('candidatura.preenchaDados')}</p>
               </div>
             </div>
 
@@ -326,28 +354,28 @@ export default function ApplyPage() {
               {/* Personal Info */}
               <div className="grid gap-4 sm:grid-cols-2">
                 <Input
-                  label="Nome completo"
+                  label={t('candidatura.nome')}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   error={errors.name}
                   required
-                  placeholder="Seu nome"
+                  placeholder={t('candidatura.nomePlaceholder')}
                 />
                 <Input
-                  label="E-mail"
+                  label={t('candidatura.email')}
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   error={errors.email}
                   required
-                  placeholder="seu@email.com"
+                  placeholder={t('candidatura.emailPlaceholder')}
                 />
                 <Input
-                  label="Telefone"
+                  label={t('candidatura.telefone')}
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="(11) 99999-9999"
+                  placeholder={t('candidatura.telefonePlaceholder')}
                 />
                 <Input
                   label="LinkedIn"
@@ -362,7 +390,7 @@ export default function ApplyPage() {
               {/* Resume Upload */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Currículo <span className="text-red-500">*</span>
+                  {t('candidatura.curriculo')} <span className="text-red-500">*</span>
                 </label>
                 <div
                   className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
@@ -398,9 +426,9 @@ export default function ApplyPage() {
                         <Upload className="h-6 w-6 text-gray-400" />
                       </div>
                       <span className="text-gray-700 font-medium">
-                        {isUploading ? 'Enviando...' : 'Clique para enviar seu currículo'}
+                        {isUploading ? t('candidatura.enviando') : t('candidatura.enviarCurriculo')}
                       </span>
-                      <p className="text-xs text-gray-500 mt-1">PDF ou Word, máximo 10MB</p>
+                      <p className="text-xs text-gray-500 mt-1">{t('candidatura.formatoArquivo')}</p>
                       <input
                         type="file"
                         accept=".pdf,.doc,.docx"
@@ -419,7 +447,7 @@ export default function ApplyPage() {
               {/* Application Questions */}
               {questions.length > 0 && (
                 <div className="space-y-4 pt-4 border-t border-gray-100">
-                  <h3 className="font-semibold text-gray-900">Perguntas adicionais</h3>
+                  <h3 className="font-semibold text-gray-900">{t('candidatura.perguntasAdicionais')}</h3>
                   {questions.map((question) => (
                     <div key={question.id}>
                       {/* Texto longo */}
@@ -464,7 +492,7 @@ export default function ApplyPage() {
                             }
                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                             required={question.required}
-                            placeholder="Digite um valor numérico"
+                            placeholder={t('candidatura.numeroPlaceholder')}
                           />
                           {errors[`question_${question.id}`] && (
                             <p className="mt-1 text-sm text-red-500">{errors[`question_${question.id}`]}</p>
@@ -573,13 +601,13 @@ export default function ApplyPage() {
                     aria-describedby="consent-description"
                   />
                   <span id="consent-description" className="text-sm">
-                    Declaro que li e aceito os{' '}
+                    {t('candidatura.consentimentoPrefixo')}{' '}
                     <Link href="/termos" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-700 font-medium underline">
-                      Termos de Uso
+                      {t('candidatura.termos')}
                     </Link>
-                    {' '}e a{' '}
+                    {' '}{t('candidatura.consentimentoMeio')}{' '}
                     <Link href="/privacidade" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-700 font-medium underline">
-                      Política de Privacidade
+                      {t('candidatura.privacidade')}
                     </Link>
                     .
                   </span>
@@ -596,7 +624,7 @@ export default function ApplyPage() {
                 size="lg"
                 isLoading={isSubmitting}
               >
-                Enviar candidatura
+                {t('candidatura.enviar')}
               </Button>
             </form>
           </div>
