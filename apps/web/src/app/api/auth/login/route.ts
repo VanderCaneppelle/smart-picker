@@ -69,11 +69,19 @@ export async function POST(request: NextRequest) {
 
     await ensureTrialSubscription(userId);
 
+    // O idioma acompanha a resposta do login para o cliente gravar o cookie na hora.
+    // Sem isso a primeira tela depois de entrar nasceria no idioma padrão.
+    const perfil = await prisma.recruiter.findUnique({
+      where: { id: userId },
+      select: { locale: true },
+    });
+
     return Response.json({
       user: {
         id: data.user.id,
         email: data.user.email,
       },
+      locale: perfil?.locale ?? 'pt',
       access_token: data.session.access_token,
       refresh_token: data.session.refresh_token,
       expires_at: data.session.expires_at,

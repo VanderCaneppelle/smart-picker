@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button, Input } from '@/components/ui';
 import { AuthLayoutSide } from '@/components/AuthLayoutSide';
 import { TrendingUp } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export default function SignUpPage() {
   return (
@@ -18,6 +19,7 @@ export default function SignUpPage() {
 }
 
 function SignUpContent() {
+  const t = useTranslations();
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
@@ -68,10 +70,10 @@ function SignUpContent() {
       );
 
       if (requires_confirmation) {
-        toast.success('Conta criada! Confira seu e-mail para confirmar.');
+        toast.success(t('auth.contaCriadaConfirmar'));
         router.push('/login');
       } else {
-        toast.success('Conta criada com sucesso!');
+        toast.success(t('auth.contaCriada'));
         router.push('/onboarding');
       }
     } catch (error) {
@@ -97,16 +99,12 @@ function SignUpContent() {
               </Link>
             </div>
 
-            <h2 className="text-2xl font-bold text-gray-900">
-              Criar conta
-            </h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Preencha os dados para começar a publicar vagas
-            </p>
+            <h2 className="text-2xl font-bold text-gray-900">{t('auth.criarConta')}</h2>
+            <p className="mt-1 text-sm text-gray-500">{t('auth.criarContaSub')}</p>
 
             {paidPlan && (
               <div className="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                <p className="font-medium">Pagamento confirmado ✓</p>
+                <p className="font-medium">{t('auth.pagamentoConfirmado')}</p>
                 <p className="mt-1 text-emerald-700">
                   Use o mesmo e-mail do pagamento para que sua assinatura seja vinculada automaticamente.
                 </p>
@@ -115,61 +113,61 @@ function SignUpContent() {
 
             <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
               <Input
-                label="Nome completo"
+                label={t('auth.nome')}
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
                 autoComplete="name"
-                placeholder="Seu nome"
+                placeholder={t('auth.nomePlaceholder')}
               />
 
               <Input
-                label="E-mail"
+                label={t('auth.email')}
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                placeholder="voce@exemplo.com"
+                placeholder={t('auth.emailPlaceholder')}
               />
 
               <Input
-                label="Empresa"
+                label={t('auth.empresa')}
                 type="text"
                 value={company}
                 onChange={(e) => setCompany(e.target.value)}
                 autoComplete="organization"
-                placeholder="Nome da empresa (opcional)"
+                placeholder={t('auth.empresaPlaceholder')}
               />
 
               <Input
-                label="Telefone"
+                label={t('auth.telefone')}
                 type="tel"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 autoComplete="tel"
-                placeholder="(00) 00000-0000"
+                placeholder={t('auth.telefonePlaceholder')}
               />
 
               <Input
-                label="Senha"
+                label={t('auth.senha')}
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="new-password"
-                placeholder="Mínimo 6 caracteres"
+                placeholder={t('auth.senhaMinima')}
               />
 
               <Input
-                label="Confirmar senha"
+                label={t('auth.confirmarSenha')}
                 type="password"
                 value={passwordConfirmation}
                 onChange={(e) => setPasswordConfirmation(e.target.value)}
                 required
                 autoComplete="new-password"
-                placeholder="Repita sua senha"
+                placeholder={t('auth.repitaSenha')}
               />
 
               <Button
@@ -177,9 +175,7 @@ function SignUpContent() {
                 className="w-full bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500"
                 size="lg"
                 isLoading={isLoading}
-              >
-                Criar conta
-              </Button>
+              >{t('auth.criarConta')}</Button>
             </form>
 
             <p className="mt-6 text-center text-sm text-gray-600">
@@ -187,9 +183,7 @@ function SignUpContent() {
               <Link
                 href="/login"
                 className="font-medium text-emerald-600 hover:text-emerald-500"
-              >
-                Entrar
-              </Link>
+              >{t('auth.entrar')}</Link>
             </p>
           </div>
         </div>

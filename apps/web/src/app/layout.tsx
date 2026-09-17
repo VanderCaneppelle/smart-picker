@@ -23,9 +23,12 @@ export const metadata: Metadata = {
 };
 
 /**
- * O layout raiz atende tanto as rotas traduzidas (dentro de [locale]) quanto as que
- * ainda não foram traduzidas. getLocale devolve o idioma da URL quando existe, e o
- * padrão nos demais casos, então o atributo lang fica correto nos dois mundos.
+ * O layout raiz atende tanto as rotas dentro de [locale] quanto as de fora (painel,
+ * candidatura, admin). getLocale resolve pela URL quando ela traz o idioma e pelo
+ * cookie no resto, então tudo sai renderizado na língua certa já na primeira pintura.
+ *
+ * As rotas dentro de [locale] recebem um segundo provider, mais interno, que existe
+ * para re-renderizar na troca de idioma. O de dentro vence, como deve ser.
  */
 export default async function RootLayout({
   children,

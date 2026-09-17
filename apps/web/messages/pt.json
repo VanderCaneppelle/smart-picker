@@ -564,5 +564,29 @@
     "inclui": "Inclui:",
     "querMais": "Quer mais recursos?",
     "verPlanosPrecos": "Ver planos e preços"
+  },
+  "auth": {
+    "entrar": "Entrar",
+    "entrarSub": "Acesse sua conta para gerenciar suas vagas",
+    "esqueciSenha": "Esqueci minha senha",
+    "criarConta": "Criar conta",
+    "criarContaSub": "Preencha os dados para começar a publicar vagas",
+    "pagamentoConfirmado": "Pagamento confirmado ✓",
+    "email": "E-mail",
+    "emailPlaceholder": "voce@exemplo.com",
+    "senha": "Senha",
+    "senhaPlaceholder": "Sua senha",
+    "nome": "Nome completo",
+    "nomePlaceholder": "Seu nome",
+    "empresa": "Empresa",
+    "empresaPlaceholder": "Nome da empresa (opcional)",
+    "telefone": "Telefone",
+    "telefonePlaceholder": "(00) 00000-0000",
+    "senhaMinima": "Mínimo 6 caracteres",
+    "confirmarSenha": "Confirmar senha",
+    "repitaSenha": "Repita sua senha",
+    "loginOk": "Login realizado com sucesso!",
+    "contaCriada": "Conta criada com sucesso!",
+    "contaCriadaConfirmar": "Conta criada! Confira seu e-mail para confirmar."
   }
 }

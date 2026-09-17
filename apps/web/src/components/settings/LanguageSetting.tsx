@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api-client';
 
 const OPCOES = [
@@ -17,6 +18,7 @@ const OPCOES = [
  */
 export function LanguageSetting() {
   const t = useTranslations('app.idioma');
+  const router = useRouter();
   const [locale, setLocale] = useState<'pt' | 'en'>('pt');
   const [salvando, setSalvando] = useState(false);
 
@@ -37,9 +39,12 @@ export function LanguageSetting() {
     setSalvando(true);
     try {
       await apiClient.updateRecruiterProfile({ locale: novo });
+      // O banco é a fonte da verdade (o worker lê dali para e-mail e prompt). O cookie
+      // é o espelho que o servidor web consegue ler antes de renderizar.
+      document.cookie = `NEXT_LOCALE=${novo}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
       toast.success(t('salvo'));
-      // Recarrega para a interface inteira assumir o idioma novo de uma vez.
-      window.location.reload();
+      // refresh em vez de reload: re-renderiza no servidor sem recarregar a página.
+      router.refresh();
     } catch {
       setLocale(anterior);
       toast.error(t('erro'));
