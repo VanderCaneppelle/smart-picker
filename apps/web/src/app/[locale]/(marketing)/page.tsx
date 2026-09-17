@@ -21,6 +21,7 @@ import {
   Building2,
   Check,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { PLANS, TRIAL_DURATION_DAYS, TRIAL_MAX_ACTIVE_JOBS } from '@/lib/subscription';
 
 function PricingCard({
@@ -30,6 +31,7 @@ function PricingCard({
   plan: (typeof PLANS)[number];
   index: number;
 }) {
+  const t = useTranslations();
   const Icon = index === 0 ? Rocket : index === 1 ? Crown : Building2;
   return (
     <div
@@ -42,7 +44,7 @@ function PricingCard({
       {plan.highlighted && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="rounded-full bg-emerald-600 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white">
-            Mais popular
+            {t('precos.maisPopular')}
           </span>
         </div>
       )}
@@ -105,6 +107,8 @@ function FAQItem({
 }
 
 export default function LandingPage() {
+  const t = useTranslations();
+
   return (
     <>
       {/* Hero Section */}
@@ -114,40 +118,39 @@ export default function LandingPage() {
             {/* Trial badge */}
             <div className="inline-flex items-stretch mb-8 text-[11px] font-semibold uppercase tracking-[0.15em]">
               <span className="px-3 py-1.5 text-emerald-700">
-                {TRIAL_DURATION_DAYS} dias grátis
+                {t('hero.selo.diasGratis', { dias: TRIAL_DURATION_DAYS })}
               </span>
               <span className="w-px bg-gray-200" aria-hidden="true" />
-              <span className="px-3 py-1.5 text-gray-500">Sem cartão de crédito</span>
+              <span className="px-3 py-1.5 text-gray-500">{t('hero.selo.semCartao')}</span>
             </div>
 
             <h1 className="text-[2.5rem] sm:text-5xl lg:text-[3.75rem] font-semibold text-gray-900 leading-[1.05] mb-6 tracking-[-0.03em] text-balance">
-              Pare de perder tempo triando currículos.{' '}
-              <span className="text-gray-500">Deixe a IA ranquear.</span>
+              {t('hero.titulo')}{' '}
+              <span className="text-gray-500">{t('hero.tituloDestaque')}</span>
             </h1>
             <p className="text-lg text-gray-600 mb-10 max-w-[38rem] mx-auto leading-relaxed text-pretty">
-              Publique sua vaga, receba candidatos e a IA gera um ranking automático
-              com score de compatibilidade. Você decide com dados, não com intuição.
+              {t('hero.subtitulo')}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 href="/signup"
                 className="inline-flex items-center justify-center px-6 py-3 rounded-lg text-[15px] font-medium text-white bg-emerald-600 hover:bg-emerald-700 transition-colors w-full sm:w-auto"
               >
-                Experimentar {TRIAL_DURATION_DAYS} dias grátis
+                {t('hero.ctaPrimario', { dias: TRIAL_DURATION_DAYS })}
               </Link>
               <a
                 href="#como-funciona"
                 className="inline-flex items-center justify-center px-6 py-3 rounded-lg text-[15px] font-medium text-gray-900 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-colors w-full sm:w-auto"
               >
-                Ver como funciona
+                {t('hero.ctaSecundario')}
               </a>
             </div>
             <p className="mt-6 text-sm text-gray-500">
-              {TRIAL_MAX_ACTIVE_JOBS} vagas ativas no teste
+              {t('hero.apoio.vagas', { n: TRIAL_MAX_ACTIVE_JOBS })}
               <span className="mx-2 text-gray-300">·</span>
-              Candidatos ilimitados
+              {t('hero.apoio.candidatos')}
               <span className="mx-2 text-gray-300">·</span>
-              Sem cartão
+              {t('hero.apoio.semCartao')}
             </p>
           </div>
 
@@ -156,16 +159,16 @@ export default function LandingPage() {
             <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent z-10 pointer-events-none" />
             <div className="bg-gray-900 rounded-2xl p-6 sm:p-8 shadow-xl shadow-gray-900/10 max-w-5xl mx-auto border border-gray-800">
               <div className="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-700/60">
-                <span className="text-sm font-medium text-gray-200">Desenvolvedor Full Stack Senior</span>
-                <span className="text-xs text-gray-500">5 candidatos · ranqueados por IA</span>
+                <span className="text-sm font-medium text-gray-200">{t('hero.mockVaga')}</span>
+                <span className="text-xs text-gray-500">{t('hero.mockResumo', { n: 5 })}</span>
               </div>
               <div className="space-y-3">
                 {[
-                  { name: 'Ana Silva', score: 94, status: 'Entrevista', role: 'Desenvolvedor Full Stack' },
-                  { name: 'Carlos Santos', score: 87, status: 'Aprovado', role: 'Eng. de Software Senior' },
-                  { name: 'Maria Oliveira', score: 82, status: 'Em revisão', role: 'Full Stack Developer' },
-                  { name: 'João Pereira', score: 76, status: 'Novo', role: 'Desenvolvedor Backend' },
-                  { name: 'Fernanda Costa', score: 71, status: 'Novo', role: 'Software Engineer' },
+                  { name: 'Ana Silva', score: 94, status: t('mock.entrevista'), role: t('mock.cargo1') },
+                  { name: 'Carlos Santos', score: 87, status: t('mock.aprovado'), role: t('mock.cargo2') },
+                  { name: 'Maria Oliveira', score: 82, status: t('mock.revisao'), role: t('mock.cargo3') },
+                  { name: 'João Pereira', score: 76, status: t('mock.novo'), role: t('mock.cargo4') },
+                  { name: 'Fernanda Costa', score: 71, status: t('mock.novo'), role: t('mock.cargo5') },
                 ].map((candidate, i) => (
                   <div
                     key={i}
@@ -207,9 +210,9 @@ export default function LandingPage() {
                         </div>
                       </div>
                       <span className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-                        candidate.status === 'Entrevista' ? 'bg-purple-500/20 text-purple-400' :
-                        candidate.status === 'Aprovado' ? 'bg-emerald-500/20 text-emerald-400' :
-                        candidate.status === 'Em revisão' ? 'bg-blue-500/20 text-blue-400' :
+                        candidate.status === t('mock.entrevista') ? 'bg-purple-500/20 text-purple-400' :
+                        candidate.status === t('mock.aprovado') ? 'bg-emerald-500/20 text-emerald-400' :
+                        candidate.status === t('mock.revisao') ? 'bg-blue-500/20 text-blue-400' :
                         'bg-gray-600/30 text-gray-400'
                       }`}>
                         {candidate.status}
@@ -249,13 +252,13 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <span className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-400 mb-4">
-              Funcionalidades
+              {t('features.rotulo')}
             </span>
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Tudo que você precisa para contratar melhor
+              {t('features.titulo')}
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Ferramentas inteligentes para consultores de RH que valorizam seu tempo
+              {t('features.subtitulo')}
             </p>
           </div>
 
@@ -263,33 +266,33 @@ export default function LandingPage() {
             {[
               {
                 icon: Zap,
-                title: 'Triagem Automática',
-                description: 'IA analisa currículos e respostas, gerando scores de compatibilidade em segundos.',
+                title: t('features.triagem.titulo'),
+                description: t('features.triagem.texto'),
               },
               {
                 icon: Target,
-                title: 'Ranking Inteligente',
-                description: 'Candidatos ordenados por fit score. Foque nos melhores, ignore o ruído.',
+                title: t('features.ranking.titulo'),
+                description: t('features.ranking.texto'),
               },
               {
                 icon: Mail,
-                title: 'E-mails automáticos',
-                description: 'Confirmação de candidatura, convite para entrevista e retorno de recusa saem sozinhos, com o seu nome e a sua assinatura. Você é avisado a cada nova inscrição.',
+                title: t('features.emails.titulo'),
+                description: t('features.emails.texto'),
               },
               {
                 icon: BarChart3,
-                title: 'Métricas Claras',
-                description: 'Scores de currículo, qualidade de respostas e nível de experiência em um painel.',
+                title: t('features.metricas.titulo'),
+                description: t('features.metricas.texto'),
               },
               {
                 icon: Users,
-                title: 'Pipeline Visual',
-                description: 'Acompanhe candidatos por etapa: novo, revisão, entrevista, contratado. Kanban ou lista.',
+                title: t('features.pipeline.titulo'),
+                description: t('features.pipeline.texto'),
               },
               {
                 icon: Shield,
-                title: 'LGPD Compliant',
-                description: 'Consentimento rastreado, exclusão sob demanda, dados protegidos e criptografados.',
+                title: t('features.lgpd.titulo'),
+                description: t('features.lgpd.texto'),
               },
             ].map((feature, i) => (
               <div
@@ -312,13 +315,13 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <span className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-400 mb-4">
-              Passo a passo
+              {t('comoFunciona.rotulo')}
             </span>
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              3 passos para ranquear candidatos
+              {t('comoFunciona.titulo')}
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Da publicação à decisão em minutos, não dias
+              {t('comoFunciona.subtitulo')}
             </p>
           </div>
 
@@ -326,20 +329,20 @@ export default function LandingPage() {
             {[
               {
                 step: '01',
-                title: 'Crie sua vaga',
-                description: 'Descreva a posição, requisitos e adicione perguntas personalizadas. Publique com um link compartilhável.',
+                title: t('comoFunciona.p1.titulo'),
+                description: t('comoFunciona.p1.texto'),
                 icon: FileText,
               },
               {
                 step: '02',
-                title: 'Receba candidaturas',
-                description: 'Candidatos aplicam com currículo e respondem suas perguntas. Sem cadastro necessário para eles.',
+                title: t('comoFunciona.p2.titulo'),
+                description: t('comoFunciona.p2.texto'),
                 icon: Inbox,
               },
               {
                 step: '03',
-                title: 'Veja o ranking',
-                description: 'A IA analisa cada candidato e gera um ranking automático com fit score. Você decide com confiança.',
+                title: t('comoFunciona.p3.titulo'),
+                description: t('comoFunciona.p3.texto'),
                 icon: ListOrdered,
               },
             ].map((item, i) => (
@@ -350,7 +353,7 @@ export default function LandingPage() {
                       <item.icon className="h-[18px] w-[18px] text-gray-700" strokeWidth={1.75} />
                     </span>
                     <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-400 tabular-nums">
-                      Passo {item.step}
+                      {t('comoFunciona.passo', { n: item.step })}
                     </span>
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-3">{item.title}</h3>
@@ -370,7 +373,7 @@ export default function LandingPage() {
               href="/signup"
               className="inline-flex items-center justify-center px-6 py-3 rounded-lg text-[15px] font-medium text-white bg-emerald-600 hover:bg-emerald-700 transition-colors"
             >
-              Criar minha primeira vaga grátis
+              {t('comoFunciona.cta')}
             </Link>
           </div>
         </div>
@@ -415,10 +418,10 @@ export default function LandingPage() {
               Preços
             </p>
             <h2 className="mb-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              Planos que crescem com você
+              {t('precos.titulo')}
             </h2>
             <p className="text-base text-gray-600 sm:text-lg">
-              Sem taxa de setup, sem contrato de fidelidade. Cancele quando quiser.
+              {t('precos.subtitulo', { dias: TRIAL_DURATION_DAYS })}
             </p>
           </div>
 
@@ -431,19 +434,19 @@ export default function LandingPage() {
           <div className="mx-auto mt-10 flex max-w-4xl flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-gray-500">
             <div className="inline-flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-              {TRIAL_DURATION_DAYS} dias grátis
+              {t('precos.garantias.diasGratis', { dias: TRIAL_DURATION_DAYS })}
             </div>
             <div className="inline-flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-              Sem cartão de crédito
+              {t('precos.garantias.semCartao')}
             </div>
             <div className="inline-flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-              Cancele quando quiser
+              {t('precos.garantias.cancele')}
             </div>
             <div className="inline-flex items-center gap-2">
               <Shield className="h-4 w-4 text-emerald-500" />
-              Pagamentos seguros via Stripe
+              {t('precos.garantias.stripe')}
             </div>
           </div>
 
@@ -452,7 +455,7 @@ export default function LandingPage() {
               href="/pricing"
               className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-6 py-2.5 text-sm font-semibold text-gray-900 transition-colors hover:border-gray-400 hover:bg-gray-50"
             >
-              Ver comparação detalhada
+              {t('precos.verComparacao')}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -464,38 +467,38 @@ export default function LandingPage() {
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Perguntas frequentes
+              {t('faq.titulo')}
             </h2>
           </div>
 
           <div className="divide-y divide-gray-200">
             <FAQItem
-              question="O que está incluso no teste grátis?"
-              answer="Você pode criar até 10 vagas ativas, receber candidatos ilimitados e ter acesso completo ao ranking por IA. Sem cartão de crédito, sem compromisso."
+              question={t('faq.q1.p')}
+              answer={t('faq.q1.r', { vagas: TRIAL_MAX_ACTIVE_JOBS })}
             />
             <FAQItem
-              question="Preciso de cartão de crédito para começar?"
-              answer="Não. O teste grátis de 30 dias não requer cartão de crédito. Você só precisa de um e-mail para criar sua conta."
+              question={t('faq.q2.p')}
+              answer={t('faq.q2.r', { dias: TRIAL_DURATION_DAYS })}
             />
             <FAQItem
-              question="O que acontece quando o teste grátis acaba?"
-              answer="Você ainda consegue acessar sua conta e ver seus dados. Para continuar publicando vagas e usando o ranking por IA, basta escolher um plano."
+              question={t('faq.q3.p')}
+              answer={t('faq.q3.r')}
             />
             <FAQItem
-              question="Posso trocar de plano depois?"
-              answer="Sim! Você pode fazer upgrade ou downgrade a qualquer momento. A cobrança é ajustada proporcionalmente."
+              question={t('faq.q4.p')}
+              answer={t('faq.q4.r')}
             />
             <FAQItem
-              question="Os candidatos precisam criar conta?"
-              answer="Não. Os candidatos aplicam diretamente pelo link da vaga, sem precisar criar conta. Eles enviam currículo e respondem suas perguntas."
+              question={t('faq.q5.p')}
+              answer={t('faq.q5.r')}
             />
             <FAQItem
-              question="Meus dados estão seguros?"
-              answer="Sim. Usamos criptografia, seguimos a LGPD e todos os dados são armazenados em servidores seguros. Candidatos podem solicitar exclusão a qualquer momento."
+              question={t('faq.q6.p')}
+              answer={t('faq.q6.r')}
             />
             <FAQItem
-              question="Como funciona o ranking por IA?"
-              answer="Nossa IA analisa o currículo, as respostas às perguntas da vaga e gera um Fit Score de 0 a 100. Quanto maior o score, mais compatível o candidato é com a vaga."
+              question={t('faq.q7.p')}
+              answer={t('faq.q7.r')}
             />
           </div>
         </div>
@@ -505,29 +508,28 @@ export default function LandingPage() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-900 to-gray-800">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
-            Pronto para contratar com inteligência?
+            {t('ctaFinal.titulo')}
           </h2>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Junte-se a recrutadores que estão economizando horas de triagem
-            com ranking automatizado por IA.
+            {t('ctaFinal.subtitulo')}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/signup"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold text-gray-900 bg-white hover:bg-gray-100 transition-all shadow-lg w-full sm:w-auto"
             >
-              Começar {TRIAL_DURATION_DAYS} dias grátis
+              {t('ctaFinal.cta', { dias: TRIAL_DURATION_DAYS })}
               <ArrowRight className="h-5 w-5" />
             </Link>
           </div>
           <div className="flex items-center justify-center gap-6 mt-6 text-sm text-gray-400">
             <div className="flex items-center gap-1.5">
               <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-              <span>Sem cartão de crédito</span>
+              <span>{t('ctaFinal.semCartao')}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-              <span>Cancele quando quiser</span>
+              <span>{t('ctaFinal.cancele')}</span>
             </div>
           </div>
         </div>
