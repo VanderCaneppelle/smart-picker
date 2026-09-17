@@ -2,6 +2,7 @@ import 'dotenv/config';
 import http from 'node:http';
 import { processCandidate } from './jobs/processQueue.js';
 import { sendScheduleInterviewEmail, sendRejectionEmail } from './jobs/sendEmails.js';
+import { varrerTrials } from './jobs/trialLifecycle.js';
 import { prisma } from './lib/db.js';
 import { logCandidateEvent } from './lib/candidateHistory.js';
 
@@ -225,12 +226,54 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // Varredura manual dos lembretes de trial. Existe para testar sem esperar o
+  // agendador, e para reprocessar caso o worker fique fora do ar.
+  if (req.method === 'POST' && req.url === '/trial-sweep') {
+    if (!WORKER_SECRET || req.headers['x-worker-secret'] !== WORKER_SECRET) {
+      res.writeHead(401);
+      res.end(JSON.stringify({ error: 'Unauthorized' }));
+      return;
+    }
+    try {
+      const body = await parseBody(req);
+      const resultado = await varrerTrials({
+        ignorarHorario: body.ignorarHorario === true,
+        simular: body.simular === true,
+      });
+      res.writeHead(200);
+      res.end(JSON.stringify(resultado));
+    } catch (err) {
+      res.writeHead(500);
+      res.end(JSON.stringify({ error: err instanceof Error ? err.message : 'Erro na varredura' }));
+    }
+    return;
+  }
+
   res.writeHead(404);
   res.end(JSON.stringify({ error: 'Not found' }));
 });
 
+const INTERVALO_VARREDURA_MS = 60 * 60 * 1000; // de hora em hora
+
 server.listen(PORT, () => {
   console.log(`Worker listening on port ${PORT} (event-driven)`);
+
+  // Agendador simples em vez de cron: o worker já é um processo longo no Railway,
+  // então não vale uma dependência a mais. A varredura decide sozinha se está no
+  // horário de envio, e a UNIQUE em lifecycle_emails impede repetição.
+  const rodar = () => {
+    varrerTrials()
+      .then((r) => {
+        if (!r.executou) return;
+        const total = r.enviados.trial_d7 + r.enviados.trial_d1 + r.enviados.trial_expired;
+        if (total > 0) console.log('[trialLifecycle] varredura enviou:', r.enviados);
+      })
+      .catch((err) => console.error('[trialLifecycle] varredura falhou:', err));
+  };
+
+  // Espera um pouco no boot para não competir com o resto da inicialização.
+  setTimeout(rodar, 30_000);
+  setInterval(rodar, INTERVALO_VARREDURA_MS);
 });
 
 process.on('SIGTERM', () => {
