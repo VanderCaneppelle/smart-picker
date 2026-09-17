@@ -51,6 +51,7 @@ export const PLANS: Plan[] = [
       'Página pública personalizada',
       'Branding customizado',
       'Suporte prioritário',
+      'Entrevista por IA (em breve)',
     ],
   },
   {
@@ -68,6 +69,7 @@ export const PLANS: Plan[] = [
       'Página pública personalizada',
       'Branding customizado',
       'Suporte dedicado',
+      'Entrevista por IA (em breve)',
       'API de integração (em breve)',
     ],
   },
@@ -85,6 +87,7 @@ export const PLANS: Plan[] = [
 
 export const TRIAL_DURATION_DAYS = 30;
 export const TRIAL_MAX_ACTIVE_JOBS = 10;
+
 
 export interface SubscriptionInfo {
   status: SubscriptionStatus;
@@ -111,13 +114,27 @@ export function isSubscriptionActive(info: SubscriptionInfo): boolean {
   return false;
 }
 
+/**
+ * Fonte única do limite de vagas ativas. Não existe plano grátis: sem assinatura paga
+ * e sem trial válido o limite é 0. A checagem de expiração é obrigatória aqui, porque
+ * nada no sistema muda o status 'trialing' depois que o trial vence.
+ */
 export function getMaxActiveJobs(info: SubscriptionInfo): number {
-  if (info.status === 'trialing') return TRIAL_MAX_ACTIVE_JOBS;
   if (info.status === 'active' && info.plan) {
     const plan = PLANS.find((p) => p.id === info.plan);
-    return plan?.maxActiveJobs ?? TRIAL_MAX_ACTIVE_JOBS;
+    return plan?.maxActiveJobs ?? 0;
+  }
+  if (info.status === 'trialing' && !isTrialExpired(info.trialEndsAt)) {
+    return TRIAL_MAX_ACTIVE_JOBS;
   }
   return 0;
+}
+
+/** Precisa assinar: trial vencido (ou cancelado) e sem plano pago ativo. */
+export function needsSubscription(info: SubscriptionInfo): boolean {
+  if (info.status === 'active' && info.plan) return false;
+  if (info.status === 'trialing' && !isTrialExpired(info.trialEndsAt)) return false;
+  return true;
 }
 
 export function getPlanById(id: PlanId | null): Plan | undefined {
@@ -125,8 +142,4 @@ export function getPlanById(id: PlanId | null): Plan | undefined {
   return PLANS.find((p) => p.id === id);
 }
 
-export function shouldShowPaywall(info: SubscriptionInfo): boolean {
-  if (info.status === 'active') return false;
-  if (info.status === 'trialing' && !isTrialExpired(info.trialEndsAt)) return false;
-  return true;
-}
+

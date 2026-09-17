@@ -7,6 +7,13 @@ import type { ApplicationQuestion, ApplicationAnswer } from '@hunter/core';
 import { Prisma } from '@prisma/client';
 import { evaluateEliminatoryQuestions } from '@/lib/evaluate-eliminatory';
 import { migrateLegacyCandidateStatusesForRecruiter } from '@/lib/candidate-status';
+import { getSubscriptionByRecruiterId } from '@/lib/subscription-service';
+import {
+  needsSubscription,
+  type SubscriptionInfo,
+  type SubscriptionStatus,
+  type PlanId,
+} from '@/lib/subscription';
 import { logCandidateEvent } from '@/lib/candidate-history';
 
 // GET /api/candidates - List all candidates (protected)
@@ -128,6 +135,29 @@ export async function POST(request: NextRequest) {
       return Response.json(
         { error: 'Not Found', message: 'Job not found or not accepting applications' },
         { status: 404 }
+      );
+    }
+
+    // A vaga só aceita candidatura enquanto o recrutador tem trial válido ou assinatura
+    // paga. Sem isso, uma vaga aberta no trial seguiria recebendo currículo (e gerando
+    // custo de IA) para sempre, já que nada desativa a vaga quando o trial vence.
+    const subscription = job.user_id
+      ? await getSubscriptionByRecruiterId(job.user_id)
+      : null;
+    const subscriptionInfo: SubscriptionInfo = {
+      status: (subscription?.status as SubscriptionStatus) ?? 'trialing',
+      plan: (subscription?.plan as PlanId | null) ?? null,
+      trialEndsAt: subscription?.trial_ends_at?.toISOString() ?? null,
+      currentPeriodEnd: null,
+    };
+
+    if (!subscription || needsSubscription(subscriptionInfo)) {
+      return Response.json(
+        {
+          error: 'Gone',
+          message: 'Esta vaga não está mais recebendo candidaturas.',
+        },
+        { status: 410 }
       );
     }
 

@@ -70,7 +70,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     recruiter.public_display_name || recruiter.company || recruiter.name;
 
   return {
-    title: `${displayName} — Vagas abertas | Rankea`,
+    title: `Vagas abertas na ${displayName} | Rankea`,
     description:
       recruiter.public_headline ||
       `Confira as vagas abertas de ${displayName} no Rankea.`,

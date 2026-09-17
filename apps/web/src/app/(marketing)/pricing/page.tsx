@@ -201,7 +201,7 @@ function PricingContent() {
                         Recurso
                       </th>
                       <th className="px-4 py-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">
-                        Grátis
+                        Teste 30 dias
                       </th>
                       {PLANS.filter((p) => !p.hidden).map((plan) => (
                         <th
@@ -217,7 +217,7 @@ function PricingContent() {
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {[
-                      { feature: 'Vagas ativas', free: '1', values: ['3', '10', 'Ilimitadas'] },
+                      { feature: 'Vagas ativas', free: '10', values: ['3', '10', 'Ilimitadas'] },
                       { feature: 'Candidatos por vaga', free: 'Ilimitados', values: ['Ilimitados', 'Ilimitados', 'Ilimitados'] },
                       { feature: 'Ranking por IA', free: '✓', values: ['✓', '✓', '✓'] },
                       { feature: 'E-mails automáticos', free: '✓', values: ['✓', '✓', '✓'] },
@@ -225,6 +225,7 @@ function PricingContent() {
                       { feature: 'Branding customizado', free: '—', values: ['—', '✓', '✓'] },
                       { feature: 'Suporte prioritário', free: '—', values: ['—', '✓', '✓'] },
                       { feature: 'Suporte dedicado', free: '—', values: ['—', '—', '✓'] },
+                      { feature: 'Entrevista por IA', free: '—', values: ['—', 'Em breve', 'Em breve'] },
                       { feature: 'API de integração', free: '—', values: ['—', '—', 'Em breve'] },
                     ].map((row, i) => (
                       <tr key={i}>

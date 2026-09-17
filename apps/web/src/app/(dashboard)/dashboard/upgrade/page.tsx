@@ -129,7 +129,7 @@ function UpgradeContent() {
               <thead>
                 <tr className="border-b border-gray-200">
                   <th className="text-left py-4 px-6 font-medium text-gray-500">Recurso</th>
-                  <th className="text-center py-4 px-6 font-medium text-gray-500">Plano Atual</th>
+                  <th className="text-center py-4 px-6 font-medium text-gray-500">Teste 30 dias</th>
                   {PLANS.filter((p) => !p.hidden).map((plan) => (
                     <th key={plan.id} className="text-center py-4 px-6 font-medium text-gray-500">
                       {plan.name}
@@ -139,7 +139,7 @@ function UpgradeContent() {
               </thead>
               <tbody>
                 {[
-                  { feature: 'Vagas ativas', free: '1', values: ['3', '10', 'Ilimitadas'] },
+                  { feature: 'Vagas ativas', free: '10', values: ['3', '10', 'Ilimitadas'] },
                   { feature: 'Candidatos por vaga', free: 'Ilimitados', values: ['Ilimitados', 'Ilimitados', 'Ilimitados'] },
                   { feature: 'Ranking por IA', free: '✓', values: ['✓', '✓', '✓'] },
                   { feature: 'E-mails automáticos', free: '✓', values: ['✓', '✓', '✓'] },
@@ -147,6 +147,7 @@ function UpgradeContent() {
                   { feature: 'Branding customizado', free: '—', values: ['—', '✓', '✓'] },
                   { feature: 'Suporte prioritário', free: '—', values: ['—', '✓', '✓'] },
                   { feature: 'Suporte dedicado', free: '—', values: ['—', '—', '✓'] },
+                  { feature: 'Entrevista por IA', free: '—', values: ['—', 'Em breve', 'Em breve'] },
                   { feature: 'API de integração', free: '—', values: ['—', '—', 'Em breve'] },
                 ].map((row, i) => (
                   <tr key={i} className="border-b border-gray-100">
