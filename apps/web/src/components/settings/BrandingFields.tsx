@@ -76,7 +76,7 @@ export default function BrandingFields({
         label="Nome de exibição"
         value={displayName}
         onChange={(e) => onDisplayNameChange(e.target.value)}
-        placeholder="Ex: Vander Talent"
+        placeholder="Ex: Consultoria Prime RH"
         helperText="Nome que aparece na página pública. Se vazio, usa seu nome ou empresa."
       />
 
