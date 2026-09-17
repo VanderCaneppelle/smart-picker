@@ -256,3 +256,21 @@ model Announcement {
   @@index([active, starts_at, ends_at])
   @@map("announcements")
 }
+
+// ============================================
+// E-MAILS DE CICLO DE VIDA (lembretes de trial)
+// ============================================
+
+model LifecycleEmail {
+  id           String   @id @default(uuid())
+  recruiter_id String
+  /** trial_d7 | trial_d1 | trial_expired */
+  kind         String
+  sent_at      DateTime @default(now())
+
+  // A unicidade é a garantia de idempotência: a varredura pode rodar de hora em hora
+  // sem risco de mandar o mesmo lembrete duas vezes para a mesma pessoa.
+  @@unique([recruiter_id, kind])
+  @@index([kind, sent_at])
+  @@map("lifecycle_emails")
+}
