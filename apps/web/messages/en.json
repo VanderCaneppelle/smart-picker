@@ -1,0 +1,169 @@
+{
+  "nav": {
+    "comoFunciona": "How it works",
+    "precos": "Pricing",
+    "faq": "FAQ",
+    "entrar": "Sign in",
+    "testeGratis": "Start free"
+  },
+  "hero": {
+    "selo": {
+      "diasGratis": "{dias} days free",
+      "semCartao": "No credit card"
+    },
+    "titulo": "Stop burning hours screening resumes.",
+    "tituloDestaque": "Let AI rank them.",
+    "subtitulo": "Post a role, collect applications, and get an automatic ranking with a compatibility score. You decide on evidence instead of gut feeling.",
+    "ctaPrimario": "Try {dias} days free",
+    "ctaSecundario": "See how it works",
+    "apoio": {
+      "vagas": "{n} active roles on the trial",
+      "candidatos": "Unlimited candidates",
+      "semCartao": "No card"
+    },
+    "mockVaga": "Senior Full Stack Developer",
+    "mockResumo": "{n} candidates · ranked by AI",
+    "fitScore": "Fit Score"
+  },
+  "features": {
+    "rotulo": "Features",
+    "titulo": "Everything you need to hire better",
+    "subtitulo": "Built for recruiters who would rather spend their time deciding than reading",
+    "triagem": {
+      "titulo": "Automatic screening",
+      "texto": "AI reads every resume and answer, and returns a compatibility score in seconds."
+    },
+    "ranking": {
+      "titulo": "Smart ranking",
+      "texto": "Candidates sorted by fit score. Start at the top and skip the noise."
+    },
+    "emails": {
+      "titulo": "Automatic emails",
+      "texto": "Application confirmations, interview invitations and rejections go out on their own, under your name and signature. You get a note on every new application."
+    },
+    "metricas": {
+      "titulo": "Clear metrics",
+      "texto": "Resume score, answer quality and seniority level, all on one screen."
+    },
+    "pipeline": {
+      "titulo": "Visual pipeline",
+      "texto": "Track candidates by stage: new, review, interview, hired. Board or list."
+    },
+    "lgpd": {
+      "titulo": "Privacy compliance",
+      "texto": "Consent tracked, deletion on request, data encrypted at rest and in transit."
+    }
+  },
+  "comoFunciona": {
+    "rotulo": "Step by step",
+    "titulo": "Three steps to a ranked shortlist",
+    "subtitulo": "From posting to decision in minutes, not days",
+    "passo": "Step {n}",
+    "p1": {
+      "titulo": "Create the role",
+      "texto": "Describe the position and requirements, add your own screening questions, and publish it with a shareable link."
+    },
+    "p2": {
+      "titulo": "Collect applications",
+      "texto": "Candidates apply with a resume and answer your questions. No account needed on their side."
+    },
+    "p3": {
+      "titulo": "Read the ranking",
+      "texto": "AI reviews every candidate and builds the ranking with a fit score, so you decide with confidence."
+    },
+    "cta": "Create my first role free"
+  },
+  "precos": {
+    "rotulo": "Plans",
+    "titulo": "Pick the plan that fits your volume",
+    "subtitulo": "Start with {dias} days free. No credit card.",
+    "porMes": "/month",
+    "assinar": "Subscribe to {plano}",
+    "maisPopular": "Most popular",
+    "verComparacao": "See the full comparison",
+    "recurso": "Feature",
+    "teste": "{dias} day trial",
+    "emBreve": "Coming soon",
+    "comparar": "Compare",
+    "tituloComparacao": "Every feature side by side",
+    "linhas": {
+      "vagasAtivas": "Active roles",
+      "candidatosPorVaga": "Candidates per role",
+      "ilimitados": "Unlimited",
+      "ilimitadas": "Unlimited",
+      "rankingIA": "AI ranking",
+      "emailsAutomaticos": "Automatic emails",
+      "paginaPublica": "Public careers page",
+      "branding": "Custom branding",
+      "suportePrioritario": "Priority support",
+      "suporteDedicado": "Dedicated support",
+      "entrevistaIA": "AI interview",
+      "api": "Integration API"
+    },
+    "garantias": {
+      "diasGratis": "{dias} days free",
+      "semCartao": "No credit card for the trial",
+      "cancele": "Cancel anytime",
+      "stripe": "Secure payments via Stripe"
+    }
+  },
+  "faq": {
+    "titulo": "Frequently asked questions",
+    "q1": {
+      "p": "What is included in the free trial?",
+      "r": "Up to {vagas} active roles, unlimited candidates, and full access to AI ranking. No credit card, no commitment."
+    },
+    "q2": {
+      "p": "Do I need a credit card to start?",
+      "r": "No. The {dias} day trial does not ask for a card. An email address is enough to create your account."
+    },
+    "q3": {
+      "p": "What happens when the trial ends?",
+      "r": "Your roles stop accepting new applications and the dashboard is locked until you subscribe. Nothing is deleted: pick a plan and everything comes back exactly as you left it."
+    },
+    "q4": {
+      "p": "Can I change plans later?",
+      "r": "Yes. Upgrade or downgrade at any time, and the charge is prorated."
+    },
+    "q5": {
+      "p": "Do candidates need to create an account?",
+      "r": "No. Candidates apply straight from the role link, with no signup. They upload a resume and answer your questions."
+    },
+    "q6": {
+      "p": "Is my data safe?",
+      "r": "Yes. Data is encrypted, we follow Brazilian privacy law (LGPD), and candidates can request deletion at any time."
+    },
+    "q7": {
+      "p": "How does the AI ranking work?",
+      "r": "The AI reads the resume and the answers to your screening questions, then produces a Fit Score from 0 to 100. The higher the score, the closer the candidate is to what the role asks for."
+    }
+  },
+  "ctaFinal": {
+    "titulo": "Ready to hire on evidence?",
+    "subtitulo": "Start today and see your candidates ranked on the first role you post.",
+    "cta": "Start {dias} days free",
+    "semCartao": "No credit card",
+    "cancele": "Cancel anytime"
+  },
+  "idioma": {
+    "rotulo": "Language",
+    "pt": "Português",
+    "en": "English"
+  },
+  "mock": {
+    "entrevista": "Interview",
+    "aprovado": "Approved",
+    "revisao": "In review",
+    "novo": "New",
+    "cargo1": "Full Stack Developer",
+    "cargo2": "Senior Software Engineer",
+    "cargo3": "Full Stack Developer",
+    "cargo4": "Backend Developer",
+    "cargo5": "Software Engineer"
+  },
+  "meta": {
+    "titulo": "Rankea | Screen less, decide better",
+    "descricao": "Cut screening time and hire on evidence with automatic AI ranking of every applicant. Built for recruiters and staffing agencies.",
+    "ogDescricao": "Automatic AI ranking of job applicants. Built for independent recruiters."
+  }
+}
