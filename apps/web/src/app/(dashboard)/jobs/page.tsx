@@ -7,6 +7,7 @@ import { Share2, Files, Eye, MapPin, Briefcase, Users, Pencil, DollarSign } from
 import { apiClient } from '@/lib/api-client';
 import { Button, Badge, SearchFilter, Loading, EmptyState } from '@/components/ui';
 import type { Job, JobStatus, EmploymentType } from '@hunter/core';
+import { useTranslations } from 'next-intl';
 
 const getStatusBadgeVariant = (status: string) => {
   switch (status) {
@@ -43,6 +44,7 @@ const formatEmploymentType = (type: string) => {
 };
 
 function JobsPageContent() {
+  const t = useTranslations();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -61,7 +63,7 @@ function JobsPageContent() {
       });
       setJobs(data.jobs);
     } catch (error) {
-      toast.error('Falha ao carregar vagas');
+      toast.error(t('vagas.erroCarregar'));
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -76,19 +78,19 @@ function JobsPageContent() {
     const url = `${window.location.origin}/jobs/${job.id}/apply`;
     try {
       await navigator.clipboard.writeText(url);
-      toast.success('Link copiado!');
+      toast.success(t('vagas.linkCopiado'));
     } catch {
-      toast.error('Falha ao copiar link');
+      toast.error(t('vagas.erroCopiar'));
     }
   }, []);
 
   const handleDuplicate = useCallback(async (job: Job) => {
     try {
       const duplicated = await apiClient.duplicateJob(job.id);
-      toast.success('Vaga duplicada como rascunho. Revise e publique quando estiver pronta.');
+      toast.success(t('vagas.duplicada'));
       router.push(`/jobs/${duplicated.id}`);
     } catch (error) {
-      toast.error('Falha ao duplicar vaga');
+      toast.error(t('vagas.erroDuplicar'));
       console.error(error);
     }
   }, [router]);
@@ -99,8 +101,8 @@ function JobsPageContent() {
     <div>
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Vagas</h1>
-        <p className="text-gray-600 mt-1">Gerencie suas vagas de emprego</p>
+        <h1 className="text-2xl font-bold text-gray-900">{t('vagas.titulo')}</h1>
+        <p className="text-gray-600 mt-1">{t('vagas.subtitulo')}</p>
       </div>
 
       {/* Busca (filtros de status e tipo ficam no menu Vagas na sidebar) */}
@@ -108,17 +110,17 @@ function JobsPageContent() {
         <SearchFilter
           value={search}
           onChange={setSearch}
-          placeholder="Buscar vagas..."
+          placeholder={t('vagas.buscar')}
           className="max-w-md"
         />
       </div>
 
       {/* Jobs List */}
       {isLoading ? (
-        <Loading text="Carregando vagas..." />
+        <Loading text={t('vagas.carregando')} />
       ) : filteredJobs.length === 0 ? (
         <EmptyState
-          title="Nenhuma vaga encontrada"
+          title="{t('vagas.nenhuma')}"
           description={
             search || statusFilter || typeFilter
               ? 'Tente ajustar seus filtros'
@@ -189,29 +191,29 @@ function JobsPageContent() {
                 <button
                   type="button"
                   onClick={() => handleShare(job)}
-                  title="Compartilhar link"
+                  title={t('vagas.compartilharLink')}
                   className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors shrink-0"
                 >
                   <Share2 className="h-3.5 w-3.5 shrink-0" />
-                  <span className="hidden 2xl:inline">Compartilhar</span>
+                  <span className="hidden 2xl:inline">{t('vagas.compartilhar')}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => handleDuplicate(job)}
-                  title="Duplicar vaga"
+                  title={t('vagas.duplicarVaga')}
                   className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors shrink-0"
                 >
                   <Files className="h-3.5 w-3.5 shrink-0" />
-                  <span className="hidden 2xl:inline">Duplicar</span>
+                  <span className="hidden 2xl:inline">{t('vagas.duplicar')}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => router.push(`/jobs/${job.id}?tab=details&edit=1`)}
-                  title="Editar vaga"
+                  title={t('vagas.editarVaga')}
                   className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors shrink-0"
                 >
                   <Pencil className="h-3.5 w-3.5 shrink-0" />
-                  <span className="hidden 2xl:inline">Editar</span>
+                  <span className="hidden 2xl:inline">{t('vagas.editar')}</span>
                 </button>
                 <Button
                   variant="secondary"
@@ -220,7 +222,7 @@ function JobsPageContent() {
                   leftIcon={<Eye className="h-3.5 w-3.5 shrink-0" />}
                   className="shrink-0 ml-auto text-xs"
                 >
-                  <span className="hidden xl:inline">Ver candidatos</span>
+                  <span className="hidden xl:inline">{t('vagas.verCandidatos')}</span>
                   <span className="xl:hidden">Ver</span>
                 </Button>
               </div>
