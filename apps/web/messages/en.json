@@ -190,5 +190,47 @@
       "salvo": "Language updated.",
       "erro": "Could not save the language."
     }
+  },
+  "candidatura": {
+    "carregando": "Loading role...",
+    "naoDisponivel": "This role is no longer accepting applications.",
+    "titulo": "Apply",
+    "nome": "Full name",
+    "nomePlaceholder": "Your name",
+    "email": "Email",
+    "emailPlaceholder": "you@email.com",
+    "telefone": "Phone",
+    "telefonePlaceholder": "+1 555 000 0000",
+    "linkedin": "LinkedIn",
+    "curriculo": "Resume",
+    "enviarCurriculo": "Click to upload your resume",
+    "enviando": "Uploading...",
+    "enviar": "Submit application",
+    "numeroPlaceholder": "Enter a number",
+    "obrigado": "Thanks for applying to",
+    "erros": {
+      "nome": "Name is required",
+      "email": "Email is required",
+      "emailInvalido": "Please enter a valid email",
+      "curriculo": "A resume is required",
+      "urlInvalida": "Please enter a valid URL",
+      "perguntaObrigatoria": "This question is required",
+      "consentimento": "You need to accept the Terms of Use and the Privacy Policy to submit your application.",
+      "revise": "Please review the required fields before submitting",
+      "falhaEnvio": "Could not submit your application",
+      "arquivoTipo": "Please upload a PDF or Word file",
+      "arquivoTamanho": "The file must be 10MB or smaller",
+      "falhaUpload": "Could not upload the resume"
+    },
+    "sucessoUpload": "Resume uploaded",
+    "sobreVaga": "About the role",
+    "candidateSe": "Apply",
+    "preenchaDados": "Fill in your details below",
+    "formatoArquivo": "PDF or Word, 10MB max",
+    "perguntasAdicionais": "Additional questions",
+    "consentimentoPrefixo": "I have read and accept the",
+    "consentimentoMeio": "and the",
+    "termos": "Terms of Use",
+    "privacidade": "Privacy Policy"
   }
 }

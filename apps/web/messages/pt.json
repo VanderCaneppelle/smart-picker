@@ -190,5 +190,47 @@
       "salvo": "Idioma atualizado.",
       "erro": "Não consegui salvar o idioma."
     }
+  },
+  "candidatura": {
+    "carregando": "Carregando vaga...",
+    "naoDisponivel": "Esta vaga não está mais recebendo candidaturas.",
+    "titulo": "Candidatar-se",
+    "nome": "Nome completo",
+    "nomePlaceholder": "Seu nome",
+    "email": "E-mail",
+    "emailPlaceholder": "seu@email.com",
+    "telefone": "Telefone",
+    "telefonePlaceholder": "(11) 99999-9999",
+    "linkedin": "LinkedIn",
+    "curriculo": "Currículo",
+    "enviarCurriculo": "Clique para enviar seu currículo",
+    "enviando": "Enviando...",
+    "enviar": "Enviar candidatura",
+    "numeroPlaceholder": "Digite um valor numérico",
+    "obrigado": "Obrigado por se candidatar para a vaga de",
+    "erros": {
+      "nome": "Nome é obrigatório",
+      "email": "E-mail é obrigatório",
+      "emailInvalido": "Por favor, insira um e-mail válido",
+      "curriculo": "Currículo é obrigatório",
+      "urlInvalida": "Por favor, insira uma URL válida",
+      "perguntaObrigatoria": "Esta pergunta é obrigatória",
+      "consentimento": "É necessário aceitar os Termos de Uso e a Política de Privacidade para enviar a candidatura.",
+      "revise": "Por favor, revise os campos obrigatórios antes de enviar",
+      "falhaEnvio": "Falha ao enviar candidatura",
+      "arquivoTipo": "Por favor, envie um arquivo PDF ou Word",
+      "arquivoTamanho": "O arquivo deve ter no máximo 10MB",
+      "falhaUpload": "Falha ao enviar currículo"
+    },
+    "sucessoUpload": "Currículo enviado com sucesso",
+    "sobreVaga": "Sobre a vaga",
+    "candidateSe": "Candidate-se",
+    "preenchaDados": "Preencha os dados abaixo",
+    "formatoArquivo": "PDF ou Word, máximo 10MB",
+    "perguntasAdicionais": "Perguntas adicionais",
+    "consentimentoPrefixo": "Declaro que li e aceito os",
+    "consentimentoMeio": "e a",
+    "termos": "Termos de Uso",
+    "privacidade": "Política de Privacidade"
   }
 }

@@ -111,9 +111,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // A vaga nasce no idioma do recrutador e fica congelada nele. Ver o comentário
+    // do campo no schema: vaga divulgada não troca de língua debaixo do candidato.
+    const dono = await prisma.recruiter.findUnique({
+      where: { id: user.id },
+      select: { locale: true },
+    });
+
     const job = await prisma.job.create({
       data: {
         user_id: user.id,
+        locale: dono?.locale ?? 'pt',
         title: validation.data.title,
         location: validation.data.location,
         employment_type: validation.data.employment_type,

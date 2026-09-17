@@ -92,6 +92,8 @@ export interface ApplicationAnswer {
 // ============================================
 
 export interface Job {
+  /** Idioma da vaga: pt | en. Define a língua da página de candidatura. */
+  locale?: string;
   id: string;
   title: string;
   location: string;
