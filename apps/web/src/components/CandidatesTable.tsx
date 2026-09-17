@@ -22,13 +22,15 @@ import {
 import { apiClient } from '@/lib/api-client';
 import { Badge, Select, SortIcon } from '@/components/ui';
 import type { Candidate, CandidateStatus, DisqualificationFlag } from '@hunter/core';
+import { useTranslations } from 'next-intl';
 
 const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['interview', 'hired', 'rejected'];
 
-const STATUS_EMAIL_MESSAGES: Record<string, string> = {
-  interview: 'Um e-mail de agendamento de entrevista será enviado ao candidato.',
-  hired: 'Um e-mail de contratação será enviado ao candidato.',
-  rejected: 'Um e-mail de rejeição será enviado ao candidato.',
+/** Guarda a chave, não o texto: constante de módulo é avaliada antes de existir idioma. */
+const STATUS_EMAIL_MESSAGE_KEYS: Record<string, string> = {
+  interview: 'candidatos.avisoEntrevista',
+  hired: 'candidatos.avisoContratado',
+  rejected: 'candidatos.avisoRejeitado',
 };
 
 interface CandidatesTableProps {
@@ -42,33 +44,33 @@ interface CandidatesTableProps {
 }
 
 const statusOptions = [
-  { value: '', label: 'Todos' },
-  { value: 'active', label: 'Todos (excl. encerrados)' },
-  { value: 'new', label: 'Novos' },
-  { value: 'reviewing', label: 'Em análise' },
-  { value: 'interview', label: 'Entrevista' },
-  { value: 'in_validation', label: 'Em validação' },
-  { value: 'rejected', label: 'Encerrados' },
-  { value: 'hired', label: 'Contratados' },
+  { value: '', labelKey: 'candidatos.filtros.todos' },
+  { value: 'active', labelKey: 'candidatos.filtros.todosExcl' },
+  { value: 'new', labelKey: 'candidatos.filtros.novos' },
+  { value: 'reviewing', labelKey: 'candidatos.filtros.emAnalise' },
+  { value: 'interview', labelKey: 'candidatos.filtros.entrevista' },
+  { value: 'in_validation', labelKey: 'candidatos.filtros.emValidacao' },
+  { value: 'rejected', labelKey: 'candidatos.filtros.encerrados' },
+  { value: 'hired', labelKey: 'candidatos.filtros.contratados' },
 ];
 
 const statusUpdateOptions = [
-  { value: 'new', label: 'Novo' },
-  { value: 'reviewing', label: 'Em análise' },
-  { value: 'interview', label: 'Entrevista' },
-  { value: 'in_validation', label: 'Em validação' },
-  { value: 'rejected', label: 'Encerrado' },
-  { value: 'hired', label: 'Contratado' },
+  { value: 'new', labelKey: 'candidatos.estados.novo' },
+  { value: 'reviewing', labelKey: 'candidatos.filtros.emAnalise' },
+  { value: 'interview', labelKey: 'candidatos.filtros.entrevista' },
+  { value: 'in_validation', labelKey: 'candidatos.filtros.emValidacao' },
+  { value: 'rejected', labelKey: 'candidatos.estados.encerrado' },
+  { value: 'hired', labelKey: 'candidatos.estados.contratado' },
 ];
 
 const bulkStatusOptions = [
-  { value: '', label: 'Mover para...' },
-  { value: 'new', label: 'Novo' },
-  { value: 'reviewing', label: 'Em análise' },
-  { value: 'interview', label: 'Entrevista' },
-  { value: 'in_validation', label: 'Em validação' },
-  { value: 'rejected', label: 'Encerrado' },
-  { value: 'hired', label: 'Contratado' },
+  { value: '', labelKey: 'candidatos.moverPara' },
+  { value: 'new', labelKey: 'candidatos.estados.novo' },
+  { value: 'reviewing', labelKey: 'candidatos.filtros.emAnalise' },
+  { value: 'interview', labelKey: 'candidatos.filtros.entrevista' },
+  { value: 'in_validation', labelKey: 'candidatos.filtros.emValidacao' },
+  { value: 'rejected', labelKey: 'candidatos.estados.encerrado' },
+  { value: 'hired', labelKey: 'candidatos.estados.contratado' },
 ];
 
 const getStatusBadgeVariant = (status: string) => {
@@ -112,6 +114,7 @@ function ActionsMenu({
   onSave: () => void;
   onUnsave: () => void;
 }) {
+  const t = useTranslations();
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -160,7 +163,7 @@ function ActionsMenu({
         className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
       >
         <Eye className="h-4 w-4 text-gray-400" />
-        Ver candidato
+        {t('candidatos.verCandidato')}
       </button>
       {isSaved ? (
         <button
@@ -172,7 +175,7 @@ function ActionsMenu({
           className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
         >
           <BookmarkCheck className="h-4 w-4 text-gray-400" />
-          {savingId === candidateId ? 'Removendo...' : 'Remover dos salvos'}
+          {savingId === candidateId ? t('candidatos.removendo') : t('candidatos.removerSalvos')}
         </button>
       ) : (
         <button
@@ -184,7 +187,7 @@ function ActionsMenu({
           className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
         >
           <Bookmark className="h-4 w-4 text-gray-400" />
-          {savingId === candidateId ? 'Salvando...' : 'Salvar candidato'}
+          {savingId === candidateId ? t('candidatos.salvando') : t('candidatos.salvarCandidato')}
         </button>
       )}
       <button
@@ -198,7 +201,7 @@ function ActionsMenu({
         <RefreshCw
           className={`h-4 w-4 text-gray-400 ${recalculatingId === candidateId ? 'animate-spin' : ''}`}
         />
-        {recalculatingId === candidateId ? 'Recalculando...' : 'Recalcular nota'}
+        {recalculatingId === candidateId ? t('candidatos.recalculando') : t('candidatos.recalcular')}
       </button>
     </div>
   );
@@ -218,6 +221,7 @@ function ActionsMenu({
 }
 
 function DisqualificationIndicator({ flags }: { flags?: DisqualificationFlag[] | null }) {
+  const t = useTranslations();
   const [showTooltip, setShowTooltip] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
@@ -274,7 +278,7 @@ function DisqualificationIndicator({ flags }: { flags?: DisqualificationFlag[] |
         ) : (
           <AlertTriangle className="h-3 w-3" />
         )}
-        {hasElimination ? 'Eliminado' : 'Atenção'}
+        {hasElimination ? t('candidatos.estados.eliminado') : t('candidatos.atencao')}
       </button>
       {tooltipContent && createPortal(tooltipContent, document.body)}
     </div>
@@ -289,6 +293,10 @@ export default function CandidatesTable({
   statusFilter: statusFilterProp,
   onStatusFilterChange,
 }: CandidatesTableProps) {
+  const t = useTranslations();
+  /** Rótulo resolvido na renderização: a lista guarda a chave. */
+  const opcoes = (lista: { value: string; labelKey: string }[]) =>
+    lista.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   const router = useRouter();
   const [statusFilterInternal, setStatusFilterInternal] = useState('');
   const statusFilter = statusFilterProp ?? statusFilterInternal;
@@ -363,12 +371,12 @@ export default function CandidatesTable({
       setCandidates((prev) =>
         prev.map((c) => (c.id === candidateId ? { ...c, status: newStatus } : c))
       );
-      toast.success('Status atualizado');
+      toast.success(t('candidatos.statusAtualizado'));
       if (newStatus === 'interview') {
         setTimeout(onRefetch, 3000);
       }
     } catch (error) {
-      toast.error('Falha ao atualizar status');
+      toast.error(t('candidatos.erroStatus'));
       console.error(error);
     }
   };
@@ -397,7 +405,7 @@ export default function CandidatesTable({
       setSelectedIds(new Set());
       await onRefetch();
     } catch (error) {
-      toast.error('Falha ao atualizar candidatos');
+      toast.error(t('candidatos.erroCandidatos'));
       console.error(error);
     } finally {
       setIsBulkUpdating(false);
@@ -408,10 +416,10 @@ export default function CandidatesTable({
     try {
       setRecalculatingId(candidateId);
       await apiClient.recalculateCandidateScore(candidateId);
-      toast.success('Recálculo iniciado. A nota será atualizada em breve.');
+      toast.success(t('candidatos.recalculoIniciado'));
       setTimeout(onRefetch, 5000);
     } catch (error) {
-      toast.error('Falha ao recalcular');
+      toast.error(t('candidatos.erroRecalcular'));
       console.error(error);
     } finally {
       setRecalculatingId(null);
@@ -423,9 +431,9 @@ export default function CandidatesTable({
       setSavingId(candidateId);
       await apiClient.saveCandidate(candidateId);
       setSavedCandidateIds((prev) => new Set(prev).add(candidateId));
-      toast.success('Candidato salvo');
+      toast.success(t('candidatos.candidatoSalvo'));
     } catch (error) {
-      toast.error('Falha ao salvar candidato');
+      toast.error(t('candidatos.erroSalvar'));
       console.error(error);
     } finally {
       setSavingId(null);
@@ -441,9 +449,9 @@ export default function CandidatesTable({
         next.delete(candidateId);
         return next;
       });
-      toast.success('Removido dos salvos');
+      toast.success(t('candidatos.removidoSalvos'));
     } catch (error) {
-      toast.error('Falha ao remover dos salvos');
+      toast.error(t('candidatos.erroRemover'));
       console.error(error);
     } finally {
       setSavingId(null);
@@ -545,7 +553,7 @@ export default function CandidatesTable({
         {!filterControlledExternally && (
           <div className="flex items-center gap-3">
             <Select
-              options={statusOptions}
+              options={opcoes(statusOptions)}
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
@@ -569,16 +577,14 @@ export default function CandidatesTable({
               >
                 {bulkStatusOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
-                    {opt.label}
+                    {t(opt.labelKey)}
                   </option>
                 ))}
               </select>
               <button
                 onClick={() => setSelectedIds(new Set())}
                 className="text-xs text-gray-500 hover:text-gray-700 underline"
-              >
-                Limpar
-              </button>
+              >{t('candidatos.limpar')}</button>
             </div>
           )}
           {!filterControlledExternally && (
@@ -657,7 +663,7 @@ export default function CandidatesTable({
                 >
                   {statusUpdateOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>
-                      {opt.label}
+                      {t(opt.labelKey)}
                     </option>
                   ))}
                 </select>
@@ -665,9 +671,7 @@ export default function CandidatesTable({
                   type="button"
                   onClick={() => router.push(`/candidates/${candidate.id}`)}
                   className="text-sm font-medium text-emerald-600 hover:text-emerald-700"
-                >
-                  Ver candidato →
-                </button>
+                >{t('candidatos.verCandidatoSeta')}</button>
               </div>
             </div>
           );
@@ -681,7 +685,7 @@ export default function CandidatesTable({
             type="button"
             onClick={() => scrollHorizontally('left')}
             className="absolute left-0 top-0 bottom-0 z-10 w-8 flex-shrink-0 bg-gradient-to-r from-gray-50 to-transparent flex items-center justify-center text-gray-600 hover:from-gray-100 hover:text-gray-900 transition-opacity"
-            aria-label="Rolar tabela para a esquerda"
+            aria-label={t('candidatos.rolarEsquerda')}
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -702,33 +706,25 @@ export default function CandidatesTable({
                   className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
                 />
               </th>
-              <th className={`${thClass} whitespace-nowrap`} style={{ minWidth: 140 }}>
-                Candidato
-              </th>
+              <th className={`${thClass} whitespace-nowrap`} style={{ minWidth: 140 }}>{t('candidatos.colCandidato')}</th>
               <th
                 className={`${thSortClass} whitespace-nowrap`}
                 style={{ minWidth: 90 }}
                 onClick={() => handleSort('created_at')}
               >
-                <div className="flex items-center gap-1">
-                  Aplicação
-                  <SortIcon direction={sortField === 'created_at' ? sortDirection : null} />
+                <div className="flex items-center gap-1">{t('candidatos.colAplicacao')}<SortIcon direction={sortField === 'created_at' ? sortDirection : null} />
                 </div>
               </th>
               <th className={`${thClass} whitespace-nowrap`} style={{ minWidth: 70 }}>
                 LinkedIn
               </th>
-              <th className={`${thClass} whitespace-nowrap`} style={{ minWidth: 82 }}>
-                Currículo
-              </th>
+              <th className={`${thClass} whitespace-nowrap`} style={{ minWidth: 82 }}>{t('candidatos.colCurriculo')}</th>
               <th
                 className={`${thSortClass} whitespace-nowrap`}
                 style={{ minWidth: 78 }}
                 onClick={() => handleSort('resume_rating')}
               >
-                <div className="flex items-center gap-1">
-                  Nota CV
-                  <SortIcon direction={sortField === 'resume_rating' ? sortDirection : null} />
+                <div className="flex items-center gap-1">{t('candidatos.colNotaCV')}<SortIcon direction={sortField === 'resume_rating' ? sortDirection : null} />
                 </div>
               </th>
               <th
@@ -736,9 +732,7 @@ export default function CandidatesTable({
                 style={{ minWidth: 88 }}
                 onClick={() => handleSort('answer_quality_rating')}
               >
-                <div className="flex items-center gap-1">
-                  Respostas
-                  <SortIcon
+                <div className="flex items-center gap-1">{t('candidatos.colRespostas')}<SortIcon
                     direction={sortField === 'answer_quality_rating' ? sortDirection : null}
                   />
                 </div>
@@ -748,22 +742,14 @@ export default function CandidatesTable({
                 style={{ minWidth: 82 }}
                 onClick={() => handleSort('fit_score')}
               >
-                <div className="flex items-center gap-1">
-                  Fit Score
-                  <SortIcon direction={sortField === 'fit_score' ? sortDirection : null} />
+                <div className="flex items-center gap-1">{t('candidatos.colFitScore')}<SortIcon direction={sortField === 'fit_score' ? sortDirection : null} />
                 </div>
               </th>
-              <th className={`${thClass} whitespace-nowrap`} style={{ minWidth: 98 }}>
-                Elegibilidade
-              </th>
-              <th className={`${thClass} whitespace-nowrap`} style={{ minWidth: 120 }}>
-                Status
-              </th>
-              <th className={`${thClass} whitespace-nowrap`} style={{ minWidth: 72 }}>
-                Convite
-              </th>
+              <th className={`${thClass} whitespace-nowrap`} style={{ minWidth: 98 }}>{t('candidatos.colElegibilidade')}</th>
+              <th className={`${thClass} whitespace-nowrap`} style={{ minWidth: 120 }}>{t('candidatos.colStatus')}</th>
+              <th className={`${thClass} whitespace-nowrap`} style={{ minWidth: 72 }}>{t('candidatos.colConvite')}</th>
               <th className={`${thClass} whitespace-nowrap`} style={{ minWidth: 44 }}>
-                <span className="sr-only">Ações</span>
+                <span className="sr-only">{t('candidatos.colAcoes')}</span>
               </th>
             </tr>
           </thead>
@@ -911,7 +897,7 @@ export default function CandidatesTable({
                     >
                       {statusUpdateOptions.map((opt) => (
                         <option key={opt.value} value={opt.value}>
-                          {opt.label}
+                          {t(opt.labelKey)}
                         </option>
                       ))}
                     </select>
@@ -959,7 +945,7 @@ export default function CandidatesTable({
             type="button"
             onClick={() => scrollHorizontally('right')}
             className="absolute right-0 top-0 bottom-0 z-10 w-8 flex-shrink-0 bg-gradient-to-l from-gray-50 to-transparent flex items-center justify-center text-gray-600 hover:from-gray-100 hover:text-gray-900 transition-opacity"
-            aria-label="Rolar tabela para a direita"
+            aria-label={t('candidatos.rolarDireita')}
           >
             <ChevronRight className="h-5 w-5" />
           </button>
@@ -975,30 +961,26 @@ export default function CandidatesTable({
               <div className="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
                 <AlertCircle className="h-5 w-5 text-amber-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">Confirmar alteração</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t('candidatos.confirmarAlteracao')}</h3>
             </div>
             <p className="text-sm text-gray-600 mb-1">
               Você está alterando o status para{' '}
               <span className="font-medium text-gray-900">
-                {statusUpdateOptions.find((o) => o.value === pendingStatusChange.newStatus)?.label}
+                {t(statusUpdateOptions.find((o) => o.value === pendingStatusChange.newStatus)?.labelKey ?? '')}
               </span>.
             </p>
             <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-5">
-              {STATUS_EMAIL_MESSAGES[pendingStatusChange.newStatus]}
+              {STATUS_EMAIL_MESSAGE_KEYS[pendingStatusChange.newStatus]}
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={cancelStatusChange}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-              >
-                Cancelar
-              </button>
+              >{t('candidatos.cancelar')}</button>
               <button
                 onClick={confirmStatusChange}
                 className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors"
-              >
-                Confirmar
-              </button>
+              >{t('candidatos.confirmar')}</button>
             </div>
           </div>
         </div>,
