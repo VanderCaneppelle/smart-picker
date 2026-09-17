@@ -39,3 +39,9 @@ prisma/*.db-journal
 
 # Testing
 coverage
+
+# TypeScript incremental build cache
+*.tsbuildinfo
+
+# Local MCP config
+.mcp.json

@@ -147,8 +147,9 @@ Responda apenas em formato JSON:
       throw new Error('No response from OpenAI');
     }
 
-    // Parse the JSON response
-    const result = JSON.parse(content);
+    // Strip markdown code block wrapper if model returned ```json ... ```
+    const jsonString = content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
+    const result = JSON.parse(jsonString);
 
     // Validate and clamp individual ratings
     const resumeRating = Math.min(5, Math.max(1, Math.round(result.resume_rating || 3)));

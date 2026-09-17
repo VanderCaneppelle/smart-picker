@@ -27,7 +27,7 @@ export default function EmailPersonalizationFields({
         label="Nome do remetente"
         value={senderName}
         onChange={(e) => onSenderNameChange(e.target.value)}
-        placeholder="Ex: Vander Talent"
+        placeholder="Ex: Equipe de Recrutamento"
         helperText={senderName ? `Preview: "${senderName} via Rankea"` : 'Aparecerá como "Nome via Rankea"'}
       />
 
@@ -36,7 +36,7 @@ export default function EmailPersonalizationFields({
         type="email"
         value={replyToEmail}
         onChange={(e) => onReplyToEmailChange(e.target.value)}
-        placeholder="voce@empresa.com"
+        placeholder="recrutamento@suaempresa.com"
         helperText="Candidatos responderão para este e-mail"
       />
 
@@ -44,7 +44,7 @@ export default function EmailPersonalizationFields({
         label="Assinatura de e-mail"
         value={signature}
         onChange={(e) => onSignatureChange(e.target.value)}
-        placeholder="Sua assinatura personalizada"
+        placeholder={'Ex:\nAtenciosamente,\nEquipe de Recrutamento\nwww.suaempresa.com'}
         rows={3}
         helperText="Texto simples. Será incluído ao final dos e-mails enviados."
       />
