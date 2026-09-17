@@ -454,5 +454,33 @@
     "removendo": "Removendo...",
     "salvando": "Salvando...",
     "recalculando": "Recalculando..."
+  },
+  "gaveta": {
+    "verAplicacao": "Ver aplicação completa",
+    "nivelExperiencia": "Nível de experiência",
+    "resumoCV": "Resumo do currículo (IA)",
+    "resumoIndisponivel": "Resumo não disponível",
+    "alertaElegibilidade": "Alerta de elegibilidade",
+    "semRespostas": "Nenhuma resposta registrada",
+    "curriculoCandidato": "Currículo do candidato",
+    "abrirCurriculo": "Abrir currículo",
+    "curriculoIndisponivel": "Currículo não disponível",
+    "verLinkedin": "Ver perfil no LinkedIn",
+    "carregandoHistorico": "Carregando histórico...",
+    "semEventos": "Nenhum evento registrado",
+    "abaResumo": "Resumo IA",
+    "abaHistorico": "Histórico",
+    "moverEntrevista": "Mover para entrevista",
+    "moverValidacao": "Mover para validação",
+    "encerrar": "Encerrar",
+    "eventos": {
+      "dataAplicacao": "Data de aplicação registrada",
+      "candidaturaRecebida": "Candidatura recebida",
+      "statusAlterado": "Status alterado",
+      "emailEntrevista": "E-mail de entrevista enviado",
+      "emailRejeicao": "E-mail de rejeição enviado",
+      "recalculoSolicitado": "Recálculo de nota solicitado",
+      "generico": "Evento registrado"
+    }
   }
 }

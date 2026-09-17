@@ -7,13 +7,15 @@ import { X, ExternalLink, FileText, Brain, MessageSquare, AlertCircle, Clock3 } 
 import { Button, Badge } from '@/components/ui';
 import type { Candidate, CandidateStatus, ApplicationQuestion } from '@hunter/core';
 import { apiClient, type CandidateHistoryEvent } from '@/lib/api-client';
+import { useTranslations } from 'next-intl';
 
 const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['interview', 'hired', 'rejected'];
 
-const STATUS_EMAIL_MESSAGES: Record<string, string> = {
-  interview: 'Um e-mail de agendamento de entrevista será enviado ao candidato.',
-  hired: 'Um e-mail de contratação será enviado ao candidato.',
-  rejected: 'Um e-mail de rejeição será enviado ao candidato.',
+/** Chaves, não textos: constante de módulo é avaliada antes de existir idioma. */
+const STATUS_EMAIL_MESSAGE_KEYS: Record<string, string> = {
+  interview: 'candidatos.avisoEntrevista',
+  hired: 'candidatos.avisoContratado',
+  rejected: 'candidatos.avisoRejeitado',
 };
 
 interface CandidateDrawerProps {
@@ -22,13 +24,13 @@ interface CandidateDrawerProps {
   onStatusChange: (candidateId: string, newStatus: CandidateStatus) => Promise<void>;
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  new: 'Novo',
-  reviewing: 'Em análise',
-  interview: 'Entrevista',
-  in_validation: 'Em validação',
-  rejected: 'Encerrado',
-  hired: 'Contratado',
+const STATUS_LABEL_KEYS: Record<string, string> = {
+  new: 'candidatos.estados.novo',
+  reviewing: 'candidatos.filtros.emAnalise',
+  interview: 'candidatos.filtros.entrevista',
+  in_validation: 'candidatos.filtros.emValidacao',
+  rejected: 'candidatos.estados.encerrado',
+  hired: 'candidatos.estados.contratado',
 };
 
 const STATUS_BADGE_VARIANT: Record<string, 'default' | 'success' | 'warning' | 'danger' | 'info' | 'purple'> = {
@@ -40,11 +42,11 @@ const STATUS_BADGE_VARIANT: Record<string, 'default' | 'success' | 'warning' | '
   hired: 'success',
 };
 
-const QUICK_ACTIONS: { status: CandidateStatus; label: string }[] = [
-  { status: 'reviewing', label: 'Em análise' },
-  { status: 'interview', label: 'Mover para entrevista' },
-  { status: 'in_validation', label: 'Mover para validação' },
-  { status: 'rejected', label: 'Encerrar' },
+const QUICK_ACTIONS: { status: CandidateStatus; labelKey: string }[] = [
+  { status: 'reviewing', labelKey: 'candidatos.filtros.emAnalise' },
+  { status: 'interview', labelKey: 'gaveta.moverEntrevista' },
+  { status: 'in_validation', labelKey: 'gaveta.moverValidacao' },
+  { status: 'rejected', labelKey: 'gaveta.encerrar' },
 ];
 
 type DrawerTab = 'summary' | 'answers' | 'resume' | 'history';
@@ -61,6 +63,7 @@ export default function CandidateDrawer({
   onClose,
   onStatusChange,
 }: CandidateDrawerProps) {
+  const t = useTranslations();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<DrawerTab>('summary');
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
@@ -136,19 +139,19 @@ export default function CandidateDrawer({
   }, [pendingAction, executeQuickAction]);
 
   const tabs: { id: DrawerTab; label: string; icon: typeof Brain }[] = [
-    { id: 'summary', label: 'Resumo IA', icon: Brain },
-    { id: 'answers', label: 'Respostas', icon: MessageSquare },
-    { id: 'resume', label: 'Currículo', icon: FileText },
-    { id: 'history', label: 'Histórico', icon: Clock3 },
+    { id: 'summary', label: t('gaveta.abaResumo'), icon: Brain },
+    { id: 'answers', label: t('candidatos.colRespostas'), icon: MessageSquare },
+    { id: 'resume', label: t('candidatos.colCurriculo'), icon: FileText },
+    { id: 'history', label: t('gaveta.abaHistorico'), icon: Clock3 },
   ];
 
   const STATUS_PT: Record<string, string> = {
-    new: 'Novo',
-    reviewing: 'Em análise',
-    interview: 'Entrevista',
-    in_validation: 'Em validação',
-    hired: 'Contratado',
-    rejected: 'Encerrado',
+    new: t('candidatos.estados.novo'),
+    reviewing: t('candidatos.filtros.emAnalise'),
+    interview: t('candidatos.filtros.entrevista'),
+    in_validation: t('candidatos.filtros.emValidacao'),
+    hired: t('candidatos.estados.contratado'),
+    rejected: t('candidatos.estados.encerrado'),
   };
 
   const mergedEvents = useMemo(() => {
@@ -159,7 +162,7 @@ export default function CandidateDrawer({
       event_type: 'application_submitted',
       from_status: null,
       to_status: 'new',
-      message: 'Data de aplicação registrada',
+      message: t('gaveta.eventos.dataAplicacao'),
       metadata: null,
       created_by: null,
       created_at: candidate.created_at,
@@ -197,7 +200,7 @@ export default function CandidateDrawer({
               </h2>
               <div className="flex items-center gap-2.5 mt-1.5">
                 <Badge variant={STATUS_BADGE_VARIANT[candidate.status] ?? 'default'}>
-                  {STATUS_LABELS[candidate.status] ?? candidate.status}
+                  {STATUS_LABEL_KEYS[candidate.status] ?? candidate.status}
                 </Badge>
                 {candidate.fit_score != null && (
                   <span className={`text-xl font-bold ${scoreColor(candidate.fit_score)}`}>
@@ -230,7 +233,7 @@ export default function CandidateDrawer({
                   disabled:opacity-50 disabled:cursor-not-allowed
                 `}
               >
-                {loadingAction === action.status ? '...' : action.label}
+                {loadingAction === action.status ? '...' : t(action.labelKey)}
               </button>
             ))}
           </div>
@@ -278,9 +281,7 @@ export default function CandidateDrawer({
             variant="primary"
             className="w-full"
             onClick={() => router.push(`/candidates/${candidate.id}`)}
-          >
-            Ver aplicação completa
-          </Button>
+          >{t('gaveta.verAplicacao')}</Button>
         </div>
       </div>
 
@@ -293,30 +294,26 @@ export default function CandidateDrawer({
               <div className="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
                 <AlertCircle className="h-5 w-5 text-amber-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">Confirmar alteração</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t('candidatos.confirmarAlteracao')}</h3>
             </div>
             <p className="text-sm text-gray-600 mb-1">
               Você está alterando o status para{' '}
               <span className="font-medium text-gray-900">
-                {QUICK_ACTIONS.find((a) => a.status === pendingAction)?.label || pendingAction}
+                {t(QUICK_ACTIONS.find((a) => a.status === pendingAction)?.labelKey ?? '') || pendingAction}
               </span>.
             </p>
             <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-5">
-              {STATUS_EMAIL_MESSAGES[pendingAction]}
+              {STATUS_EMAIL_MESSAGE_KEYS[pendingAction]}
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setPendingAction(null)}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-              >
-                Cancelar
-              </button>
+              >{t('candidatos.cancelar')}</button>
               <button
                 onClick={confirmQuickAction}
                 className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors"
-              >
-                Confirmar
-              </button>
+              >{t('candidatos.confirmar')}</button>
             </div>
           </div>
         </div>,
@@ -339,6 +336,7 @@ function ScoreCard({
   max: number;
   suffix: string;
 }) {
+  const t = useTranslations();
   if (value == null) {
     return (
       <div className="bg-gray-50 rounded-lg p-3 text-center">
@@ -363,41 +361,36 @@ function ScoreCard({
 }
 
 function SummaryTab({ candidate }: { candidate: Candidate }) {
+  const t = useTranslations();
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-3 gap-3">
-        <ScoreCard label="Fit Score" value={candidate.fit_score} max={100} suffix="%" />
-        <ScoreCard label="Currículo" value={candidate.resume_rating} max={5} suffix="/5" />
-        <ScoreCard label="Respostas" value={candidate.answer_quality_rating} max={5} suffix="/5" />
+        <ScoreCard label={t('candidatos.colFitScore')} value={candidate.fit_score} max={100} suffix="%" />
+        <ScoreCard label={t('candidatos.colCurriculo')} value={candidate.resume_rating} max={5} suffix="/5" />
+        <ScoreCard label={t('candidatos.colRespostas')} value={candidate.answer_quality_rating} max={5} suffix="/5" />
       </div>
 
       {candidate.experience_level && (
         <div>
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-            Nível de Experiência
-          </p>
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">{t('gaveta.nivelExperiencia')}</p>
           <p className="text-sm text-gray-900">{candidate.experience_level}</p>
         </div>
       )}
 
       {candidate.resume_summary ? (
         <div>
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-            Resumo do Currículo (IA)
-          </p>
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">{t('gaveta.resumoCV')}</p>
           <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
             {candidate.resume_summary}
           </p>
         </div>
       ) : (
-        <p className="text-sm text-gray-400 italic">Resumo não disponível</p>
+        <p className="text-sm text-gray-400 italic">{t('gaveta.resumoIndisponivel')}</p>
       )}
 
       {candidate.flagged_reason && (
         <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-          <p className="text-xs font-medium text-orange-700 uppercase tracking-wider mb-1">
-            Alerta de elegibilidade
-          </p>
+          <p className="text-xs font-medium text-orange-700 uppercase tracking-wider mb-1">{t('gaveta.alertaElegibilidade')}</p>
           <p className="text-sm text-orange-800">{candidate.flagged_reason}</p>
         </div>
       )}
@@ -406,12 +399,13 @@ function SummaryTab({ candidate }: { candidate: Candidate }) {
 }
 
 function AnswersTab({ candidate }: { candidate: Candidate }) {
+  const t = useTranslations();
   const answers = candidate.application_answers;
   const questions = (candidate.job?.application_questions || []) as ApplicationQuestion[];
   const questionById = new Map(questions.map((q) => [q.id, q]));
 
   if (!answers || answers.length === 0) {
-    return <p className="text-sm text-gray-400 italic">Nenhuma resposta registrada</p>;
+    return <p className="text-sm text-gray-400 italic">{t('gaveta.semRespostas')}</p>;
   }
 
   return (
@@ -433,24 +427,23 @@ function AnswersTab({ candidate }: { candidate: Candidate }) {
 }
 
 function ResumeTab({ candidate }: { candidate: Candidate }) {
+  const t = useTranslations();
   return (
     <div className="space-y-4">
       {candidate.resume_url ? (
         <div className="bg-gray-50 rounded-lg border border-gray-200 p-8 text-center">
           <FileText className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-sm text-gray-600 mb-4">Currículo do candidato</p>
+          <p className="text-sm text-gray-600 mb-4">{t('gaveta.curriculoCandidato')}</p>
           <a
             href={candidate.resume_url}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
           >
-            <ExternalLink className="h-4 w-4" />
-            Abrir currículo
-          </a>
+            <ExternalLink className="h-4 w-4" />{t('gaveta.abrirCurriculo')}</a>
         </div>
       ) : (
-        <p className="text-sm text-gray-400 italic">Currículo não disponível</p>
+        <p className="text-sm text-gray-400 italic">{t('gaveta.curriculoIndisponivel')}</p>
       )}
 
       {candidate.linkedin_url && (
@@ -460,9 +453,7 @@ function ResumeTab({ candidate }: { candidate: Candidate }) {
           rel="noopener noreferrer"
           className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 transition-colors"
         >
-          <ExternalLink className="h-4 w-4" />
-          Ver perfil no LinkedIn
-        </a>
+          <ExternalLink className="h-4 w-4" />{t('gaveta.verLinkedin')}</a>
       )}
     </div>
   );
@@ -477,12 +468,13 @@ function HistoryTab({
   eventsLoading: boolean;
   statusLabels: Record<string, string>;
 }) {
+  const t = useTranslations();
   if (eventsLoading) {
-    return <p className="text-sm text-gray-400 italic">Carregando histórico...</p>;
+    return <p className="text-sm text-gray-400 italic">{t('gaveta.carregandoHistorico')}</p>;
   }
 
   if (events.length === 0) {
-    return <p className="text-sm text-gray-400 italic">Nenhum evento registrado</p>;
+    return <p className="text-sm text-gray-400 italic">{t('gaveta.semEventos')}</p>;
   }
 
   return (
@@ -497,14 +489,14 @@ function HistoryTab({
         });
 
         const titleByType: Record<string, string> = {
-          application_submitted: 'Candidatura recebida',
-          status_changed: 'Status alterado',
-          email_sent_interview: 'E-mail de entrevista enviado',
-          email_sent_rejection: 'E-mail de rejeição enviado',
-          score_recalculated: 'Recálculo de nota solicitado',
+          application_submitted: t('gaveta.eventos.candidaturaRecebida'),
+          status_changed: t('gaveta.eventos.statusAlterado'),
+          email_sent_interview: t('gaveta.eventos.emailEntrevista'),
+          email_sent_rejection: t('gaveta.eventos.emailRejeicao'),
+          score_recalculated: t('gaveta.eventos.recalculoSolicitado'),
         };
 
-        const title = titleByType[event.event_type] || 'Evento registrado';
+        const title = titleByType[event.event_type] || t('gaveta.eventos.generico');
         const fromStatus = event.from_status ? statusLabels[event.from_status] || event.from_status : null;
         const toStatus = event.to_status ? statusLabels[event.to_status] || event.to_status : null;
 

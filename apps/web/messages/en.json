@@ -454,5 +454,33 @@
     "removendo": "Removing...",
     "salvando": "Saving...",
     "recalculando": "Recalculating..."
+  },
+  "gaveta": {
+    "verAplicacao": "View the full application",
+    "nivelExperiencia": "Experience level",
+    "resumoCV": "Resume summary (AI)",
+    "resumoIndisponivel": "No summary available",
+    "alertaElegibilidade": "Eligibility warning",
+    "semRespostas": "No answers recorded",
+    "curriculoCandidato": "Candidate resume",
+    "abrirCurriculo": "Open resume",
+    "curriculoIndisponivel": "Resume not available",
+    "verLinkedin": "View LinkedIn profile",
+    "carregandoHistorico": "Loading history...",
+    "semEventos": "No events recorded",
+    "abaResumo": "AI summary",
+    "abaHistorico": "History",
+    "moverEntrevista": "Move to interview",
+    "moverValidacao": "Move to validation",
+    "encerrar": "Close out",
+    "eventos": {
+      "dataAplicacao": "Application date recorded",
+      "candidaturaRecebida": "Application received",
+      "statusAlterado": "Status changed",
+      "emailEntrevista": "Interview email sent",
+      "emailRejeicao": "Rejection email sent",
+      "recalculoSolicitado": "Score recalculation requested",
+      "generico": "Event recorded"
+    }
   }
 }
