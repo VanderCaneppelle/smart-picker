@@ -48,18 +48,19 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    const [jobs, total] = await Promise.all([
-      prisma.job.findMany({
-        where,
-        orderBy: { created_at: 'desc' },
-        include: {
-          _count: {
-            select: { candidates: { where: { deleted_at: null } } },
-          },
+    // Sequencial, não Promise.all: a DATABASE_URL roda com pgbouncer e
+    // connection_limit=1, então consultas em paralelo disputam a mesma conexão e
+    // estouram o pool por timeout. Consulta rápida em fila custa milissegundos.
+    const jobs = await prisma.job.findMany({
+      where,
+      orderBy: { created_at: 'desc' },
+      include: {
+        _count: {
+          select: { candidates: { where: { deleted_at: null } } },
         },
-      }),
-      prisma.job.count({ where }),
-    ]);
+      },
+    });
+    const total = await prisma.job.count({ where });
 
     return Response.json({ jobs, total });
   } catch (error) {

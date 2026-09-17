@@ -18,86 +18,53 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const jobId = searchParams.get('job_id');
 
-    const [
-      jobs,
-      allCandidates,
-      validationCount,
-      interviewCount,
-      hiredCount,
-      rejectedCount,
-      reviewingCount,
-    ] = await Promise.all([
-      prisma.job.findMany({
-        where: {
-          deleted_at: null,
-          user_id: userId,
-          ...(jobId ? { id: jobId } : {}),
-        },
-        select: {
-          id: true,
-          title: true,
-          status: true,
-          created_at: true,
-          _count: { select: { candidates: { where: { deleted_at: null } } } },
-        },
-      }),
-      prisma.candidate.findMany({
-        where: {
-          deleted_at: null,
-          job: { user_id: userId, deleted_at: null },
-          ...(jobId ? { job_id: jobId } : {}),
-        },
-        select: {
-          id: true,
-          status: true,
-          fit_score: true,
-          created_at: true,
-          updated_at: true,
-          job_id: true,
-          disqualification_flags: true,
-        },
-      }),
-      prisma.candidate.count({
-        where: {
-          deleted_at: null,
-          status: 'in_validation',
-          job: { user_id: userId, deleted_at: null },
-          ...(jobId ? { job_id: jobId } : {}),
-        },
-      }),
-      prisma.candidate.count({
-        where: {
-          deleted_at: null,
-          status: 'interview',
-          job: { user_id: userId, deleted_at: null },
-          ...(jobId ? { job_id: jobId } : {}),
-        },
-      }),
-      prisma.candidate.count({
-        where: {
-          deleted_at: null,
-          status: 'hired',
-          job: { user_id: userId, deleted_at: null },
-          ...(jobId ? { job_id: jobId } : {}),
-        },
-      }),
-      prisma.candidate.count({
-        where: {
-          deleted_at: null,
-          status: 'rejected',
-          job: { user_id: userId, deleted_at: null },
-          ...(jobId ? { job_id: jobId } : {}),
-        },
-      }),
-      prisma.candidate.count({
-        where: {
-          deleted_at: null,
-          status: 'reviewing',
-          job: { user_id: userId, deleted_at: null },
-          ...(jobId ? { job_id: jobId } : {}),
-        },
-      }),
-    ]);
+    // Duas consultas, em sequência. Antes eram sete em Promise.all, e a
+    // DATABASE_URL roda com pgbouncer e connection_limit=1: paralelizar disputa a
+    // mesma conexão e estoura o pool por timeout.
+    //
+    // As cinco contagens por status sumiram porque usavam exatamente o mesmo filtro
+    // de allCandidates, mudando só o status. Como a lista já vem inteira e traz o
+    // campo status, dá para contar em memória sem ir ao banco cinco vezes.
+    const jobs = await prisma.job.findMany({
+      where: {
+        deleted_at: null,
+        user_id: userId,
+        ...(jobId ? { id: jobId } : {}),
+      },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        created_at: true,
+        _count: { select: { candidates: { where: { deleted_at: null } } } },
+      },
+    });
+
+    const allCandidates = await prisma.candidate.findMany({
+      where: {
+        deleted_at: null,
+        job: { user_id: userId, deleted_at: null },
+        ...(jobId ? { job_id: jobId } : {}),
+      },
+      select: {
+        id: true,
+        status: true,
+        fit_score: true,
+        created_at: true,
+        updated_at: true,
+        job_id: true,
+        disqualification_flags: true,
+      },
+    });
+
+    const contarPorStatus = (status: string) =>
+      allCandidates.filter((c) => c.status === status).length;
+
+    const validationCount = contarPorStatus('in_validation');
+    const interviewCount = contarPorStatus('interview');
+    const hiredCount = contarPorStatus('hired');
+    const rejectedCount = contarPorStatus('rejected');
+    const reviewingCount = contarPorStatus('reviewing');
 
     // ---- VISÃO GERAL ----
     const totalJobs = jobs.length;
