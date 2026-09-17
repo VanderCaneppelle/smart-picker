@@ -221,7 +221,7 @@ export default function DashboardPage() {
 
       {/* ============ SEÇÃO 1: VISÃO GERAL ============ */}
       <section>
-        <SectionHeader icon={BarChart3} title="Visão Geral" color="emerald" />
+        <SectionHeader icon={BarChart3} title="Visão Geral" />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mt-4">
           <MetricCard
@@ -229,7 +229,6 @@ export default function DashboardPage() {
             value={overview.openJobs}
             subtitle={`de ${overview.totalJobs} no total`}
             icon={Briefcase}
-            color="emerald"
             onClick={() => router.push('/jobs?status=active')}
           />
           <MetricCard
@@ -237,21 +236,19 @@ export default function DashboardPage() {
             value={overview.activeCandidates}
             subtitle={`${overview.totalCandidates} no total`}
             icon={Users}
-            color="blue"
           />
           <MetricCard
             title="Em entrevista"
             value={overview.interviewCount}
             subtitle="agendados ou em andamento"
             icon={UserCheck}
-            color="violet"
           />
           <MetricCard
             title="Ações pendentes"
             value={overview.pendingReview + overview.staleJobsCount}
             subtitle={`${overview.pendingReview} revisões · ${overview.staleJobsCount} vagas paradas`}
             icon={Clock}
-            color="amber"
+            tone={overview.pendingReview + overview.staleJobsCount > 0 ? 'warning' : 'default'}
             pulse={overview.pendingReview > 0}
           />
         </div>
@@ -278,7 +275,7 @@ export default function DashboardPage() {
 
       {/* ============ SEÇÃO 2: INTELIGÊNCIA E AUTOMAÇÃO ============ */}
       <section>
-        <SectionHeader icon={Brain} title="Inteligência & Automação" color="violet" badge="IA" />
+        <SectionHeader icon={Brain} title="Inteligência & Automação" badge="IA" />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mt-4">
           <MetricCard
@@ -286,28 +283,25 @@ export default function DashboardPage() {
             value={`${intelligence.autoFilteredPercent}%`}
             subtitle={`${intelligence.eliminatedCount} candidatos eliminados`}
             icon={ShieldAlert}
-            color="red"
           />
           <MetricCard
             title="Com alerta para revisão"
             value={`${intelligence.flaggedForReviewPercent}%`}
             subtitle={`${intelligence.warningCount} com alertas`}
             icon={AlertTriangle}
-            color="amber"
+            tone={intelligence.warningCount > 0 ? 'warning' : 'default'}
           />
           <MetricCard
             title="Score médio global"
             value={`${intelligence.avgGlobalScore}%`}
             subtitle="fit score médio de todos"
             icon={TrendingUp}
-            color="teal"
           />
           <MetricCard
             title="Melhor score atual"
             value={`${intelligence.bestScore}%`}
             subtitle="candidato com maior nota"
             icon={Award}
-            color="emerald"
             highlight={intelligence.bestScore >= 85}
           />
         </div>
@@ -374,7 +368,7 @@ export default function DashboardPage() {
 
       {/* ============ SEÇÃO 3: PERFORMANCE DO PROCESSO ============ */}
       <section>
-        <SectionHeader icon={Target} title="Performance do Processo" color="blue" />
+        <SectionHeader icon={Target} title="Performance do Processo" />
 
         <div className="mt-4 grid gap-4 lg:grid-cols-3">
           {/* Funnel visual */}
@@ -457,7 +451,7 @@ export default function DashboardPage() {
 
       {/* ============ SEÇÃO 4: INSIGHTS DA SEMANA ============ */}
       <section>
-        <SectionHeader icon={Lightbulb} title="Insights da Semana" color="amber" />
+        <SectionHeader icon={Lightbulb} title="Insights da Semana" />
 
         <div className="mt-4 space-y-3">
           {insights.map((insight, i) => (
@@ -482,30 +476,20 @@ export default function DashboardPage() {
 function SectionHeader({
   icon: Icon,
   title,
-  color,
   badge,
 }: {
   icon: React.ElementType;
   title: string;
-  color: string;
   badge?: string;
 }) {
-  const colorMap: Record<string, string> = {
-    emerald: 'text-emerald-600 bg-emerald-100',
-    violet: 'text-violet-600 bg-violet-100',
-    blue: 'text-blue-600 bg-blue-100',
-    amber: 'text-amber-600 bg-amber-100',
-  };
-  const cls = colorMap[color] || colorMap.emerald;
-
   return (
     <div className="flex items-center gap-3">
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${cls}`}>
+      <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100 text-gray-500">
         <Icon className="h-4.5 w-4.5" />
       </div>
       <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
       {badge && (
-        <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-violet-500 to-purple-600 text-white px-2 py-0.5 rounded-full">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-50 ring-1 ring-inset ring-emerald-600/20 px-2 py-0.5 rounded-full">
           {badge}
         </span>
       )}
@@ -513,12 +497,19 @@ function SectionHeader({
   );
 }
 
+/**
+ * Superfície neutra para todos os cards. A cor fica reservada para estado:
+ * a régua lateral é verde (marca) por padrão e só troca para âmbar/vermelho
+ * quando a métrica realmente pede atenção. Card zerado nunca alarma.
+ */
+type MetricTone = 'default' | 'warning' | 'critical';
+
 function MetricCard({
   title,
   value,
   subtitle,
   icon: Icon,
-  color,
+  tone = 'default',
   onClick,
   pulse,
   highlight,
@@ -527,59 +518,50 @@ function MetricCard({
   value: string | number;
   subtitle: string;
   icon: React.ElementType;
-  color: string;
+  tone?: MetricTone;
   onClick?: () => void;
   pulse?: boolean;
   highlight?: boolean;
 }) {
-  const bgMap: Record<string, string> = {
-    emerald: 'bg-emerald-50 border-emerald-200',
-    blue: 'bg-blue-50 border-blue-200',
-    violet: 'bg-violet-50 border-violet-200',
-    amber: 'bg-amber-50 border-amber-200',
-    red: 'bg-red-50 border-red-200',
-    teal: 'bg-teal-50 border-teal-200',
+  const ruleMap: Record<MetricTone, string> = {
+    default: 'bg-emerald-500',
+    warning: 'bg-amber-500',
+    critical: 'bg-red-500',
   };
-  const iconBgMap: Record<string, string> = {
-    emerald: 'bg-emerald-100 text-emerald-600',
-    blue: 'bg-blue-100 text-blue-600',
-    violet: 'bg-violet-100 text-violet-600',
-    amber: 'bg-amber-100 text-amber-600',
-    red: 'bg-red-100 text-red-600',
-    teal: 'bg-teal-100 text-teal-600',
-  };
-  const textMap: Record<string, string> = {
-    emerald: 'text-emerald-900',
-    blue: 'text-blue-900',
-    violet: 'text-violet-900',
-    amber: 'text-amber-900',
-    red: 'text-red-900',
-    teal: 'text-teal-900',
+  const iconMap: Record<MetricTone, string> = {
+    default: 'bg-gray-50 text-gray-400',
+    warning: 'bg-amber-50 text-amber-600',
+    critical: 'bg-red-50 text-red-600',
   };
 
   return (
     <div
       onClick={onClick}
-      className={`relative rounded-xl border p-5 transition-all ${bgMap[color] || bgMap.emerald} ${
-        onClick ? 'cursor-pointer hover:shadow-md' : ''
-      } ${highlight ? 'ring-2 ring-emerald-400 ring-offset-1' : ''}`}
+      className={`relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 transition-all ${
+        onClick
+          ? 'cursor-pointer hover:border-gray-300 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2'
+          : ''
+      } ${highlight ? 'ring-1 ring-emerald-500/30' : ''}`}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={(e) => onClick && e.key === 'Enter' && onClick()}
     >
+      <span aria-hidden className={`absolute inset-y-0 left-0 w-[3px] ${ruleMap[tone]}`} />
+
       {pulse && (
         <span className="absolute top-3 right-3 flex h-2.5 w-2.5">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
           <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500" />
         </span>
       )}
-      <div className="flex items-start justify-between">
+
+      <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className={`text-sm font-medium opacity-80 ${textMap[color]}`}>{title}</p>
-          <p className={`mt-1 text-3xl font-bold ${textMap[color]}`}>{value}</p>
-          <p className={`mt-0.5 text-xs opacity-70 ${textMap[color]}`}>{subtitle}</p>
+          <p className="text-sm font-medium text-gray-500">{title}</p>
+          <p className="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{value}</p>
+          <p className="mt-1 text-xs text-gray-400">{subtitle}</p>
         </div>
-        <div className={`rounded-lg p-2.5 ${iconBgMap[color] || iconBgMap.emerald}`}>
+        <div className={`rounded-lg p-2.5 shrink-0 ${iconMap[tone]}`}>
           <Icon className="h-5 w-5" />
         </div>
       </div>
