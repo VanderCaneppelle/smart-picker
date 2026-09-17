@@ -233,3 +233,26 @@ model CandidateEvent {
   @@index([event_type])
   @@map("candidate_events")
 }
+
+// ============================================
+// ANNOUNCEMENTS (avisos do admin no portal do recrutador)
+// ============================================
+
+model Announcement {
+  id          String    @id @default(uuid())
+  title       String
+  body        String    @db.Text
+  level       String    @default("info") // info | success | warning
+  active      Boolean   @default(true)
+  dismissible Boolean   @default(true)
+
+  // Janela de exibição. null em starts_at = já vale; null em ends_at = não expira.
+  starts_at   DateTime?
+  ends_at     DateTime?
+
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  @@index([active, starts_at, ends_at])
+  @@map("announcements")
+}

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loading } from '@/components/ui';
 import { SubscriptionPaywall, TrialBanner, TrialSidebarBadge } from '@/components/SubscriptionPaywall';
+import AnnouncementBanner from '@/components/AnnouncementBanner';
 import { apiClient } from '@/lib/api-client';
 import { useActiveJobsLimit } from '@/hooks/useActiveJobsLimit';
 import {
@@ -526,6 +527,7 @@ function DashboardLayoutContent({
         </header>
 
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 lg:py-8 overflow-y-auto overflow-x-hidden min-w-0">
+          <AnnouncementBanner />
           {subscription && !needsSubscription(subscription) && subscription.status === 'trialing' && (
             <div className="mb-4">
               <TrialBanner daysRemaining={getTrialDaysRemaining(subscription.trialEndsAt)} />
