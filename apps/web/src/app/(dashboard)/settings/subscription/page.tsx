@@ -24,8 +24,10 @@ import {
   getPlanById,
   PLANS,
 } from '@/lib/subscription';
+import { useTranslations } from 'next-intl';
 
 export default function SubscriptionPage() {
+  const t = useTranslations();
   const router = useRouter();
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,7 +38,7 @@ export default function SubscriptionPage() {
       .getSubscription()
       .then(setSubscription)
       .catch(() => {
-        toast.error('Erro ao carregar assinatura');
+        toast.error(t('assinatura.erroCarregar'));
       })
       .finally(() => {
         setIsLoading(false);
@@ -57,14 +59,12 @@ export default function SubscriptionPage() {
   };
 
   if (isLoading) {
-    return <Loading text="Carregando assinatura..." />;
+    return <Loading text={t('assinatura.carregando')} />;
   }
 
   if (!subscription) {
     return (
-      <div className="text-center py-12 text-gray-500">
-        Não foi possível carregar informações da assinatura.
-      </div>
+      <div className="text-center py-12 text-gray-500">{t('assinatura.naoCarregou')}</div>
     );
   }
 
@@ -91,47 +91,45 @@ export default function SubscriptionPage() {
           href="/perfil"
           className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-4"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar ao perfil
-        </Link>
-        <h1 className="text-2xl font-bold text-gray-900">Assinatura</h1>
-        <p className="text-gray-600 mt-1">Gerencie seu plano e pagamentos</p>
+          <ArrowLeft className="h-4 w-4" />{t('assinatura.voltarPerfil')}</Link>
+        <h1 className="text-2xl font-bold text-gray-900">{t('assinatura.titulo')}</h1>
+        <p className="text-gray-600 mt-1">{t('assinatura.subtitulo')}</p>
       </div>
 
       {/* Status Card */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Status da Assinatura</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">{t('assinatura.statusTitulo')}</h2>
             <div className="flex items-center gap-2">
               {isActive && (
                 <>
                   <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                  <span className="text-emerald-700 font-medium">Ativa</span>
+                  <span className="text-emerald-700 font-medium">{t('assinatura.ativa')}</span>
                 </>
               )}
               {isTrialing && (
                 <>
                   <Clock className="h-5 w-5 text-blue-500" />
-                  <span className="text-blue-700 font-medium">Período de teste</span>
+                  <span className="text-blue-700 font-medium">{t('assinatura.periodoTeste')}</span>
                 </>
               )}
               {isExpired && (
                 <>
                   <AlertCircle className="h-5 w-5 text-amber-500" />
-                  <span className="text-amber-700 font-medium">Teste expirado</span>
+                  <span className="text-amber-700 font-medium">{t('assinatura.testeExpirado')}</span>
                 </>
               )}
               {isPastDue && (
                 <>
                   <AlertCircle className="h-5 w-5 text-red-500" />
-                  <span className="text-red-700 font-medium">Pagamento pendente</span>
+                  <span className="text-red-700 font-medium">{t('assinatura.pagamentoPendente')}</span>
                 </>
               )}
               {isCanceled && (
                 <>
                   <AlertCircle className="h-5 w-5 text-gray-500" />
-                  <span className="text-gray-700 font-medium">Cancelada</span>
+                  <span className="text-gray-700 font-medium">{t('assinatura.cancelada')}</span>
                 </>
               )}
             </div>
@@ -150,8 +148,7 @@ export default function SubscriptionPage() {
         {isTrialing && (
           <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800">
-              <strong>{daysRemaining} {daysRemaining === 1 ? 'dia restante' : 'dias restantes'}</strong> no seu teste grátis.
-            </p>
+              <strong>{daysRemaining} {daysRemaining === 1 ? 'dia restante' : 'dias restantes'}</strong>{t('assinatura.noTesteGratis')}</p>
             <p className="text-xs text-blue-600 mt-1">
               Após o período de teste, sua assinatura será cobrada automaticamente se você não cancelar.
             </p>
@@ -162,12 +159,12 @@ export default function SubscriptionPage() {
         {isActive && plan && (
           <div className="mt-4 space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">Plano atual</span>
+              <span className="text-gray-600">{t('assinatura.planoAtual')}</span>
               <span className="font-medium text-gray-900">{plan.name} · {plan.priceLabel}/mês</span>
             </div>
             {nextBillingDate && (
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Próxima cobrança</span>
+                <span className="text-gray-600">{t('assinatura.proximaCobranca')}</span>
                 <span className="font-medium text-gray-900">{nextBillingDate}</span>
               </div>
             )}
@@ -183,9 +180,7 @@ export default function SubscriptionPage() {
             <Link
               href="/pricing"
               className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium text-sm hover:bg-emerald-700 transition-colors"
-            >
-              Ver planos
-            </Link>
+            >{t('assinatura.verPlanos')}</Link>
           </div>
         )}
 
@@ -199,9 +194,7 @@ export default function SubscriptionPage() {
               onClick={handleOpenPortal}
               isLoading={isOpeningPortal}
               className="bg-red-600 hover:bg-red-700"
-            >
-              Atualizar pagamento
-            </Button>
+            >{t('assinatura.atualizarPagamento')}</Button>
           </div>
         )}
 
@@ -223,7 +216,7 @@ export default function SubscriptionPage() {
       {/* Actions */}
       {(isActive || isTrialing) && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Gerenciar assinatura</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('assinatura.gerenciar')}</h3>
           <p className="text-sm text-gray-600 mb-4">
             Abra o portal de pagamento do Stripe para atualizar seu método de pagamento, ver faturas,
             trocar de plano ou cancelar sua assinatura.
@@ -233,34 +226,32 @@ export default function SubscriptionPage() {
             isLoading={isOpeningPortal}
             className="bg-emerald-600 hover:bg-emerald-700"
           >
-            <ExternalLink className="h-4 w-4 mr-2" />
-            Abrir portal de pagamento
-          </Button>
+            <ExternalLink className="h-4 w-4 mr-2" />{t('assinatura.abrirPortal')}</Button>
         </div>
       )}
 
       {/* Plan details */}
       {plan && (
         <div className="mt-6 bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Detalhes do plano</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('assinatura.detalhesPlano')}</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Plano</span>
+              <span className="text-sm text-gray-600">{t('assinatura.plano')}</span>
               <span className="text-sm font-medium text-gray-900">{plan.name}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Preço</span>
+              <span className="text-sm text-gray-600">{t('assinatura.preco')}</span>
               <span className="text-sm font-medium text-gray-900">{plan.priceLabel}/mês</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Vagas ativas</span>
+              <span className="text-sm text-gray-600">{t('assinatura.vagasAtivas')}</span>
               <span className="text-sm font-medium text-gray-900">
                 {plan.maxActiveJobs === Infinity ? 'Ilimitadas' : `Até ${plan.maxActiveJobs}`}
               </span>
             </div>
           </div>
           <div className="mt-4 pt-4 border-t border-gray-200">
-            <p className="text-xs font-medium text-gray-700 mb-2">Inclui:</p>
+            <p className="text-xs font-medium text-gray-700 mb-2">{t('assinatura.inclui')}</p>
             <ul className="space-y-1">
               {plan.features.map((feature, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs text-gray-600">
@@ -276,16 +267,14 @@ export default function SubscriptionPage() {
       {/* Upgrade CTA if on trial or expired */}
       {(isTrialing || isExpired) && (
         <div className="mt-6 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Quer mais recursos?</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('assinatura.querMais')}</h3>
           <p className="text-sm text-gray-600 mb-4">
             Veja todos os planos disponíveis e escolha o que melhor se adapta às suas necessidades.
           </p>
           <Link
             href="/pricing"
             className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium text-sm hover:bg-emerald-700 transition-colors"
-          >
-            Ver planos e preços
-          </Link>
+          >{t('assinatura.verPlanosPrecos')}</Link>
         </div>
       )}
     </div>
