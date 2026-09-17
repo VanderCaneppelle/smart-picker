@@ -368,6 +368,8 @@ export default function NewJobPage() {
             error={errors.description}
             required
             placeholder="Descreva a vaga, responsabilidades, requisitos..."
+            aiPolish
+            aiContext={title}
           />
         </div>
 
@@ -405,6 +407,8 @@ export default function NewJobPage() {
                       />
                       <div className="flex items-center gap-4 flex-wrap">
                         <Select
+                          id={`question-${index}-type`}
+                          label="Tipo de resposta"
                           options={questionTypeOptions}
                           value={question.type}
                           onChange={(e) =>
