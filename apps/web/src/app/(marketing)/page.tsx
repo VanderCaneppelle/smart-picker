@@ -5,22 +5,21 @@ import { useState } from 'react';
 import {
   Zap,
   Target,
-  Clock,
   BarChart3,
   Users,
   CheckCircle2,
   ArrowRight,
-  Sparkles,
   Shield,
   Star,
   ChevronDown,
-  Gift,
+  FileText,
+  Inbox,
+  ListOrdered,
+  Mail,
   Rocket,
   Crown,
   Building2,
   Check,
-  Play,
-  CreditCard,
 } from 'lucide-react';
 import { PLANS, TRIAL_DURATION_DAYS, TRIAL_MAX_ACTIVE_JOBS } from '@/lib/subscription';
 
@@ -109,68 +108,56 @@ export default function LandingPage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="overflow-hidden px-4 pb-20 pt-12 sm:px-6 lg:px-8">
+      <section className="overflow-hidden px-4 pb-24 pt-20 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-4xl mx-auto">
             {/* Trial badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200 mb-8">
-              <Gift className="h-4 w-4 text-emerald-600" />
-              <span className="text-sm font-medium text-emerald-700">
-                {TRIAL_DURATION_DAYS} dias grátis, sem cartão de crédito
+            <div className="inline-flex items-stretch mb-8 text-[11px] font-semibold uppercase tracking-[0.15em]">
+              <span className="px-3 py-1.5 text-emerald-700">
+                {TRIAL_DURATION_DAYS} dias grátis
               </span>
+              <span className="w-px bg-gray-200" aria-hidden="true" />
+              <span className="px-3 py-1.5 text-gray-500">Sem cartão de crédito</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-[1.1] mb-6 tracking-tight">
+            <h1 className="text-[2.5rem] sm:text-5xl lg:text-[3.75rem] font-semibold text-gray-900 leading-[1.05] mb-6 tracking-[-0.03em] text-balance">
               Pare de perder tempo triando currículos.{' '}
-              <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                Deixe a IA ranquear.
-              </span>
+              <span className="text-gray-500">Deixe a IA ranquear.</span>
             </h1>
-            <p className="text-lg sm:text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg text-gray-600 mb-10 max-w-[38rem] mx-auto leading-relaxed text-pretty">
               Publique sua vaga, receba candidatos e a IA gera um ranking automático
               com score de compatibilidade. Você decide com dados, não com intuição.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 href="/signup"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/25 transition-all hover:shadow-emerald-500/40 hover:-translate-y-0.5 w-full sm:w-auto"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-lg text-[15px] font-medium text-white bg-emerald-600 hover:bg-emerald-700 transition-colors w-full sm:w-auto"
               >
                 Experimentar {TRIAL_DURATION_DAYS} dias grátis
-                <ArrowRight className="h-5 w-5" />
               </Link>
               <a
                 href="#como-funciona"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all w-full sm:w-auto"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-lg text-[15px] font-medium text-gray-900 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-colors w-full sm:w-auto"
               >
-                <Play className="h-4 w-4" />
                 Ver como funciona
               </a>
             </div>
-            <div className="flex items-center justify-center gap-6 mt-6 text-sm text-gray-500">
-              <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                <span>{TRIAL_MAX_ACTIVE_JOBS} vagas ativas grátis</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                <span>Candidatos ilimitados</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <CreditCard className="h-4 w-4 text-emerald-500" />
-                <span>Sem cartão</span>
-              </div>
-            </div>
+            <p className="mt-6 text-sm text-gray-500">
+              {TRIAL_MAX_ACTIVE_JOBS} vagas ativas no teste
+              <span className="mx-2 text-gray-300">·</span>
+              Candidatos ilimitados
+              <span className="mx-2 text-gray-300">·</span>
+              Sem cartão
+            </p>
           </div>
 
           {/* Hero Visual */}
           <div className="mt-16 relative">
             <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent z-10 pointer-events-none" />
-            <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 sm:p-8 shadow-2xl max-w-5xl mx-auto border border-gray-700/50">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-3 h-3 rounded-full bg-red-500" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                <div className="w-3 h-3 rounded-full bg-green-500" />
-                <span className="ml-3 text-xs text-gray-500 font-mono">rankea.ai · Desenvolvedor Full Stack Senior</span>
+            <div className="bg-gray-900 rounded-2xl p-6 sm:p-8 shadow-xl shadow-gray-900/10 max-w-5xl mx-auto border border-gray-800">
+              <div className="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-700/60">
+                <span className="text-sm font-medium text-gray-200">Desenvolvedor Full Stack Senior</span>
+                <span className="text-xs text-gray-500">5 candidatos · ranqueados por IA</span>
               </div>
               <div className="space-y-3">
                 {[
@@ -190,7 +177,7 @@ export default function LandingPage() {
                       <div className="hidden sm:flex w-6 text-center text-xs font-mono text-gray-500">
                         #{i + 1}
                       </div>
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-semibold text-sm">
+                      <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-gray-200 font-medium text-sm">
                         {candidate.name.charAt(0)}
                       </div>
                       <div>
@@ -261,8 +248,7 @@ export default function LandingPage() {
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium mb-4">
-              <Sparkles className="h-3.5 w-3.5" />
+            <span className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-400 mb-4">
               Funcionalidades
             </span>
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
@@ -279,51 +265,39 @@ export default function LandingPage() {
                 icon: Zap,
                 title: 'Triagem Automática',
                 description: 'IA analisa currículos e respostas, gerando scores de compatibilidade em segundos.',
-                iconColor: 'text-amber-600',
-                bg: 'bg-amber-50',
               },
               {
                 icon: Target,
                 title: 'Ranking Inteligente',
                 description: 'Candidatos ordenados por fit score. Foque nos melhores, ignore o ruído.',
-                iconColor: 'text-blue-600',
-                bg: 'bg-blue-50',
               },
               {
-                icon: Clock,
-                title: 'Economize Tempo',
-                description: 'Reduza horas de análise manual para minutos. Mais produtividade, zero burocracia.',
-                iconColor: 'text-purple-600',
-                bg: 'bg-purple-50',
+                icon: Mail,
+                title: 'E-mails automáticos',
+                description: 'Confirmação de candidatura, convite para entrevista e retorno de recusa saem sozinhos, com o seu nome e a sua assinatura. Você é avisado a cada nova inscrição.',
               },
               {
                 icon: BarChart3,
                 title: 'Métricas Claras',
                 description: 'Scores de currículo, qualidade de respostas e nível de experiência em um painel.',
-                iconColor: 'text-emerald-600',
-                bg: 'bg-emerald-50',
               },
               {
                 icon: Users,
                 title: 'Pipeline Visual',
                 description: 'Acompanhe candidatos por etapa: novo, revisão, entrevista, contratado. Kanban ou lista.',
-                iconColor: 'text-pink-600',
-                bg: 'bg-pink-50',
               },
               {
                 icon: Shield,
                 title: 'LGPD Compliant',
                 description: 'Consentimento rastreado, exclusão sob demanda, dados protegidos e criptografados.',
-                iconColor: 'text-teal-600',
-                bg: 'bg-teal-50',
               },
             ].map((feature, i) => (
               <div
                 key={i}
                 className="group relative bg-white rounded-2xl p-7 border border-gray-100 hover:border-gray-200 hover:shadow-lg transition-all duration-200"
               >
-                <div className={`w-12 h-12 rounded-xl ${feature.bg} flex items-center justify-center mb-5`}>
-                  <feature.icon className={`h-6 w-6 ${feature.iconColor}`} />
+                <div className="w-10 h-10 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center mb-5">
+                  <feature.icon className="h-[18px] w-[18px] text-gray-700" strokeWidth={1.75} />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
                 <p className="text-gray-500 text-sm leading-relaxed">{feature.description}</p>
@@ -337,8 +311,7 @@ export default function LandingPage() {
       <section id="como-funciona" className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium mb-4">
-              <ArrowRight className="h-3.5 w-3.5" />
+            <span className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-400 mb-4">
               Passo a passo
             </span>
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
@@ -355,26 +328,28 @@ export default function LandingPage() {
                 step: '01',
                 title: 'Crie sua vaga',
                 description: 'Descreva a posição, requisitos e adicione perguntas personalizadas. Publique com um link compartilhável.',
-                icon: '📋',
+                icon: FileText,
               },
               {
                 step: '02',
                 title: 'Receba candidaturas',
                 description: 'Candidatos aplicam com currículo e respondem suas perguntas. Sem cadastro necessário para eles.',
-                icon: '📥',
+                icon: Inbox,
               },
               {
                 step: '03',
                 title: 'Veja o ranking',
                 description: 'A IA analisa cada candidato e gera um ranking automático com fit score. Você decide com confiança.',
-                icon: '🏆',
+                icon: ListOrdered,
               },
             ].map((item, i) => (
               <div key={i} className="relative">
                 <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm h-full">
-                  <div className="flex items-center gap-4 mb-5">
-                    <span className="text-3xl">{item.icon}</span>
-                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                  <div className="flex items-center justify-between mb-6">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-gray-50">
+                      <item.icon className="h-[18px] w-[18px] text-gray-700" strokeWidth={1.75} />
+                    </span>
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-400 tabular-nums">
                       Passo {item.step}
                     </span>
                   </div>
@@ -383,7 +358,7 @@ export default function LandingPage() {
                 </div>
                 {i < 2 && (
                   <div className="hidden md:flex absolute top-1/2 -right-6 lg:-right-8 -translate-y-1/2 z-10">
-                    <ArrowRight className="h-6 w-6 text-emerald-300" />
+                    <ArrowRight className="h-5 w-5 text-gray-300" />
                   </div>
                 )}
               </div>
@@ -393,10 +368,9 @@ export default function LandingPage() {
           <div className="text-center mt-12">
             <Link
               href="/signup"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/25 transition-all hover:shadow-emerald-500/40"
+              className="inline-flex items-center justify-center px-6 py-3 rounded-lg text-[15px] font-medium text-white bg-emerald-600 hover:bg-emerald-700 transition-colors"
             >
               Criar minha primeira vaga grátis
-              <ArrowRight className="h-5 w-5" />
             </Link>
           </div>
         </div>

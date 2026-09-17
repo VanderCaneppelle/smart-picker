@@ -10,7 +10,7 @@ import { apiClient } from '@/lib/api-client';
 import { useActiveJobsLimit } from '@/hooks/useActiveJobsLimit';
 import {
   type SubscriptionInfo,
-  shouldShowPaywall,
+  needsSubscription,
   getTrialDaysRemaining,
 } from '@/lib/subscription';
 import { TrendingUp, LogOut, Briefcase, PlusCircle, LayoutDashboard, Users, User, ChevronDown, Menu, X, Settings, CreditCard } from 'lucide-react';
@@ -526,7 +526,7 @@ function DashboardLayoutContent({
         </header>
 
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 lg:py-8 overflow-y-auto overflow-x-hidden min-w-0">
-          {subscription && subscription.status === 'trialing' && (
+          {subscription && !needsSubscription(subscription) && subscription.status === 'trialing' && (
             <div className="mb-4">
               <TrialBanner daysRemaining={getTrialDaysRemaining(subscription.trialEndsAt)} />
             </div>
@@ -535,9 +535,10 @@ function DashboardLayoutContent({
         </main>
       </div>
 
-      {subscription && shouldShowPaywall(subscription) && (
+      {subscription && needsSubscription(subscription) && (
         <SubscriptionPaywall subscription={subscription} />
       )}
+
     </div>
   );
 }

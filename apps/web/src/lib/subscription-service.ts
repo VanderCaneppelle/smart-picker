@@ -4,8 +4,7 @@ import { prisma } from '@/lib/db';
 import { stripe } from '@/lib/stripe';
 import {
   TRIAL_DURATION_DAYS,
-  TRIAL_MAX_ACTIVE_JOBS,
-  PLANS,
+  getMaxActiveJobs,
   type PlanId,
   type SubscriptionStatus,
 } from '@/lib/subscription';
@@ -356,12 +355,13 @@ export interface ActiveJobsLimit {
 }
 
 function resolveMaxActiveJobs(sub: Subscription): number {
-  if (sub.status === 'trialing') return TRIAL_MAX_ACTIVE_JOBS;
-  if (sub.status === 'active' && sub.plan) {
-    const plan = PLANS.find((p) => p.id === sub.plan);
-    if (plan) return plan.maxActiveJobs;
-  }
-  return 0;
+  // Delega para getMaxActiveJobs para não existirem duas cópias da mesma regra.
+  return getMaxActiveJobs({
+    status: sub.status as SubscriptionStatus,
+    plan: sub.plan as PlanId | null,
+    trialEndsAt: sub.trial_ends_at?.toISOString() ?? null,
+    currentPeriodEnd: null,
+  });
 }
 
 export async function getActiveJobsLimit(recruiterId: string): Promise<ActiveJobsLimit> {
