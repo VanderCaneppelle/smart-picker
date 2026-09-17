@@ -398,6 +398,16 @@ class ApiClient {
     });
   }
 
+  async polishJobDescription(
+    html: string,
+    jobTitle?: string
+  ): Promise<{ html: string; missing: string[] }> {
+    return this.request<{ html: string; missing: string[] }>('/jobs/polish-description', {
+      method: 'POST',
+      body: JSON.stringify({ html, jobTitle }),
+    });
+  }
+
   async createPortalSession(): Promise<{ url: string }> {
     return this.request<{ url: string }>('/subscription/portal', {
       method: 'POST',

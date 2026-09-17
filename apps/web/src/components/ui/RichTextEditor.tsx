@@ -5,6 +5,10 @@ import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import {
   Bold,
+  Sparkles,
+  Check,
+  X,
+  Loader2,
   Italic,
   List,
   ListOrdered,
@@ -16,7 +20,9 @@ import {
   Redo,
   Minus,
 } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { apiClient } from '@/lib/api-client';
 
 interface RichTextEditorProps {
   value: string;
@@ -25,6 +31,10 @@ interface RichTextEditorProps {
   label?: string;
   error?: string;
   required?: boolean;
+  /** Liga o botão "Melhorar com IA". Só faz sentido na descrição da vaga. */
+  aiPolish?: boolean;
+  /** Contexto passado para a IA (título da vaga). */
+  aiContext?: string;
 }
 
 const MenuButton = ({
@@ -60,7 +70,34 @@ const RichTextEditor = ({
   label,
   error,
   required,
+  aiPolish = false,
+  aiContext,
 }: RichTextEditorProps) => {
+  const [polishing, setPolishing] = useState(false);
+  const [suggestion, setSuggestion] = useState<{ html: string; missing: string[] } | null>(null);
+
+  const handlePolish = async () => {
+    if (!editor) return;
+    setPolishing(true);
+    setSuggestion(null);
+    try {
+      const result = await apiClient.polishJobDescription(editor.getHTML(), aiContext);
+      setSuggestion(result);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Não consegui melhorar a descrição.');
+    } finally {
+      setPolishing(false);
+    }
+  };
+
+  const applySuggestion = () => {
+    if (!editor || !suggestion) return;
+    // setContent entra no histórico do TipTap, então o Desfazer da barra reverte isto.
+    editor.commands.setContent(suggestion.html);
+    onChange(editor.getHTML());
+    setSuggestion(null);
+    toast.success('Descrição atualizada. Use Desfazer se quiser voltar.');
+  };
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -221,10 +258,73 @@ const RichTextEditor = ({
           >
             <Redo className="h-4 w-4" />
           </MenuButton>
+
+          {aiPolish && (
+            <button
+              type="button"
+              onClick={handlePolish}
+              disabled={polishing}
+              title="Corrige o texto e organiza em seções, sem inventar informação"
+              className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-[13px] font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {polishing ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
+              )}
+              {polishing ? 'Melhorando...' : 'Melhorar com IA'}
+            </button>
+          )}
         </div>
 
         {/* Editor */}
         <EditorContent editor={editor} />
+
+        {suggestion && (
+          <div className="border-t border-gray-200 bg-gray-50 p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-400">
+                Sugestão da IA
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSuggestion(null)}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-[13px] font-medium text-gray-700 transition-colors hover:bg-gray-100"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Descartar
+                </button>
+                <button
+                  type="button"
+                  onClick={applySuggestion}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-1.5 text-[13px] font-medium text-white transition-colors hover:bg-emerald-700"
+                >
+                  <Check className="h-3.5 w-3.5" />
+                  Aplicar
+                </button>
+              </div>
+            </div>
+
+            <div
+              className="tiptap max-h-72 overflow-y-auto rounded-md border border-gray-200 bg-white p-4"
+              dangerouslySetInnerHTML={{ __html: suggestion.html }}
+            />
+
+            {suggestion.missing.length > 0 && (
+              <div className="mt-3">
+                <p className="mb-1.5 text-[13px] font-medium text-gray-700">
+                  A IA não escreveu isto porque você não informou:
+                </p>
+                <ul className="list-disc space-y-0.5 pl-5 text-[13px] text-gray-500">
+                  {suggestion.missing.map((item, i) => (
+                    <li key={i}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
     </div>

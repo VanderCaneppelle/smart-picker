@@ -698,6 +698,8 @@ export default function JobDetailPage() {
                 value={description}
                 onChange={setDescription}
                 required
+                aiPolish
+                aiContext={title}
               />
             ) : (
               <div
@@ -741,6 +743,8 @@ export default function JobDetailPage() {
                         />
                         <div className="flex items-center gap-4 flex-wrap">
                           <Select
+                            id={`question-${index}-type`}
+                            label="Tipo de resposta"
                             options={questionTypeOptions}
                             value={question.type}
                             onChange={(e) => updateQuestion(index, { type: e.target.value as QuestionType })}
