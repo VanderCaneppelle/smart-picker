@@ -99,7 +99,11 @@ export function OnboardingTour() {
     const el = document.querySelector<HTMLElement>(`[data-onboarding-id="${step.targetId}"]`);
     if (el) {
       const r = el.getBoundingClientRect();
-      setTargetRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+      setTargetRect((prev) =>
+        prev && prev.top === r.top && prev.left === r.left && prev.width === r.width && prev.height === r.height
+          ? prev
+          : { top: r.top, left: r.left, width: r.width, height: r.height }
+      );
     } else {
       setTargetRect(null);
     }
@@ -121,12 +125,20 @@ export function OnboardingTour() {
     const t2 = setTimeout(measureTarget, 900);
     window.addEventListener('resize', measureTarget);
     window.addEventListener('scroll', measureTarget, true);
+
+    // Re-measure when the page layout shifts after async data loads
+    // (e.g. the sidebar's active-jobs counter appearing below the target),
+    // which otherwise leaves the spotlight stuck on a stale position.
+    const observer = new MutationObserver(measureTarget);
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+
     return () => {
       if (tScroll) clearTimeout(tScroll);
       clearTimeout(t1);
       clearTimeout(t2);
       window.removeEventListener('resize', measureTarget);
       window.removeEventListener('scroll', measureTarget, true);
+      observer.disconnect();
     };
   }, [step, measureTarget]);
 
