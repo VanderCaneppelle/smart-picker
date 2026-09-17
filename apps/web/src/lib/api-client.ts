@@ -398,6 +398,64 @@ class ApiClient {
     });
   }
 
+  // Admin (área restrita por ADMIN_EMAILS; responde 404 para quem não é admin)
+
+  async getAdminOverview(): Promise<AdminOverview> {
+    return this.request<AdminOverview>('/admin/overview');
+  }
+
+  async getAdminRecruiters(params: { search?: string; page?: number } = {}) {
+    const qs = new URLSearchParams();
+    if (params.search) qs.set('search', params.search);
+    if (params.page) qs.set('page', String(params.page));
+    const suffix = qs.toString() ? `?${qs.toString()}` : '';
+    return this.request<AdminRecruitersResponse>(`/admin/recruiters${suffix}`);
+  }
+
+  async getAdminSubscriptions(params: { filter?: string; page?: number } = {}) {
+    const qs = new URLSearchParams();
+    if (params.filter) qs.set('filter', params.filter);
+    if (params.page) qs.set('page', String(params.page));
+    const suffix = qs.toString() ? `?${qs.toString()}` : '';
+    return this.request<AdminSubscriptionsResponse>(`/admin/subscriptions${suffix}`);
+  }
+
+  async getAdminAnnouncements(): Promise<{ data: AdminAnnouncement[] }> {
+    return this.request<{ data: AdminAnnouncement[] }>('/admin/announcements');
+  }
+
+  async createAnnouncement(input: {
+    title: string;
+    body: string;
+    level: string;
+    dismissible: boolean;
+    starts_at?: string | null;
+    ends_at?: string | null;
+  }): Promise<AdminAnnouncement> {
+    return this.request<AdminAnnouncement>('/admin/announcements', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+  }
+
+  async updateAnnouncement(
+    id: string,
+    input: Partial<{ active: boolean; title: string; body: string; level: string }>
+  ): Promise<AdminAnnouncement> {
+    return this.request<AdminAnnouncement>(`/admin/announcements/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    });
+  }
+
+  async deleteAnnouncement(id: string): Promise<{ success: boolean }> {
+    return this.request<{ success: boolean }>(`/admin/announcements/${id}`, { method: 'DELETE' });
+  }
+
+  async getMyAnnouncements(): Promise<{ data: RecruiterAnnouncement[] }> {
+    return this.request<{ data: RecruiterAnnouncement[] }>('/announcements');
+  }
+
   async polishJobDescription(
     html: string,
     jobTitle?: string
@@ -515,3 +573,80 @@ class ApiClient {
 
 export const apiClient = new ApiClient();
 export default apiClient;
+
+export interface AdminOverview {
+  recruiters: { total: number; last7d: number; last30d: number };
+  jobs: { total: number; active: number };
+  candidates: { total: number; last7d: number; last30d: number };
+  subscriptions: {
+    byStatus: Record<string, number>;
+    byPlan: Record<string, number>;
+    trialsExpiring7d: number;
+    trialsExpired: number;
+    mrr: number;
+  };
+}
+
+export interface AdminRecruiterRow {
+  id: string;
+  name: string;
+  email: string;
+  company: string | null;
+  created_at: string;
+  jobs: number;
+  candidates: number;
+  subscription: {
+    status: string;
+    plan: string | null;
+    trial_ends_at: string | null;
+    current_period_end: string | null;
+  } | null;
+}
+
+export interface AdminPagination {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface AdminRecruitersResponse {
+  data: AdminRecruiterRow[];
+  pagination: AdminPagination;
+}
+
+export interface AdminSubscriptionRow {
+  id: string;
+  status: string;
+  plan: string | null;
+  trial_ends_at: string | null;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+  created_at: string;
+  recruiter: { id: string; name: string; email: string; company: string | null };
+}
+
+export interface AdminSubscriptionsResponse {
+  data: AdminSubscriptionRow[];
+  pagination: AdminPagination;
+}
+
+export interface AdminAnnouncement {
+  id: string;
+  title: string;
+  body: string;
+  level: string;
+  active: boolean;
+  dismissible: boolean;
+  starts_at: string | null;
+  ends_at: string | null;
+  created_at: string;
+}
+
+export interface RecruiterAnnouncement {
+  id: string;
+  title: string;
+  body: string;
+  level: string;
+  dismissible: boolean;
+}
