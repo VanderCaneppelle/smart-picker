@@ -904,9 +904,7 @@ export default function JobDetailPage() {
 
                             {question.type === 'number' && (
                               <div className="space-y-3">
-                                <p className="text-xs text-gray-600">
-                                  Se a resposta numérica estiver fora do intervalo, o candidato será flagueado ou eliminado.
-                                </p>
+                                <p className="text-xs text-gray-600">{t('vaga.intervaloAjuda')}</p>
                                 <div className="grid grid-cols-3 gap-3">
                                   <div>
                                     <label className="block text-xs font-medium text-gray-600 mb-1">{t('formVaga.minimo')}</label>
@@ -1106,7 +1104,7 @@ export default function JobDetailPage() {
           {/* Anotações internas */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('formVaga.anotacoes')}</h2>
-            <p className="text-sm text-gray-500 mb-4">Visível apenas para recrutadores. Use para perguntas da entrevista ou observações.</p>
+            <p className="text-sm text-gray-500 mb-4">{t('vaga.notaInternaAjuda')}</p>
             <Textarea
               label={t('formVaga.perguntasEntrevista')}
               value={interviewQuestions}
@@ -1148,9 +1146,7 @@ export default function JobDetailPage() {
           </>
         }
       >
-        <p className="text-gray-600">
-          Você tem alterações não salvas nos detalhes da vaga. Deseja salvar antes de continuar?
-        </p>
+        <p className="text-gray-600">{t('vaga.confirmarSair')}</p>
       </Modal>
 
       {/* Delete Modal */}
@@ -1165,10 +1161,7 @@ export default function JobDetailPage() {
           </>
         }
       >
-        <p className="text-gray-600">
-          Tem certeza que deseja excluir esta vaga? Esta ação não pode ser desfeita.
-          Todos os candidatos associados a esta vaga também serão removidos.
-        </p>
+        <p className="text-gray-600">{t('vaga.confirmarExcluir')}</p>
       </Modal>
     </div>
   );

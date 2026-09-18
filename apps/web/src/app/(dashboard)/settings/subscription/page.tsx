@@ -186,9 +186,7 @@ export default function SubscriptionPage() {
         {/* Past due */}
         {isPastDue && (
           <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-800 mb-3">
-              O pagamento da sua assinatura falhou. Atualize seu método de pagamento para continuar usando o Rankea.
-            </p>
+            <p className="text-sm text-red-800 mb-3">{t('assinatura.pagamentoFalhou')}</p>
             <Button
               onClick={handleOpenPortal}
               isLoading={isOpeningPortal}
@@ -214,10 +212,7 @@ export default function SubscriptionPage() {
       {(isActive || isTrialing) && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('assinatura.gerenciar')}</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Abra o portal de pagamento do Stripe para atualizar seu método de pagamento, ver faturas,
-            trocar de plano ou cancelar sua assinatura.
-          </p>
+          <p className="text-sm text-gray-600 mb-4">{t('assinatura.portalTexto')}</p>
           <Button
             onClick={handleOpenPortal}
             isLoading={isOpeningPortal}
@@ -267,9 +262,7 @@ export default function SubscriptionPage() {
       {(isTrialing || isExpired) && (
         <div className="mt-6 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('assinatura.querMais')}</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Veja todos os planos disponíveis e escolha o que melhor se adapta às suas necessidades.
-          </p>
+          <p className="text-sm text-gray-600 mb-4">{t('assinatura.verPlanosTexto')}</p>
           <Link
             href="/pricing"
             className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium text-sm hover:bg-emerald-700 transition-colors"

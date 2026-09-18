@@ -23,10 +23,7 @@ export function AuthLayoutSide() {
               <span className="text-sm font-medium text-emerald-200">{t('autenticacao.diasGratis')}</span>
             </div>
             <h1 className="text-3xl xl:text-4xl font-bold leading-tight">{t('autenticacao.contrateInteligencia')}</h1>
-            <p className="mt-4 text-emerald-100 text-lg">
-              Publique vagas, receba candidatos e deixe a IA ranquear os melhores.
-              Comece grátis: 10 vagas ativas e candidatos ilimitados.
-            </p>
+            <p className="mt-4 text-emerald-100 text-lg">{t('auth.lateralTexto')}</p>
           </div>
           <ul className="space-y-4">
             {[

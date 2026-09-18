@@ -34,7 +34,7 @@ export default function PublicSlugStep() {
         setValidationError('');
       } else {
         setAvailability('taken');
-        setValidationError(result.reason || 'Este slug já está em uso');
+        setValidationError(result.reason || t('perfil.slugEmUso'));
       }
     } catch {
       setAvailability('idle');
@@ -72,7 +72,7 @@ export default function PublicSlugStep() {
       toast.success(t('onboarding.slugOk'));
       router.push('/dashboard');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Erro ao salvar slug');
+      toast.error(error instanceof Error ? error.message : t('perfil.erroSalvarSlug'));
     } finally {
       setIsSaving(false);
     }
@@ -92,9 +92,7 @@ export default function PublicSlugStep() {
             </div>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">{t('onboarding.slugTitulo')}</h1>
-          <p className="text-gray-600 mt-2">
-            Escolha um slug para sua página de recrutador. Candidatos poderão ver suas vagas abertas nessa página.
-          </p>
+          <p className="text-gray-600 mt-2">{t('onboarding.slugSubtitulo')}</p>
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm">
@@ -168,9 +166,7 @@ export default function PublicSlugStep() {
                 isLoading={isSaving}
                 className="flex-1 bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500"
                 rightIcon={<ArrowRight className="h-4 w-4" />}
-              >
-                Continuar
-              </Button>
+              >{t('comum.continuar')}</Button>
             </div>
           </form>
         </div>

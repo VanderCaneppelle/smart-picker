@@ -111,7 +111,7 @@ export default async function RecruiterPublicPage({ params }: PageProps) {
   const headerGradient = `linear-gradient(135deg, ${brandColor} 0%, ${darken(25)} 50%, ${darken(40)} 100%)`;
   const tagline =
     recruiter.public_headline ||
-    'Estamos em busca de talentos. Conheça nossas vagas e faça parte do time.';
+    t('publica.chamadaPadrao');
 
   return (
     <div className="min-h-screen bg-gray-50/80">
@@ -203,10 +203,7 @@ export default async function RecruiterPublicPage({ params }: PageProps) {
               style={{ backgroundColor: brandColor }}
             >
               <h2 className="text-xl font-bold mb-3">{t('publica.naoEncontrou')}</h2>
-              <p className="max-w-xl mx-auto text-white/90 mb-4 text-sm sm:text-base">
-                Estamos sempre em busca de bons talentos. Envie seu currículo e
-                conte como você pode contribuir.
-              </p>
+              <p className="max-w-xl mx-auto text-white/90 mb-4 text-sm sm:text-base">{t('publica.talentosTexto')}</p>
               <a
                 href={`mailto:${contactEmail}`}
                 className="inline-block font-medium underline underline-offset-2 hover:no-underline"

@@ -109,7 +109,8 @@
       "semCartao": "Sem cartão de crédito no teste",
       "cancele": "Cancele a qualquer momento",
       "stripe": "Pagamentos seguros via Stripe"
-    }
+    },
+    "erroPagamento": "Erro ao iniciar pagamento"
   },
   "faq": {
     "titulo": "Perguntas frequentes",
@@ -538,7 +539,10 @@
     "erroCarregar": "Erro ao carregar configurações",
     "atualizado": "Perfil atualizado com sucesso",
     "erroAtualizar": "Erro ao atualizar perfil",
-    "linkedinAjuda": "Link do perfil ou da empresa. Aparece na página pública para visitantes."
+    "linkedinAjuda": "Link do perfil ou da empresa. Aparece na página pública para visitantes.",
+    "slugEmUso": "Este slug já está em uso",
+    "erroSalvarSlug": "Erro ao salvar slug",
+    "reiniciarTutorialTexto": "Reinicie o tutorial de primeiros passos para rever o guia interativo desde o início."
   },
   "salvos": {
     "titulo": "Candidatos salvos",
@@ -589,7 +593,10 @@
     "cobrancaAuto": "Após o período de teste, sua assinatura será cobrada automaticamente se você não cancelar.",
     "ilimitadas": "Ilimitadas",
     "diasRestantes": "{n, plural, one {# dia restante} other {# dias restantes}}",
-    "ate": "Até {n}"
+    "ate": "Até {n}",
+    "portalTexto": "Abra o portal de pagamento do Stripe para atualizar seu método de pagamento, ver faturas, trocar de plano ou cancelar sua assinatura.",
+    "pagamentoFalhou": "O pagamento da sua assinatura falhou. Atualize seu método de pagamento para continuar usando o Rankea.",
+    "verPlanosTexto": "Veja todos os planos disponíveis e escolha o que melhor se adapta às suas necessidades."
   },
   "auth": {
     "entrar": "Entrar",
@@ -613,7 +620,8 @@
     "repitaSenha": "Repita sua senha",
     "loginOk": "Login realizado com sucesso!",
     "contaCriada": "Conta criada com sucesso!",
-    "contaCriadaConfirmar": "Conta criada! Confira seu e-mail para confirmar."
+    "contaCriadaConfirmar": "Conta criada! Confira seu e-mail para confirmar.",
+    "lateralTexto": "Publique vagas, receba candidatos e deixe a IA ranquear os melhores. Comece grátis: 10 vagas ativas e candidatos ilimitados."
   },
   "kanban": {
     "novos": "Novos",
@@ -659,7 +667,8 @@
     "redirecionando": "Redirecionando...",
     "copiar": "Copiar",
     "remover": "Remover",
-    "voltarInicio": "Voltar ao início"
+    "voltarInicio": "Voltar ao início",
+    "continuar": "Continuar"
   },
   "upgrade": {
     "titulo": "Atualize seu plano",
@@ -804,7 +813,8 @@
     "variaveis": "Variáveis: candidate_name, job_title, sender_name, signature. Para \"Entrevista\": calendly_link",
     "dicaRecebida": "E-mail enviado quando o candidato envia a aplicação. Use as variáveis no texto.",
     "dicaEntrevista": "Inclua {variavel} onde deve aparecer o botão/link do Calendly.",
-    "dicaRejeicao": "E-mail enviado quando o candidato é encerrado."
+    "dicaRejeicao": "E-mail enviado quando o candidato é encerrado.",
+    "modelosTexto": "Personalize o assunto e o corpo de cada e-mail enviado aos candidatos. Deixe em branco para usar o modelo padrão."
   },
   "planos": {
     "starter": {
@@ -846,7 +856,12 @@
   "vaga": {
     "pesosDescricao": "Defina como a IA deve ponderar cada aspecto na avaliação dos candidatos.",
     "naoSalvo": "Alterações não salvas",
-    "excluirVaga": "Excluir Vaga"
+    "excluirVaga": "Excluir Vaga",
+    "confirmarExcluir": "Tem certeza que deseja excluir esta vaga? Esta ação não pode ser desfeita. Todos os candidatos associados a esta vaga também serão removidos.",
+    "intervaloAjuda": "Se a resposta numérica estiver fora do intervalo, o candidato será flagueado ou eliminado.",
+    "confirmarSair": "Você tem alterações não salvas nos detalhes da vaga. Deseja salvar antes de continuar?",
+    "notaInternaAjuda": "Visível apenas para recrutadores. Use para perguntas da entrevista ou observações.",
+    "semPerguntas": "Nenhuma pergunta adicionada. Clique em \"Adicionar Pergunta\" para criar uma."
   },
   "publica": {
     "semResultado": "Nenhuma vaga encontrada com os filtros aplicados.",
@@ -859,7 +874,9 @@
     "semVagasTexto": "Não há vagas abertas no momento. Volte em breve!",
     "semVagas": "Nenhuma vaga aberta no momento",
     "naoEncontrou": "Não encontrou a vaga ideal?",
-    "contato": "Entrar em contato"
+    "contato": "Entrar em contato",
+    "talentosTexto": "Estamos sempre em busca de bons talentos. Envie seu currículo e conte como você pode contribuir.",
+    "chamadaPadrao": "Estamos em busca de talentos. Conheça nossas vagas e faça parte do time."
   },
   "senha": {
     "linkInvalido": "Link inválido ou expirado. Solicite um novo link de recuperação."
@@ -935,7 +952,8 @@
     "proximo": "Próximo",
     "concluir": "Concluir",
     "concluirBang": "Concluir!",
-    "slugExemplo": "seu-slug"
+    "slugExemplo": "seu-slug",
+    "slugSubtitulo": "Escolha um slug para sua página de recrutador. Candidatos poderão ver suas vagas abertas nessa página."
   },
   "aplicar": {
     "naoEncontrada": "Vaga não encontrada",
@@ -964,5 +982,8 @@
   },
   "depoimento": {
     "cargo": "Consultora de RH Independente"
+  },
+  "cadastro": {
+    "mesmoEmail": "Use o mesmo e-mail do pagamento para que sua assinatura seja vinculada automaticamente."
   }
 }

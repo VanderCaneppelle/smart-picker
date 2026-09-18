@@ -270,8 +270,7 @@ export function OnboardingTour() {
             {stepIndex > 0 && (
               <button type="button" onClick={prevTourStep}
                 className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                <ChevronLeft className="h-3.5 w-3.5" />Voltar
-              </button>
+                <ChevronLeft className="h-3.5 w-3.5" />{t('comum.voltar')}</button>
             )}
             <button type="button" onClick={nextTourStep}
               className="flex items-center gap-1 px-4 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium">

@@ -381,9 +381,7 @@ export default function NewJobPage() {
           </div>
 
           {applicationQuestions.length === 0 ? (
-            <p className="text-gray-500 text-sm py-4 text-center">
-              Nenhuma pergunta adicionada. Clique em &quot;Adicionar Pergunta&quot; para criar uma.
-            </p>
+            <p className="text-gray-500 text-sm py-4 text-center">{t('vaga.semPerguntas')}</p>
           ) : (
             <div className="space-y-4">
               {applicationQuestions.map((question, index) => (
@@ -565,9 +563,7 @@ export default function NewJobPage() {
 
                           {question.type === 'number' && (
                             <div className="space-y-3">
-                              <p className="text-xs text-gray-600">
-                                Se a resposta numérica estiver fora do intervalo, o candidato será flagueado ou eliminado.
-                              </p>
+                              <p className="text-xs text-gray-600">{t('vaga.intervaloAjuda')}</p>
                               <div className="grid grid-cols-3 gap-3">
                                 <div>
                                   <label className="block text-xs font-medium text-gray-600 mb-1">{t('formVaga.minimo')}</label>
@@ -757,7 +753,7 @@ export default function NewJobPage() {
         {/* Anotações internas */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('formVaga.anotacoes')}</h2>
-          <p className="text-sm text-gray-500 mb-4">Visível apenas para recrutadores. Use para perguntas da entrevista ou observações.</p>
+          <p className="text-sm text-gray-500 mb-4">{t('vaga.notaInternaAjuda')}</p>
           <Textarea
             label={t('formVaga.perguntasEntrevista')}
             value={interviewQuestions}

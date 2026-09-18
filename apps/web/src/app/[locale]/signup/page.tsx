@@ -105,9 +105,7 @@ function SignUpContent() {
             {paidPlan && (
               <div className="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
                 <p className="font-medium">{t('auth.pagamentoConfirmado')}</p>
-                <p className="mt-1 text-emerald-700">
-                  Use o mesmo e-mail do pagamento para que sua assinatura seja vinculada automaticamente.
-                </p>
+                <p className="mt-1 text-emerald-700">{t('cadastro.mesmoEmail')}</p>
               </div>
             )}
 

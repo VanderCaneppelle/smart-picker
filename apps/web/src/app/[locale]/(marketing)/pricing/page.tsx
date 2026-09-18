@@ -63,12 +63,12 @@ function PricingContent() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || 'Erro ao iniciar pagamento');
+        throw new Error(data.message || t('precos.erroPagamento'));
       }
       const { url } = await res.json();
       if (url) window.location.href = url;
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Erro ao iniciar pagamento');
+      toast.error(err instanceof Error ? err.message : t('precos.erroPagamento'));
       setLoadingPlan(null);
     }
   };

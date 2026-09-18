@@ -263,9 +263,7 @@ export default function EmailTemplatesSection({
   return (
     <div className="space-y-5">
       <h3 className="text-lg font-semibold text-gray-900">{t('config.modelos')}</h3>
-      <p className="text-sm text-gray-500">
-        Personalize o assunto e o corpo de cada e-mail enviado aos candidatos. Deixe em branco para usar o modelo padrão.
-      </p>
+      <p className="text-sm text-gray-500">{t('config.modelosTexto')}</p>
 
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(280px,480px),1fr] gap-6 lg:gap-8 w-full">
         <div className="space-y-3 min-w-0">

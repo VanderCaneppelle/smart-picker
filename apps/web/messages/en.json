@@ -109,7 +109,8 @@
       "semCartao": "No credit card for the trial",
       "cancele": "Cancel anytime",
       "stripe": "Secure payments via Stripe"
-    }
+    },
+    "erroPagamento": "Could not start the payment"
   },
   "faq": {
     "titulo": "Frequently asked questions",
@@ -538,7 +539,10 @@
     "erroCarregar": "Could not load settings",
     "atualizado": "Profile updated",
     "erroAtualizar": "Could not update the profile",
-    "linkedinAjuda": "Profile or company link. It shows on your public page for visitors."
+    "linkedinAjuda": "Profile or company link. It shows on your public page for visitors.",
+    "slugEmUso": "This slug is already taken",
+    "erroSalvarSlug": "Could not save the slug",
+    "reiniciarTutorialTexto": "Restart the first-steps tutorial to walk through the interactive guide again."
   },
   "salvos": {
     "titulo": "Saved candidates",
@@ -589,7 +593,10 @@
     "cobrancaAuto": "After the trial, your subscription is charged automatically unless you cancel.",
     "ilimitadas": "Unlimited",
     "diasRestantes": "{n, plural, one {# day left} other {# days left}}",
-    "ate": "Up to {n}"
+    "ate": "Up to {n}",
+    "pagamentoFalhou": "Your subscription payment failed. Update your payment method to keep using Rankea.",
+    "portalTexto": "Open the Stripe billing portal to update your payment method, see invoices, change plan or cancel your subscription.",
+    "verPlanosTexto": "See every available plan and pick the one that fits you best."
   },
   "auth": {
     "entrar": "Sign in",
@@ -613,7 +620,8 @@
     "repitaSenha": "Repeat your password",
     "loginOk": "Signed in",
     "contaCriada": "Account created",
-    "contaCriadaConfirmar": "Account created. Check your email to confirm it."
+    "contaCriadaConfirmar": "Account created. Check your email to confirm it.",
+    "lateralTexto": "Post jobs, receive candidates and let the AI rank the best ones. Start free: 10 active jobs and unlimited candidates."
   },
   "kanban": {
     "novos": "New",
@@ -659,7 +667,8 @@
     "redirecionando": "Redirecting...",
     "copiar": "Copy",
     "remover": "Remove",
-    "voltarInicio": "Back to home"
+    "voltarInicio": "Back to home",
+    "continuar": "Continue"
   },
   "upgrade": {
     "titulo": "Upgrade your plan",
@@ -804,7 +813,8 @@
     "variaveis": "Variables: candidate_name, job_title, sender_name, signature. For \"Interview\": calendly_link",
     "dicaRecebida": "Email sent when the candidate submits an application. Use the variables in the text.",
     "dicaEntrevista": "Include {variavel} where the Calendly button/link should appear.",
-    "dicaRejeicao": "Email sent when the candidate is closed out."
+    "dicaRejeicao": "Email sent when the candidate is closed out.",
+    "modelosTexto": "Customize the subject and body of every email sent to candidates. Leave blank to use the default template."
   },
   "planos": {
     "starter": {
@@ -846,7 +856,12 @@
   "vaga": {
     "pesosDescricao": "Set how the AI should weigh each aspect when evaluating candidates.",
     "naoSalvo": "Unsaved changes",
-    "excluirVaga": "Delete job"
+    "excluirVaga": "Delete job",
+    "intervaloAjuda": "If the numeric answer falls outside the range, the candidate is flagged or eliminated.",
+    "notaInternaAjuda": "Visible to recruiters only. Use it for interview questions or notes.",
+    "confirmarSair": "You have unsaved changes in the job details. Save before leaving?",
+    "confirmarExcluir": "Delete this job? This cannot be undone. Every candidate attached to it is removed too.",
+    "semPerguntas": "No questions yet. Click \"Add question\" to create one."
   },
   "publica": {
     "semResultado": "No jobs match the filters.",
@@ -859,7 +874,9 @@
     "semVagasTexto": "No open jobs right now. Check back soon!",
     "semVagas": "No open jobs right now",
     "naoEncontrou": "Didn't find the right job?",
-    "contato": "Get in touch"
+    "contato": "Get in touch",
+    "talentosTexto": "We are always looking for good people. Send your resume and tell us how you can contribute.",
+    "chamadaPadrao": "We are hiring. Take a look at our openings and join the team."
   },
   "senha": {
     "linkInvalido": "Invalid or expired link. Request a new recovery link."
@@ -935,7 +952,8 @@
     "proximo": "Next",
     "concluir": "Finish",
     "concluirBang": "Finish!",
-    "slugExemplo": "your-slug"
+    "slugExemplo": "your-slug",
+    "slugSubtitulo": "Pick a slug for your recruiter page. Candidates will see your open jobs there."
   },
   "aplicar": {
     "naoEncontrada": "Job not found",
@@ -964,5 +982,8 @@
   },
   "depoimento": {
     "cargo": "Independent HR Consultant"
+  },
+  "cadastro": {
+    "mesmoEmail": "Use the same email as the payment so your subscription is linked automatically."
   }
 }

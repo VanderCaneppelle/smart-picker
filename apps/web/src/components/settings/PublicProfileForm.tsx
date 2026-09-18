@@ -129,7 +129,7 @@ export default function PublicProfileForm() {
         setSlugError('');
       } else {
         setSlugAvailability('taken');
-        setSlugError(result.reason || 'Este slug já está em uso');
+        setSlugError(result.reason || t('perfil.slugEmUso'));
       }
     } catch {
       setSlugAvailability('idle');
@@ -519,9 +519,7 @@ export default function PublicProfileForm() {
       {/* Onboarding reset */}
       <div className="bg-white rounded-lg border border-gray-200 p-6 mt-8">
         <h2 className="text-lg font-semibold text-gray-900 mb-1">{t('config.tutorial')}</h2>
-        <p className="text-sm text-gray-500 mb-4">
-          Reinicie o tutorial de primeiros passos para rever o guia interativo desde o início.
-        </p>
+        <p className="text-sm text-gray-500 mb-4">{t('perfil.reiniciarTutorialTexto')}</p>
         <Button
           type="button"
           variant="ghost"
