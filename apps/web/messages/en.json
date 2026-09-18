@@ -4,11 +4,7 @@
     "precos": "Pricing",
     "faq": "FAQ",
     "entrar": "Sign in",
-    "testeGratis": "Start free",
-    "criarVaga": "Create job",
-    "vagas": "Jobs",
-    "vagasAtivasLimite": "{atual}/{limite} active jobs",
-    "vagasAtivas": "{atual} active jobs"
+    "testeGratis": "Start free"
   },
   "hero": {
     "selo": {
@@ -180,7 +176,9 @@
       "perfil": "Profile",
       "assinatura": "Subscription",
       "configuracoes": "Settings",
-      "sair": "Sign out"
+      "sair": "Sign out",
+      "vagasAtivasLimite": "{atual}/{limite} active jobs",
+      "vagasAtivas": "{atual} active jobs"
     },
     "status": {
       "todos": "All statuses",
@@ -260,6 +258,9 @@
     "agendadosAndamento": "scheduled or under way",
     "acoesPendentes": "Pending actions",
     "revisoesParadas": "{revisoes} to review · {paradas} stalled roles",
+    "candidatosAguardandoRevisao": "Candidates awaiting review",
+    "outrosAguardando": "+{n} more awaiting review",
+    "vagasSemCandidatos14Dias": "Roles with no candidates for 14+ days",
     "filtrados": "Filtered automatically",
     "eliminados": "{n} candidates ruled out",
     "comAlerta": "Flagged for review",
@@ -596,7 +597,8 @@
     "ate": "Up to {n}",
     "pagamentoFalhou": "Your subscription payment failed. Update your payment method to keep using Rankea.",
     "portalTexto": "Open the Stripe billing portal to update your payment method, see invoices, change plan or cancel your subscription.",
-    "verPlanosTexto": "See every available plan and pick the one that fits you best."
+    "verPlanosTexto": "See every available plan and pick the one that fits you best.",
+    "erroPortal": "Could not open the billing portal"
   },
   "auth": {
     "entrar": "Sign in",
@@ -888,7 +890,17 @@
   },
   "paywall": {
     "testeAcabando": "Heads up: your trial is ending!",
-    "naoPerca": "Don't lose access to AI ranking and your active jobs."
+    "naoPerca": "Don't lose access to AI ranking and your active jobs.",
+    "erroSessao": "Could not start the checkout session",
+    "testeExpirou": "Your trial has ended",
+    "restamNoTeste": "{n, plural, one {# day left} other {# days left}} in your free trial",
+    "escolhaPlano": "Pick a plan to continue",
+    "expirouPonto": "Your trial has ended.",
+    "ultimoDia": "Last day of the free trial!",
+    "restamNoTestePonto": "{n} days left in your free trial.",
+    "testeExpiradoCurto": "Trial ended",
+    "restantesCurto": "{n, plural, one {# day left} other {# days left}}",
+    "verPlanos": "See plans"
   },
   "onboarding": {
     "tudoProntoTexto": "You finished every first step. Now just focus on the candidates.",

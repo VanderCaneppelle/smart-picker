@@ -22,12 +22,11 @@ import CandidateKanbanCard from './CandidateKanbanCard';
 import CandidateDrawer from './CandidateDrawer';
 import { useTranslations } from 'next-intl';
 
-const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['interview', 'hired', 'rejected'];
+const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['interview', 'rejected'];
 
 /** Chaves, não textos: constante de módulo é avaliada antes de existir idioma. */
 const STATUS_EMAIL_KEYS: Record<string, string> = {
   interview: 'candidatos.emailEntrevista',
-  hired: 'candidatos.emailContratacao',
   rejected: 'candidatos.emailRejeicao',
 };
 

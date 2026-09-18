@@ -87,7 +87,7 @@ function DashboardLayoutContent({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
-  const { data: jobsLimit } = useActiveJobsLimit();
+  const { data: jobsLimit, refresh: refreshJobsLimit } = useActiveJobsLimit();
   const [vagasExpanded, setVagasExpanded] = useState(() => pathname === '/jobs' || (pathname?.startsWith('/jobs/') && pathname !== '/jobs/new'));
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -108,6 +108,14 @@ function DashboardLayoutContent({
   useEffect(() => {
     fetchSubscription();
   }, [isAuthenticated]);
+
+  // O contador de vagas ativas da sidebar só era buscado uma vez, no mount do
+  // layout. Como o layout persiste entre navegações (SPA), mudar o status de
+  // uma vaga em outra tela deixava o número da sidebar desatualizado até um
+  // reload completo. Refaz a busca a cada troca de rota.
+  useEffect(() => {
+    refreshJobsLimit();
+  }, [pathname, refreshJobsLimit]);
 
   useEffect(() => {
     const subParam = searchParams?.get('subscription');
@@ -227,7 +235,7 @@ function DashboardLayoutContent({
                   </Link>
                   {jobsLimit && (
                     <p className={`mt-1.5 px-3 text-xs ${blocked ? 'text-amber-700' : 'text-gray-500'}`}>
-                      {hasLimit ? t('nav.vagasAtivasLimite', { atual: jobsLimit.current, limite: limit }) : t('nav.vagasAtivas', { atual: jobsLimit.current })}
+                      {hasLimit ? t('app.nav.vagasAtivasLimite', { atual: jobsLimit.current, limite: limit }) : t('app.nav.vagasAtivas', { atual: jobsLimit.current })}
                     </p>
                   )}
                 </div>
@@ -439,11 +447,11 @@ function DashboardLayoutContent({
                             }`}
                           >
                             <PlusCircle className="h-5 w-5" />
-                            {t('nav.criarVaga')}
+                            {t('app.nav.criarVaga')}
                           </Link>
                           {jobsLimit && (
                             <p className={`px-3 text-xs ${blocked ? 'text-amber-700' : 'text-gray-500'}`}>
-                              {hasLimit ? t('nav.vagasAtivasLimite', { atual: jobsLimit.current, limite: limit }) : t('nav.vagasAtivas', { atual: jobsLimit.current })}
+                              {hasLimit ? t('app.nav.vagasAtivasLimite', { atual: jobsLimit.current, limite: limit }) : t('app.nav.vagasAtivas', { atual: jobsLimit.current })}
                             </p>
                           )}
                         </>
@@ -467,7 +475,7 @@ function DashboardLayoutContent({
                       }`}
                     >
                       <Briefcase className="h-5 w-5" />
-                      {t('nav.vagas')}
+                      {t('app.nav.vagas')}
                     </Link>
                     <Link
                       href="/candidatos-salvos"
@@ -541,7 +549,7 @@ function DashboardLayoutContent({
       </div>
 
       {subscription && needsSubscription(subscription) && (
-        <SubscriptionPaywall subscription={subscription} />
+        <SubscriptionPaywall subscription={subscription} onLogout={handleLogout} />
       )}
 
     </div>

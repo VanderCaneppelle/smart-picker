@@ -12,6 +12,7 @@ import {
   Building2,
   Gift,
   Loader2,
+  LogOut,
 } from 'lucide-react';
 import { PLANS, type SubscriptionInfo, getTrialDaysRemaining } from '@/lib/subscription';
 import { usePlanoTraduzido } from '@/lib/plan-i18n';
@@ -21,9 +22,10 @@ import { useTranslations } from 'next-intl';
 
 interface SubscriptionPaywallProps {
   subscription: SubscriptionInfo;
+  onLogout?: () => void;
 }
 
-export function SubscriptionPaywall({ subscription }: SubscriptionPaywallProps) {
+export function SubscriptionPaywall({ subscription, onLogout }: SubscriptionPaywallProps) {
   const t = useTranslations();
   const tp = usePlanoTraduzido();
   const daysLeft = getTrialDaysRemaining(subscription.trialEndsAt);
@@ -38,13 +40,23 @@ export function SubscriptionPaywall({ subscription }: SubscriptionPaywallProps) 
         window.location.href = url;
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Erro ao criar sessão de pagamento');
+      toast.error(err instanceof Error ? err.message : t('paywall.erroSessao'));
       setLoadingPlan(null);
     }
   };
 
   return (
     <div className="fixed inset-0 z-[100] bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+      {onLogout && (
+        <button
+          type="button"
+          onClick={onLogout}
+          className="absolute top-4 right-4 sm:top-6 sm:right-6 inline-flex items-center gap-1.5 text-sm font-medium text-white/70 hover:text-white transition-colors"
+        >
+          <LogOut className="h-4 w-4" />
+          {t('app.nav.sair')}
+        </button>
+      )}
       <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-t-2xl px-6 sm:px-8 py-8 text-white text-center">
@@ -56,13 +68,13 @@ export function SubscriptionPaywall({ subscription }: SubscriptionPaywallProps) 
             )}
             <span className="text-sm font-medium">
               {isExpired
-                ? 'Seu período de teste expirou'
-                : `${daysLeft} ${daysLeft === 1 ? 'dia restante' : 'dias restantes'} no teste grátis`}
+                ? t('paywall.testeExpirou')
+                : t('paywall.restamNoTeste', { n: daysLeft })}
             </span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold mb-2">
             {isExpired
-              ? 'Escolha um plano para continuar'
+              ? t('paywall.escolhaPlano')
               : t('paywall.testeAcabando')}
           </h2>
           <p className="text-emerald-100 max-w-lg mx-auto">
@@ -172,10 +184,10 @@ export function TrialBanner({ daysRemaining }: TrialBannerProps) {
         )}
         <span>
           {daysRemaining === 0
-            ? 'Seu teste expirou.'
+            ? t('paywall.expirouPonto')
             : daysRemaining === 1
-              ? 'Último dia do teste grátis!'
-              : `${daysRemaining} dias restantes no teste grátis.`}
+              ? t('paywall.ultimoDia')
+              : t('paywall.restamNoTestePonto', { n: daysRemaining })}
         </span>
       </div>
       <Link
@@ -223,11 +235,11 @@ export function TrialSidebarBadge({ daysRemaining, status, plan }: TrialSidebarB
           <div className="min-w-0">
             <p className={`text-xs font-medium ${urgency ? 'text-amber-700' : 'text-emerald-700'}`}>
               {daysRemaining === 0
-                ? 'Teste expirado'
-                : `${daysRemaining} ${daysRemaining === 1 ? 'dia' : 'dias'} restantes`}
+                ? t('paywall.testeExpiradoCurto')
+                : t('paywall.restantesCurto', { n: daysRemaining })}
             </p>
             <p className={`text-[10px] ${urgency ? 'text-amber-500' : 'text-emerald-500'}`}>
-              {daysRemaining === 0 ? 'Ver planos' : 'Teste grátis'}
+              {daysRemaining === 0 ? t('paywall.verPlanos') : t('nav.testeGratis')}
             </p>
           </div>
         </div>

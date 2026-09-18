@@ -4,11 +4,7 @@
     "precos": "Preços",
     "faq": "FAQ",
     "entrar": "Entrar",
-    "testeGratis": "Teste grátis",
-    "criarVaga": "Criar vaga",
-    "vagas": "Vagas",
-    "vagasAtivasLimite": "{atual}/{limite} vagas ativas",
-    "vagasAtivas": "{atual} vagas ativas"
+    "testeGratis": "Teste grátis"
   },
   "hero": {
     "selo": {
@@ -180,7 +176,9 @@
       "perfil": "Perfil",
       "assinatura": "Assinatura",
       "configuracoes": "Configurações",
-      "sair": "Sair"
+      "sair": "Sair",
+      "vagasAtivasLimite": "{atual}/{limite} vagas ativas",
+      "vagasAtivas": "{atual} vagas ativas"
     },
     "status": {
       "todos": "Todos os status",
@@ -260,6 +258,9 @@
     "agendadosAndamento": "agendados ou em andamento",
     "acoesPendentes": "Ações pendentes",
     "revisoesParadas": "{revisoes} revisões · {paradas} vagas paradas",
+    "candidatosAguardandoRevisao": "Candidatos aguardando revisão",
+    "outrosAguardando": "+{n} outro(s) aguardando revisão",
+    "vagasSemCandidatos14Dias": "Vagas sem candidatos há 14+ dias",
     "filtrados": "Filtrados automaticamente",
     "eliminados": "{n} candidatos eliminados",
     "comAlerta": "Com alerta para revisão",
@@ -596,7 +597,8 @@
     "ate": "Até {n}",
     "portalTexto": "Abra o portal de pagamento do Stripe para atualizar seu método de pagamento, ver faturas, trocar de plano ou cancelar sua assinatura.",
     "pagamentoFalhou": "O pagamento da sua assinatura falhou. Atualize seu método de pagamento para continuar usando o Rankea.",
-    "verPlanosTexto": "Veja todos os planos disponíveis e escolha o que melhor se adapta às suas necessidades."
+    "verPlanosTexto": "Veja todos os planos disponíveis e escolha o que melhor se adapta às suas necessidades.",
+    "erroPortal": "Erro ao abrir portal de pagamento"
   },
   "auth": {
     "entrar": "Entrar",
@@ -888,7 +890,17 @@
   },
   "paywall": {
     "testeAcabando": "Aproveite: seu teste está acabando!",
-    "naoPerca": "Não perca acesso ao ranking por IA e suas vagas ativas."
+    "naoPerca": "Não perca acesso ao ranking por IA e suas vagas ativas.",
+    "erroSessao": "Erro ao criar sessão de pagamento",
+    "testeExpirou": "Seu período de teste expirou",
+    "restamNoTeste": "{n, plural, one {# dia restante} other {# dias restantes}} no teste grátis",
+    "escolhaPlano": "Escolha um plano para continuar",
+    "expirouPonto": "Seu teste expirou.",
+    "ultimoDia": "Último dia do teste grátis!",
+    "restamNoTestePonto": "{n} dias restantes no teste grátis.",
+    "testeExpiradoCurto": "Teste expirado",
+    "restantesCurto": "{n, plural, one {# dia restante} other {# dias restantes}}",
+    "verPlanos": "Ver planos"
   },
   "onboarding": {
     "tudoProntoTexto": "Você completou todos os primeiros passos. Agora é só focar nos candidatos.",

@@ -53,10 +53,11 @@ export default function SubscriptionPage() {
     try {
       const { url } = await apiClient.createPortalSession();
       if (url) {
-        window.location.href = url;
+        window.open(url, '_blank', 'noopener,noreferrer');
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Erro ao abrir portal de pagamento');
+      toast.error(err instanceof Error ? err.message : t('assinatura.erroPortal'));
+    } finally {
       setIsOpeningPortal(false);
     }
   };

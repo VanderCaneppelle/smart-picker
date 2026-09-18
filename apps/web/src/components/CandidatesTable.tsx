@@ -25,12 +25,11 @@ import type { Candidate, CandidateStatus, DisqualificationFlag } from '@hunter/c
 import { useTranslations } from 'next-intl';
 import { useIntlLocale } from '@/lib/plan-i18n';
 
-const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['interview', 'hired', 'rejected'];
+const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['interview', 'rejected'];
 
 /** Guarda a chave, não o texto: constante de módulo é avaliada antes de existir idioma. */
 const STATUS_EMAIL_MESSAGE_KEYS: Record<string, string> = {
   interview: 'candidatos.avisoEntrevista',
-  hired: 'candidatos.avisoContratado',
   rejected: 'candidatos.avisoRejeitado',
 };
 
@@ -972,7 +971,7 @@ export default function CandidatesTable({
               </span>.
             </p>
             <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-5">
-              {t(STATUS_EMAIL_MESSAGE_KEYS[pendingStatusChange.newStatus])}
+              {t(STATUS_EMAIL_MESSAGE_KEYS[pendingStatusChange.newStatus] ?? '')}
             </p>
             <div className="flex justify-end gap-3">
               <button

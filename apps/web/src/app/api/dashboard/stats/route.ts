@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
       },
       select: {
         id: true,
+        name: true,
         status: true,
         fit_score: true,
         created_at: true,
@@ -78,6 +79,18 @@ export async function GET(request: NextRequest) {
       ? Math.round(activeJobs.reduce((acc, j) => acc + (now.getTime() - new Date(j.created_at).getTime()) / 86400000, 0) / activeJobs.length)
       : 0;
 
+    const jobTitleById = new Map(jobs.map((j) => [j.id, j.title]));
+    const pendingReviewCandidates = allCandidates
+      .filter((c) => c.status === 'new')
+      .sort((a, b) => (b.fit_score ?? -1) - (a.fit_score ?? -1))
+      .slice(0, 5)
+      .map((c) => ({
+        id: c.id,
+        name: c.name,
+        jobId: c.job_id,
+        jobTitle: jobTitleById.get(c.job_id) ?? '',
+        fitScore: c.fit_score,
+      }));
     const pendingReview = allCandidates.filter((c) => c.status === 'new').length;
     const staleJobs = activeJobs.filter((j) => {
       const daysSinceCreated = (now.getTime() - new Date(j.created_at).getTime()) / 86400000;
@@ -228,6 +241,7 @@ export async function GET(request: NextRequest) {
         avgCandidatesPerJob,
         avgDaysJobOpen: avgDaysOpen,
         pendingReview,
+        pendingReviewCandidates,
         staleJobsCount: staleJobs.length,
         staleJobs: staleJobs.map((j) => ({ id: j.id, title: j.title })),
       },
