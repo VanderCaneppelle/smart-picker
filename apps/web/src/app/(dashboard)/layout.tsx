@@ -7,7 +7,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Loading } from '@/components/ui';
 import { SubscriptionPaywall, TrialBanner, TrialSidebarBadge } from '@/components/SubscriptionPaywall';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
-import { AppIntlProvider } from '@/components/AppIntlProvider';
 import { useTranslations } from 'next-intl';
 import { apiClient } from '@/lib/api-client';
 import { useActiveJobsLimit } from '@/hooks/useActiveJobsLimit';
@@ -552,10 +551,11 @@ function DashboardLayoutContent({
  * O provider de idioma fica por fora da casca: assim tudo dentro do painel, inclusive
  * as telas filhas, lê a preferência que o recrutador salvou, e não o idioma da URL.
  */
+/**
+ * Sem provider próprio aqui. O idioma do painel vem do cookie, lido no servidor pelo
+ * getRequestConfig antes de renderizar, e entregue pelo provider do layout raiz. Era
+ * a busca por API depois da montagem que fazia a tela nascer em português e trocar.
+ */
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <AppIntlProvider>
-      <DashboardShell>{children}</DashboardShell>
-    </AppIntlProvider>
-  );
+  return <DashboardShell>{children}</DashboardShell>;
 }

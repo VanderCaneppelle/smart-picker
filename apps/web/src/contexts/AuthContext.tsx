@@ -89,6 +89,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(USER_KEY, JSON.stringify(data.user));
 
     apiClient.setToken(data.access_token);
+
+    // Espelha o idioma da conta no cookie que o servidor lê. É o que faz a primeira
+    // tela depois do login já sair renderizada na língua certa.
+    const locale = (data as { locale?: string }).locale;
+    if (locale === 'pt' || locale === 'en') {
+      document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+    }
+
     setUser(data.user);
   }, []);
 

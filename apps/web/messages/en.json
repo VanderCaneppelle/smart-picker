@@ -564,5 +564,29 @@
     "inclui": "Includes:",
     "querMais": "Want more?",
     "verPlanosPrecos": "See plans and pricing"
+  },
+  "auth": {
+    "entrar": "Sign in",
+    "entrarSub": "Sign in to manage your roles",
+    "esqueciSenha": "Forgot my password",
+    "criarConta": "Create account",
+    "criarContaSub": "Fill in your details to start posting roles",
+    "pagamentoConfirmado": "Payment confirmed ✓",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "senha": "Password",
+    "senhaPlaceholder": "Your password",
+    "nome": "Full name",
+    "nomePlaceholder": "Your name",
+    "empresa": "Company",
+    "empresaPlaceholder": "Company name (optional)",
+    "telefone": "Phone",
+    "telefonePlaceholder": "+1 555 000 0000",
+    "senhaMinima": "At least 6 characters",
+    "confirmarSenha": "Confirm password",
+    "repitaSenha": "Repeat your password",
+    "loginOk": "Signed in",
+    "contaCriada": "Account created",
+    "contaCriadaConfirmar": "Account created. Check your email to confirm it."
   }
 }

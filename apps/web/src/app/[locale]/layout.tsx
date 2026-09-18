@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
 import { routing, type Locale } from '@/i18n/routing';
 
 /**
@@ -49,5 +50,19 @@ export default async function LocaleLayout({
   // Permite renderização estática das páginas traduzidas.
   setRequestLocale(locale);
 
-  return children;
+  /**
+   * O provider vive AQUI, e não no layout raiz, de propósito.
+   *
+   * Em navegação suave o Next re-renderiza só os segmentos que mudaram. O layout raiz
+   * é compartilhado entre /pt e /en, então um provider lá dentro mantinha o idioma
+   * antigo: a URL virava /en e o texto continuava em português. Aqui, como o segmento
+   * [locale] faz parte da rota, ele re-renderiza junto e o idioma acompanha.
+   */
+  const messages = await getMessages({ locale });
+
+  return (
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      {children}
+    </NextIntlClientProvider>
+  );
 }
