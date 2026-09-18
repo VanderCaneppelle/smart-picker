@@ -538,7 +538,7 @@ function DashboardLayoutContent({
       </div>
 
       {subscription && needsSubscription(subscription) && (
-        <SubscriptionPaywall subscription={subscription} />
+        <SubscriptionPaywall subscription={subscription} onLogout={handleLogout} />
       )}
 
     </div>
