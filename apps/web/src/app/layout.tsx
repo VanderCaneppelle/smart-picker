@@ -4,6 +4,8 @@ import { Toaster } from 'sonner';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
+import { moedaDaRequisicao } from '@/lib/pais';
+import { MoedaProvider } from '@/contexts/MoedaContext';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -37,6 +39,8 @@ export default async function RootLayout({
 }>) {
   const locale = await getLocale();
   const messages = await getMessages();
+  // O país vive na requisição, que só o servidor enxerga. Desce por contexto.
+  const moeda = await moedaDaRequisicao();
 
   return (
     <html lang={locale} suppressHydrationWarning>
@@ -53,10 +57,12 @@ export default async function RootLayout({
       </head>
       <body className="min-h-screen bg-gray-50 antialiased" suppressHydrationWarning>
         <NextIntlClientProvider locale={locale} messages={messages}>
+          <MoedaProvider moeda={moeda}>
           <AuthProvider>
           {children}
           <Toaster position="top-right" richColors />
         </AuthProvider>
+          </MoedaProvider>
         </NextIntlClientProvider>
       </body>
     </html>
