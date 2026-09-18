@@ -23,6 +23,7 @@ import { apiClient } from '@/lib/api-client';
 import { Badge, Select, SortIcon } from '@/components/ui';
 import type { Candidate, CandidateStatus, DisqualificationFlag } from '@hunter/core';
 import { useTranslations } from 'next-intl';
+import { useIntlLocale } from '@/lib/plan-i18n';
 
 const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['interview', 'rejected'];
 
@@ -293,6 +294,7 @@ export default function CandidatesTable({
   onStatusFilterChange,
 }: CandidatesTableProps) {
   const t = useTranslations();
+  const localeIntl = useIntlLocale();
   /** Rótulo resolvido na renderização: a lista guarda a chave. */
   const opcoes = (lista: { value: string; labelKey: string }[]) =>
     lista.map((o) => ({ value: o.value, label: t(o.labelKey) }));
@@ -794,7 +796,7 @@ export default function CandidatesTable({
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div className="flex items-center gap-1.5 text-sm text-gray-600">
                       <Calendar className="h-3.5 w-3.5 text-gray-400 shrink-0" />
-                      {new Date(candidate.created_at).toLocaleDateString('pt-BR', {
+                      {new Date(candidate.created_at).toLocaleDateString(localeIntl, {
                         day: '2-digit',
                         month: '2-digit',
                         year: '2-digit',
@@ -907,11 +909,11 @@ export default function CandidatesTable({
                     {candidate.schedule_interview_email_sent_at ? (
                       <span
                         className="inline-flex items-center gap-1 text-green-600 text-xs"
-                        title={`Enviado em ${new Date(candidate.schedule_interview_email_sent_at).toLocaleString('pt-BR')}`}
+                        title={`Enviado em ${new Date(candidate.schedule_interview_email_sent_at).toLocaleString(localeIntl)}`}
                       >
                         <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
                         {new Date(candidate.schedule_interview_email_sent_at).toLocaleDateString(
-                          'pt-BR',
+                          localeIntl,
                           { day: '2-digit', month: '2-digit', year: '2-digit' }
                         )}
                       </span>

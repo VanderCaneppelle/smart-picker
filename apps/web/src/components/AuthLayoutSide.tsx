@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { TrendingUp, CheckCircle2, Gift } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export function AuthLayoutSide() {
+  const t = useTranslations();
   return (
     <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-emerald-700 via-emerald-800 to-teal-900 text-white overflow-hidden">
       <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.04\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-80" />
@@ -18,15 +20,10 @@ export function AuthLayoutSide() {
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm mb-4">
               <Gift className="h-4 w-4 text-emerald-300" />
-              <span className="text-sm font-medium text-emerald-200">30 dias grátis</span>
+              <span className="text-sm font-medium text-emerald-200">{t('autenticacao.diasGratis')}</span>
             </div>
-            <h1 className="text-3xl xl:text-4xl font-bold leading-tight">
-              Contrate com inteligência.
-            </h1>
-            <p className="mt-4 text-emerald-100 text-lg">
-              Publique vagas, receba candidatos e deixe a IA ranquear os melhores.
-              Comece grátis: 10 vagas ativas e candidatos ilimitados.
-            </p>
+            <h1 className="text-3xl xl:text-4xl font-bold leading-tight">{t('autenticacao.contrateInteligencia')}</h1>
+            <p className="mt-4 text-emerald-100 text-lg">{t('auth.lateralTexto')}</p>
           </div>
           <ul className="space-y-4">
             {[
@@ -44,9 +41,7 @@ export function AuthLayoutSide() {
             ))}
           </ul>
         </div>
-        <p className="text-sm text-emerald-200/80">
-          Sem compromisso. Cancele quando quiser.
-        </p>
+        <p className="text-sm text-emerald-200/80">{t('autenticacao.semCompromisso')}</p>
       </div>
     </div>
   );

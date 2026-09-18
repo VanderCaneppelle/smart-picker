@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { PLANS, TRIAL_DURATION_DAYS, TRIAL_MAX_ACTIVE_JOBS } from '@/lib/subscription';
+import { usePlanoTraduzido } from '@/lib/plan-i18n';
 
 function PricingCard({
   plan,
@@ -32,6 +33,7 @@ function PricingCard({
   index: number;
 }) {
   const t = useTranslations();
+  const tp = usePlanoTraduzido();
   const Icon = index === 0 ? Rocket : index === 1 ? Crown : Building2;
   return (
     <div
@@ -53,20 +55,20 @@ function PricingCard({
         <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50">
           <Icon className="h-5 w-5 text-emerald-600" />
         </span>
-        <h3 className="text-base font-semibold tracking-tight text-gray-900">{plan.name}</h3>
+        <h3 className="text-base font-semibold tracking-tight text-gray-900">{tp(plan).nome}</h3>
       </div>
 
-      <p className="mb-6 text-sm leading-relaxed text-gray-500">{plan.description}</p>
+      <p className="mb-6 text-sm leading-relaxed text-gray-500">{tp(plan).descricao}</p>
 
       <div className="mb-6 flex items-baseline gap-1">
-        <span className="text-4xl font-bold tracking-tight text-gray-900">{plan.priceLabel}</span>
-        <span className="text-sm text-gray-500">/mês</span>
+        <span className="text-4xl font-bold tracking-tight text-gray-900">{tp(plan).preco}</span>
+        <span className="text-sm text-gray-500">{t('precos.porMes')}</span>
       </div>
 
       <div className="mb-6 h-px bg-gray-100" />
 
       <ul className="space-y-3 text-sm">
-        {plan.features.map((feature, i) => (
+        {tp(plan).recursos.map((feature, i) => (
           <li key={i} className="flex items-start gap-2.5">
             <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-emerald-50">
               <Check className="h-3 w-3 text-emerald-600" strokeWidth={3} />
@@ -402,7 +404,7 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <p className="font-semibold">Marina Souza</p>
-                  <p className="text-emerald-200 text-sm">Consultora de RH Independente</p>
+                  <p className="text-emerald-200 text-sm">{t('depoimento.cargo')}</p>
                 </div>
               </div>
             </div>
@@ -415,7 +417,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-7xl">
           <div className="mx-auto mb-16 max-w-2xl text-center">
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-emerald-600">
-              Preços
+              {t('precos.rotulo')}
             </p>
             <h2 className="mb-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
               {t('precos.titulo')}

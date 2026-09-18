@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { TrendingUp } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export function MarketingFooter() {
+  const t = useTranslations();
   return (
     <footer className="border-t border-gray-100 bg-white px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -13,15 +15,9 @@ export function MarketingFooter() {
             <span className="text-xl font-bold text-gray-900">Rankea</span>
           </Link>
           <div className="flex flex-wrap items-center justify-center gap-6">
-            <Link href="/termos" className="text-sm text-gray-500 hover:text-gray-700">
-              Termos de Uso
-            </Link>
-            <Link href="/privacidade" className="text-sm text-gray-500 hover:text-gray-700">
-              Política de Privacidade
-            </Link>
-            <Link href="/pricing" className="text-sm text-gray-500 hover:text-gray-700">
-              Preços
-            </Link>
+            <Link href="/termos" className="text-sm text-gray-500 hover:text-gray-700">{t('rodape.termos')}</Link>
+            <Link href="/privacidade" className="text-sm text-gray-500 hover:text-gray-700">{t('rodape.privacidade')}</Link>
+            <Link href="/pricing" className="text-sm text-gray-500 hover:text-gray-700">{t('rodape.precos')}</Link>
             <p className="text-sm text-gray-400">
               © {new Date().getFullYear()} Rankea. Todos os direitos reservados.
             </p>

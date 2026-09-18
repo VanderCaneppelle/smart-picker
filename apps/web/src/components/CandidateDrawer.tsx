@@ -8,6 +8,7 @@ import { Button, Badge } from '@/components/ui';
 import type { Candidate, CandidateStatus, ApplicationQuestion } from '@hunter/core';
 import { apiClient, type CandidateHistoryEvent } from '@/lib/api-client';
 import { useTranslations } from 'next-intl';
+import { useIntlLocale } from '@/lib/plan-i18n';
 
 const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['interview', 'rejected'];
 
@@ -199,7 +200,7 @@ export default function CandidateDrawer({
               </h2>
               <div className="flex items-center gap-2.5 mt-1.5">
                 <Badge variant={STATUS_BADGE_VARIANT[candidate.status] ?? 'default'}>
-                  {STATUS_LABEL_KEYS[candidate.status] ?? candidate.status}
+                  {STATUS_LABEL_KEYS[candidate.status] ? t(STATUS_LABEL_KEYS[candidate.status]) : candidate.status}
                 </Badge>
                 {candidate.fit_score != null && (
                   <span className={`text-xl font-bold ${scoreColor(candidate.fit_score)}`}>
@@ -468,6 +469,7 @@ function HistoryTab({
   statusLabels: Record<string, string>;
 }) {
   const t = useTranslations();
+  const localeIntl = useIntlLocale();
   if (eventsLoading) {
     return <p className="text-sm text-gray-400 italic">{t('gaveta.carregandoHistorico')}</p>;
   }
@@ -479,7 +481,7 @@ function HistoryTab({
   return (
     <div className="space-y-4">
       {events.map((event) => {
-        const dateText = new Date(event.created_at).toLocaleString('pt-BR', {
+        const dateText = new Date(event.created_at).toLocaleString(localeIntl, {
           day: '2-digit',
           month: '2-digit',
           year: 'numeric',

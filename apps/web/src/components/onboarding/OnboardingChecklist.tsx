@@ -13,15 +13,17 @@ import {
   PartyPopper,
 } from 'lucide-react';
 import { useOnboarding, ONBOARDING_STEPS, type OnboardingStepId } from '@/contexts/OnboardingContext';
+import { useTranslations } from 'next-intl';
 
-const STEP_LABELS: Record<OnboardingStepId, string> = {
-  profile: 'Completar perfil',
-  settings: 'Configurar perfil público',
-  'create-job': 'Criar primeira vaga',
-  'add-questions': 'Adicionar perguntas à vaga',
-  'ia-config': 'Configurar avaliação por IA',
-  'share-job': 'Compartilhar vaga',
-  'review-candidates': 'Analisar candidatos',
+/** Chaves, não textos: constante de módulo é avaliada antes de existir idioma. */
+const STEP_LABEL_KEYS: Record<OnboardingStepId, string> = {
+  profile: 'onboarding.passos.perfil',
+  settings: 'onboarding.configurarPerfil',
+  'create-job': 'onboarding.passos.criarVaga',
+  'add-questions': 'onboarding.passos.perguntas',
+  'ia-config': 'onboarding.passos.ia',
+  'share-job': 'onboarding.passos.compartilhar',
+  'review-candidates': 'onboarding.passos.analisar',
 };
 
 const STEP_HREF: Partial<Record<OnboardingStepId, string>> = {
@@ -35,6 +37,7 @@ const STEP_HREF: Partial<Record<OnboardingStepId, string>> = {
 };
 
 export function OnboardingChecklist() {
+  const t = useTranslations();
   const {
     state,
     completedCount,
@@ -75,10 +78,8 @@ export function OnboardingChecklist() {
             <PartyPopper className="h-6 w-6 text-white" />
           </div>
           <div>
-            <p className="font-bold text-gray-900 text-base">Tudo pronto!</p>
-            <p className="text-sm text-gray-500 mt-1">
-              Você completou todos os primeiros passos. Agora é só focar nos candidatos.
-            </p>
+            <p className="font-bold text-gray-900 text-base">{t('onboarding.tudoPronto')}</p>
+            <p className="text-sm text-gray-500 mt-1">{t('onboarding.tudoProntoTexto')}</p>
           </div>
           <div className="flex items-center gap-3 mt-1">
             <button
@@ -86,16 +87,12 @@ export function OnboardingChecklist() {
               onClick={() => { resetOnboarding(); router.push('/perfil'); }}
               className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors"
             >
-              <RotateCcw className="h-3 w-3" />
-              Reiniciar tutorial
-            </button>
+              <RotateCcw className="h-3 w-3" />{t('onboarding.reiniciar')}</button>
             <button
               type="button"
               onClick={dismissOnboarding}
               className="px-4 py-1.5 text-xs bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors"
-            >
-              Dispensar
-            </button>
+            >{t('onboarding.dispensar')}</button>
           </div>
         </div>
       </div>
@@ -114,7 +111,7 @@ export function OnboardingChecklist() {
           <Rocket className="h-4 w-4 text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-900 text-sm">Primeiros passos</p>
+          <p className="font-semibold text-gray-900 text-sm">{t('onboarding.primeirosPassos')}</p>
           <p className="text-xs text-gray-500 mt-0.5">
             {completedCount} de {totalSteps} concluídos · {percent}%
           </p>
@@ -126,7 +123,7 @@ export function OnboardingChecklist() {
             onClick={(e) => { e.stopPropagation(); dismissOnboarding(); }}
             onKeyDown={(e) => e.key === 'Enter' && (e.stopPropagation(), dismissOnboarding())}
             className="p-1.5 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100 transition-colors"
-            aria-label="Ocultar checklist"
+            aria-label={t('onboarding.ocultar')}
           >
             <X className="h-3.5 w-3.5" />
           </div>
@@ -179,7 +176,7 @@ export function OnboardingChecklist() {
                     className={`flex-1 flex items-center gap-2 text-left ${done ? 'cursor-default' : 'cursor-pointer'}`}
                   >
                     <span className={`text-sm flex-1 ${done ? 'line-through text-gray-400' : 'text-gray-700 group-hover:text-emerald-800'}`}>
-                      {STEP_LABELS[step.id]}
+                      {t(STEP_LABEL_KEYS[step.id])}
                     </span>
                     {!done && (
                       <span className="text-xs text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity font-medium shrink-0">
@@ -199,9 +196,7 @@ export function OnboardingChecklist() {
               onClick={() => { resetOnboarding(); router.push('/perfil'); }}
               className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors"
             >
-              <RotateCcw className="h-3 w-3" />
-              Reiniciar tutorial
-            </button>
+              <RotateCcw className="h-3 w-3" />{t('onboarding.reiniciar')}</button>
             <button
               type="button"
               onClick={() => { startTour(0); router.push('/perfil'); }}

@@ -3,16 +3,27 @@
 import { useState, useMemo } from 'react';
 import { ChevronDown, ChevronRight, Mail, Calendar, XCircle } from 'lucide-react';
 import { Input } from '@/components/ui';
+import { useTranslations } from 'next-intl';
 
-const PLACEHOLDERS = 'Variáveis: {{candidate_name}}, {{job_title}}, {{sender_name}}, {{signature}}. Para "Entrevista": {{calendly_link}}';
-
-const PREVIEW_VARS = {
-  candidate_name: 'Maria Silva',
-  job_title: 'Desenvolvedor Full Stack',
-  sender_name: 'Equipe de RH',
-  signature: 'Atenciosamente,\nEquipe de RH',
-  calendly_link: `<p>Agende sua entrevista pelo link abaixo:</p><div style="text-align: center; margin: 24px 0;"><a href="#" style="display: inline-block; background: #059669; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">Entrevista (Calendly)</a></div><p>Se o link não abrir, copie e cole no navegador: <br><a href="#" style="color: #2563eb; word-break: break-all;">https://calendly.com/exemplo</a></p>`,
-};
+/**
+ * Variáveis de exemplo da prévia. Montadas dentro do componente: constante de
+ * módulo é avaliada na importação, antes de existir idioma, e o texto sairia cru.
+ */
+function usarVariaveisPrevia() {
+  const t = useTranslations();
+  return {
+    candidate_name: t('config.previaNome'),
+    job_title: t('config.previaVaga'),
+    sender_name: t('config.previaRemetente'),
+    signature: t('config.previaAssinatura'),
+    calendly_link:
+      `<p>${t('config.agendeEntrevista')}</p>` +
+      '<div style="text-align: center; margin: 24px 0;">' +
+      `<a href="#" style="display: inline-block; background: #059669; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">${t('config.entrevistaCalendly')}</a>` +
+      `</div><p>${t('config.linkNaoAbrir')}<br>` +
+      '<a href="#" style="color: #2563eb; word-break: break-all;">https://calendly.com/exemplo</a></p>',
+  };
+}
 
 function renderPreviewTemplate(
   template: string,
@@ -56,6 +67,7 @@ function TemplateEditor({
   expandedId,
   onToggle,
 }: TemplateEditorProps) {
+  const t = useTranslations();
   const open = expandedId === id;
 
   return (
@@ -76,13 +88,13 @@ function TemplateEditor({
       {open && (
         <div className="p-4 space-y-4 border-t border-gray-200 bg-white">
           <Input
-            label="Assunto"
+            label={t('config.assunto')}
             value={subject}
             onChange={(e) => onSubjectChange(e.target.value)}
             placeholder={defaultSubject}
           />
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Corpo do e-mail (HTML)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('config.corpoHtml')}</label>
             <textarea
               value={bodyHtml}
               onChange={(e) => onBodyChange(e.target.value)}
@@ -90,7 +102,7 @@ function TemplateEditor({
               rows={10}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-sm"
             />
-            <p className="mt-1 text-xs text-gray-500">{PLACEHOLDERS}</p>
+            <p className="mt-1 text-xs text-gray-500">{t('config.variaveis')}</p>
           </div>
         </div>
       )}
@@ -117,26 +129,30 @@ function PreviewPanel({
   defaultBodyHint,
   showCalendlyInPreview,
 }: PreviewPanelProps) {
+  const t = useTranslations();
+  const variaveis = usarVariaveisPrevia();
   const previewSubject = useMemo(
-    () => renderPreviewTemplate(subject || defaultSubject, PREVIEW_VARS),
+    () => renderPreviewTemplate(subject || defaultSubject, variaveis),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [subject, defaultSubject]
   );
 
   const previewHtml = useMemo(() => {
     const raw = bodyHtml || defaultBodyHint;
     if (!raw || !raw.trim().startsWith('<')) return '';
-    const vars = { ...PREVIEW_VARS };
+    const vars = { ...variaveis };
     if (!showCalendlyInPreview) {
-      vars.calendly_link = '<p><em>[Link do Calendly será inserido aqui]</em></p>';
+      vars.calendly_link = `<p><em>${t('config.linkCalendlyAqui')}</em></p>`;
     }
     return renderPreviewTemplate(raw, vars);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bodyHtml, defaultBodyHint, showCalendlyInPreview]);
 
   if (!templateId) {
     return (
       <div className="h-full min-h-[320px] flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 text-center p-6">
-        <p className="text-sm font-medium text-gray-600">Prévia do e-mail</p>
-        <p className="text-sm text-gray-500 mt-1">Expanda um modelo à esquerda para ver como o e-mail ficará.</p>
+        <p className="text-sm font-medium text-gray-600">{t('config.previaEmail')}</p>
+        <p className="text-sm text-gray-500 mt-1">{t('config.expandaModelo')}</p>
       </div>
     );
   }
@@ -144,12 +160,12 @@ function PreviewPanel({
   return (
     <div className="flex flex-col h-full min-h-0 rounded-xl border border-gray-200 bg-white overflow-hidden">
       <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Prévia</p>
+        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{t('config.previa')}</p>
         <p className="text-sm font-semibold text-gray-900 mt-0.5">{templateTitle}</p>
       </div>
       <div className="flex-1 flex flex-col min-h-0 p-4 overflow-auto">
         <div className="mb-3">
-          <span className="text-xs font-medium text-gray-500">Assunto: </span>
+          <span className="text-xs font-medium text-gray-500">{t('config.assuntoDoisPontos')}</span>
           <span className="text-sm text-gray-900">{previewSubject || '(vazio)'}</span>
         </div>
         {previewHtml ? (
@@ -162,7 +178,7 @@ function PreviewPanel({
             />
           </div>
         ) : (
-          <p className="text-sm text-gray-500 italic">Edite o corpo em HTML para ver a prévia.</p>
+          <p className="text-sm text-gray-500 italic">{t('config.editeCorpo')}</p>
         )}
       </div>
     </div>
@@ -198,6 +214,7 @@ export default function EmailTemplatesSection({
   onRejectionSubjectChange,
   onRejectionBodyChange,
 }: EmailTemplatesSectionProps) {
+  const t = useTranslations();
   const [expandedId, setExpandedId] = useState<TemplateId | null>(null);
 
   const handleToggle = (id: TemplateId) => {
@@ -207,29 +224,29 @@ export default function EmailTemplatesSection({
   const previewProps = useMemo(() => {
     if (expandedId === 'application_received')
       return {
-        templateTitle: 'Candidatura recebida',
+        templateTitle: t('config.candidaturaRecebida'),
         subject: applicationReceivedSubject,
         bodyHtml: applicationReceivedBodyHtml,
         defaultSubject: 'Candidatura recebida: {{job_title}}',
-        defaultBodyHint: 'E-mail enviado quando o candidato envia a aplicação. Use as variáveis no texto.',
+        defaultBodyHint: t('config.dicaRecebida'),
         showCalendlyInPreview: false,
       };
     if (expandedId === 'schedule_interview')
       return {
-        templateTitle: 'Entrevista',
+        templateTitle: t('candidatos.filtros.entrevista'),
         subject: scheduleInterviewSubject,
         bodyHtml: scheduleInterviewBodyHtml,
         defaultSubject: "Você foi selecionado(a)! Agende sua entrevista – {{job_title}}",
-        defaultBodyHint: 'Inclua {{calendly_link}} onde deve aparecer o botão/link do Calendly.',
+        defaultBodyHint: t('config.dicaEntrevista', { variavel: '{{calendly_link}}' }),
         showCalendlyInPreview: true,
       };
     if (expandedId === 'rejection')
       return {
-        templateTitle: 'Rejeição',
+        templateTitle: t('config.rejeicao'),
         subject: rejectionSubject,
         bodyHtml: rejectionBodyHtml,
         defaultSubject: 'Atualização sobre sua candidatura: {{job_title}}',
-        defaultBodyHint: 'E-mail enviado quando o candidato é encerrado.',
+        defaultBodyHint: t('config.dicaRejeicao'),
         showCalendlyInPreview: false,
       };
     return null;
@@ -245,50 +262,48 @@ export default function EmailTemplatesSection({
 
   return (
     <div className="space-y-5">
-      <h3 className="text-lg font-semibold text-gray-900">Modelos de e-mail</h3>
-      <p className="text-sm text-gray-500">
-        Personalize o assunto e o corpo de cada e-mail enviado aos candidatos. Deixe em branco para usar o modelo padrão.
-      </p>
+      <h3 className="text-lg font-semibold text-gray-900">{t('config.modelos')}</h3>
+      <p className="text-sm text-gray-500">{t('config.modelosTexto')}</p>
 
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(280px,480px),1fr] gap-6 lg:gap-8 w-full">
         <div className="space-y-3 min-w-0">
           <TemplateEditor
             id="application_received"
-            title="Candidatura recebida"
+            title={t('config.candidaturaRecebida')}
             icon={<Mail className="h-4 w-4 text-emerald-600" />}
             subject={applicationReceivedSubject}
             bodyHtml={applicationReceivedBodyHtml}
             onSubjectChange={onApplicationReceivedSubjectChange}
             onBodyChange={onApplicationReceivedBodyChange}
             defaultSubject="Candidatura recebida: {{job_title}}"
-            defaultBodyHint="E-mail enviado quando o candidato envia a aplicação. Use as variáveis no texto."
+            defaultBodyHint={t('config.dicaRecebida')}
             expandedId={expandedId}
             onToggle={handleToggle}
           />
           <TemplateEditor
             id="schedule_interview"
-            title="Entrevista"
+            title={t('candidatos.filtros.entrevista')}
             icon={<Calendar className="h-4 w-4 text-blue-600" />}
             subject={scheduleInterviewSubject}
             bodyHtml={scheduleInterviewBodyHtml}
             onSubjectChange={onScheduleInterviewSubjectChange}
             onBodyChange={onScheduleInterviewBodyChange}
             defaultSubject="Você foi selecionado(a)! Agende sua entrevista – {{job_title}}"
-            defaultBodyHint="Inclua {{calendly_link}} onde deve aparecer o botão/link do Calendly."
+            defaultBodyHint={t('config.dicaEntrevista', { variavel: '{{calendly_link}}' })}
             showCalendlyInPreview
             expandedId={expandedId}
             onToggle={handleToggle}
           />
           <TemplateEditor
             id="rejection"
-            title="Rejeição"
+            title={t('config.rejeicao')}
             icon={<XCircle className="h-4 w-4 text-gray-500" />}
             subject={rejectionSubject}
             bodyHtml={rejectionBodyHtml}
             onSubjectChange={onRejectionSubjectChange}
             onBodyChange={onRejectionBodyChange}
             defaultSubject="Atualização sobre sua candidatura: {{job_title}}"
-            defaultBodyHint="E-mail enviado quando o candidato é encerrado."
+            defaultBodyHint={t('config.dicaRejeicao')}
             expandedId={expandedId}
             onToggle={handleToggle}
           />

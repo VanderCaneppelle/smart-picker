@@ -12,6 +12,7 @@ import CandidatesViewToggle, {
 import CandidatesTable from './CandidatesTable';
 import CandidatesKanbanBoard from './CandidatesKanbanBoard';
 import type { Candidate } from '@hunter/core';
+import { useTranslations } from 'next-intl';
 
 /** Busca global: nome, e-mail, resumo do CV, nível de experiência, score numérico */
 function filterCandidatesBySearch(candidates: Candidate[], query: string): Candidate[] {
@@ -28,14 +29,14 @@ function filterCandidatesBySearch(candidates: Candidate[], query: string): Candi
 }
 
 const statusOptions = [
-  { value: '', label: 'Todos' },
-  { value: 'active', label: 'Todos (excl. encerrados)' },
-  { value: 'new', label: 'Novos' },
-  { value: 'reviewing', label: 'Em análise' },
-  { value: 'interview', label: 'Entrevista' },
-  { value: 'in_validation', label: 'Em validação' },
-  { value: 'rejected', label: 'Encerrados' },
-  { value: 'hired', label: 'Contratados' },
+  { value: '', labelKey: 'candidatos.filtros.todos' },
+  { value: 'active', labelKey: 'candidatos.filtros.todosExcl' },
+  { value: 'new', labelKey: 'candidatos.filtros.novos' },
+  { value: 'reviewing', labelKey: 'candidatos.filtros.emAnalise' },
+  { value: 'interview', labelKey: 'candidatos.filtros.entrevista' },
+  { value: 'in_validation', labelKey: 'candidatos.filtros.emValidacao' },
+  { value: 'rejected', labelKey: 'candidatos.filtros.encerrados' },
+  { value: 'hired', labelKey: 'candidatos.filtros.contratados' },
 ];
 
 interface CandidatesSectionProps {
@@ -43,6 +44,10 @@ interface CandidatesSectionProps {
 }
 
 export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
+  const t = useTranslations();
+  /** Rótulo resolvido na renderização: a lista guarda a chave. */
+  const opcoes = (lista: { value: string; labelKey: string }[]) =>
+    lista.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [view, setView] = useState<CandidatesView>('list');
@@ -89,7 +94,7 @@ export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
       const data = await apiClient.getJobCandidates(jobId);
       setCandidates(data.candidates);
     } catch (error) {
-      toast.error('Falha ao carregar candidatos');
+      toast.error(t('secaoCand.erroCarregar'));
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -117,14 +122,14 @@ export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
   }, [filteredBySearch]);
 
   if (isLoading) {
-    return <Loading text="Carregando candidatos..." />;
+    return <Loading text={t('secaoCand.carregando')} />;
   }
 
   if (candidates.length === 0) {
     return (
       <EmptyState
-        title="Nenhum candidato ainda"
-        description="Compartilhe a vaga para começar a receber candidaturas"
+        title={t('secaoCand.nenhumAinda')}
+        description={t('secaoCand.vazioDica')}
       />
     );
   }
@@ -142,7 +147,7 @@ export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
           <CandidatesViewToggle view={view} onViewChange={setView} />
           {view === 'list' && (
             <Select
-              options={statusOptions}
+              options={opcoes(statusOptions)}
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="w-[200px] shrink-0"
@@ -154,10 +159,10 @@ export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
             <Search className="absolute left-3 h-4 w-4 text-gray-400 pointer-events-none" aria-hidden />
             <input
               type="text"
-              placeholder="Buscar por nome, email ou palavra-chave"
+              placeholder={t('secaoCand.buscar')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              aria-label="Buscar por nome, email ou palavra-chave"
+              aria-label={t('secaoCand.buscar')}
               className="w-full min-w-0 pl-9 pr-9 py-2 text-sm border border-gray-300 rounded-lg
                 placeholder-gray-400 text-gray-900
                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
@@ -168,22 +173,20 @@ export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
                 type="button"
                 onClick={() => setSearchQuery('')}
                 className="absolute right-2.5 p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                aria-label="Limpar busca"
+                aria-label={t('secaoCand.limparBusca')}
               >
                 <X className="h-4 w-4" />
               </button>
             )}
           </div>
           <span className="text-sm text-gray-500 whitespace-nowrap">
-            {displayCandidates.length} candidato{displayCandidates.length !== 1 ? 's' : ''}
+            {t('secaoCand.contagem', { n: displayCandidates.length })}
           </span>
         </div>
       </div>
 
       {showEmptySearchMessage && (
-        <p className="text-sm text-gray-500 text-center py-4 mb-2 rounded-lg bg-gray-50 border border-gray-100">
-          Nenhum candidato encontrado
-        </p>
+        <p className="text-sm text-gray-500 text-center py-4 mb-2 rounded-lg bg-gray-50 border border-gray-100">{t('secaoCand.nenhumEncontrado')}</p>
       )}
 
       {view === 'list' ? (

@@ -3,6 +3,7 @@
 import { useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { LayoutList, Columns3 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export type CandidatesView = 'list' | 'kanban';
 
@@ -29,6 +30,7 @@ interface CandidatesViewToggleProps {
 }
 
 export default function CandidatesViewToggle({ view, onViewChange }: CandidatesViewToggleProps) {
+  const t = useTranslations();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -57,9 +59,7 @@ export default function CandidatesViewToggle({ view, onViewChange }: CandidatesV
             : 'text-gray-500 hover:text-gray-700'
         }`}
       >
-        <LayoutList className="h-4 w-4" />
-        Lista
-      </button>
+        <LayoutList className="h-4 w-4" />{t('kanban.lista')}</button>
       <button
         onClick={() => setView('kanban')}
         className={`${btnBase} ${
@@ -68,9 +68,7 @@ export default function CandidatesViewToggle({ view, onViewChange }: CandidatesV
             : 'text-gray-500 hover:text-gray-700'
         }`}
       >
-        <Columns3 className="h-4 w-4" />
-        Kanban
-      </button>
+        <Columns3 className="h-4 w-4" />{t('kanban.quadro')}</button>
     </div>
   );
 }

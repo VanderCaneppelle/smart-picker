@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { apiClient, type RecruiterAnnouncement } from '@/lib/api-client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslations } from 'next-intl';
 
 const STORAGE_KEY = 'rankea.dismissedAnnouncements';
 
@@ -41,6 +42,7 @@ const LEVEL_STYLE: Record<string, string> = {
 };
 
 export default function AnnouncementBanner() {
+  const t = useTranslations();
   const { isLoading } = useAuth();
   const [items, setItems] = useState<RecruiterAnnouncement[]>([]);
   const [dismissed, setDismissed] = useState<string[]>([]);
@@ -85,7 +87,7 @@ export default function AnnouncementBanner() {
             <button
               type="button"
               onClick={() => fechar(a.id)}
-              aria-label="Fechar aviso"
+              aria-label={t('comum.fecharAviso')}
               className="shrink-0 rounded p-1 text-gray-400 transition-colors hover:bg-black/5 hover:text-gray-600"
             >
               <X className="h-4 w-4" />

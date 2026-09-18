@@ -24,27 +24,27 @@ const getStatusBadgeVariant = (status: string) => {
   }
 };
 
-const EMPLOYMENT_TYPE_LABELS: Record<string, string> = {
-  full_time: 'Tempo integral',
-  part_time: 'Meio período',
-  contract: 'Contrato',
-  internship: 'Estágio',
-  freelance: 'Freelance',
+/** Chaves, não textos: constante de módulo é avaliada antes de existir idioma. */
+const EMPLOYMENT_TYPE_KEYS: Record<string, string> = {
+  full_time: 'contrato.integral',
+  part_time: 'contrato.meioPeriodo',
+  contract: 'contrato.contrato',
+  internship: 'contrato.estagio',
+  freelance: 'contrato.freelance',
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  draft: 'Rascunho',
-  active: 'Ativa',
-  closed: 'Fechada',
-  on_hold: 'Pausada',
-};
-
-const formatEmploymentType = (type: string) => {
-  return EMPLOYMENT_TYPE_LABELS[type] || type.replace(/_/g, ' ');
+const STATUS_KEYS: Record<string, string> = {
+  draft: 'vagas.estados.rascunho',
+  active: 'vagas.estados.ativa',
+  closed: 'vagas.estados.fechada',
+  on_hold: 'vagas.estados.pausada',
 };
 
 function JobsPageContent() {
   const t = useTranslations();
+  /** Rótulo resolvido na renderização: o mapa guarda a chave. */
+  const formatarContrato = (type: string) =>
+    EMPLOYMENT_TYPE_KEYS[type] ? t(EMPLOYMENT_TYPE_KEYS[type]) : type.replace(/_/g, ' ');
   const router = useRouter();
   const searchParams = useSearchParams();
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -124,12 +124,12 @@ function JobsPageContent() {
           description={
             search || statusFilter || typeFilter
               ? 'Tente ajustar seus filtros'
-              : 'Crie sua primeira vaga para começar'
+              : t('vagas.vazioDica')
           }
           action={
             !search && !statusFilter && !typeFilter
               ? {
-                  label: 'Criar Vaga',
+                  label: t('formVaga.titulo'),
                   onClick: () => router.push('/jobs/new'),
                 }
               : undefined
@@ -158,7 +158,7 @@ function JobsPageContent() {
                   </div>
                 </div>
                 <Badge variant={getStatusBadgeVariant(job.status)} className="shrink-0">
-                  {STATUS_LABELS[job.status] || job.status.replace(/_/g, ' ')}
+                  {t(STATUS_KEYS[job.status] ?? '') || job.status.replace(/_/g, ' ')}
                 </Badge>
               </div>
 
@@ -166,7 +166,7 @@ function JobsPageContent() {
               <div className="space-y-2 mb-4 min-w-0 shrink-0">
                 <div className="flex items-center gap-2 text-sm text-gray-600 min-w-0">
                   <Briefcase className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{formatEmploymentType(job.employment_type)}</span>
+                  <span className="truncate">{formatarContrato(job.employment_type)}</span>
                 </div>
                 {job.salary_range && (
                   <div className="flex items-center gap-2 text-sm text-gray-600 min-w-0">
@@ -223,7 +223,7 @@ function JobsPageContent() {
                   className="shrink-0 ml-auto text-xs"
                 >
                   <span className="hidden xl:inline">{t('vagas.verCandidatos')}</span>
-                  <span className="xl:hidden">Ver</span>
+                  <span className="xl:hidden">{t('comum.ver')}</span>
                 </Button>
               </div>
             </div>
@@ -235,8 +235,9 @@ function JobsPageContent() {
 }
 
 export default function JobsPage() {
+  const t = useTranslations();
   return (
-    <Suspense fallback={<Loading text="Carregando..." />}>
+    <Suspense fallback={<Loading text={t('comum.carregando')} />}>
       <JobsPageContent />
     </Suspense>
   );

@@ -9,11 +9,14 @@ export type PlanId = 'starter' | 'professional' | 'enterprise' | 'test';
 
 export interface Plan {
   id: PlanId;
+  /** Fallback em português: usado fora da UI (admin, logs, Stripe). */
   name: string;
+  /** Chave de tradução do nome. Constante de módulo não pode guardar texto traduzido. */
+  nameKey: string;
   price: number;
   priceLabel: string;
-  description: string;
-  features: string[];
+  descriptionKey: string;
+  featureKeys: string[];
   maxActiveJobs: number;
   highlighted?: boolean;
   hidden?: boolean;
@@ -23,65 +26,69 @@ export const PLANS: Plan[] = [
   {
     id: 'starter',
     name: 'Starter',
+    nameKey: 'planos.starter.nome',
     price: 97,
     priceLabel: 'R$ 97',
-    description: 'Para recrutadores autônomos começando.',
+    descriptionKey: 'planos.starter.descricao',
     maxActiveJobs: 3,
-    features: [
-      'Até 3 vagas ativas',
-      'Candidatos ilimitados',
-      'Ranking por IA',
-      'E-mails automáticos',
-      'Página pública de vagas',
+    featureKeys: [
+      'planos.recursos.vagas3',
+      'planos.recursos.candidatosIlimitados',
+      'planos.recursos.rankingIA',
+      'planos.recursos.emailsAutomaticos',
+      'planos.recursos.paginaPublica',
     ],
   },
   {
     id: 'professional',
     name: 'Profissional',
+    nameKey: 'planos.professional.nome',
     price: 197,
     priceLabel: 'R$ 197',
-    description: 'Para consultorias e recrutadores em crescimento.',
+    descriptionKey: 'planos.professional.descricao',
     maxActiveJobs: 10,
     highlighted: true,
-    features: [
-      'Até 10 vagas ativas',
-      'Candidatos ilimitados',
-      'Ranking por IA',
-      'E-mails automáticos',
-      'Página pública personalizada',
-      'Branding customizado',
-      'Suporte prioritário',
-      'Entrevista por IA (em breve)',
+    featureKeys: [
+      'planos.recursos.vagas10',
+      'planos.recursos.candidatosIlimitados',
+      'planos.recursos.rankingIA',
+      'planos.recursos.emailsAutomaticos',
+      'planos.recursos.paginaPersonalizada',
+      'planos.recursos.branding',
+      'planos.recursos.suportePrioritario',
+      'planos.recursos.entrevistaIA',
     ],
   },
   {
     id: 'enterprise',
     name: 'Empresarial',
+    nameKey: 'planos.enterprise.nome',
     price: 397,
     priceLabel: 'R$ 397',
-    description: 'Para equipes e operações de alto volume.',
+    descriptionKey: 'planos.enterprise.descricao',
     maxActiveJobs: Infinity,
-    features: [
-      'Vagas ilimitadas',
-      'Candidatos ilimitados',
-      'Ranking por IA',
-      'E-mails automáticos',
-      'Página pública personalizada',
-      'Branding customizado',
-      'Suporte dedicado',
-      'Entrevista por IA (em breve)',
-      'API de integração (em breve)',
+    featureKeys: [
+      'planos.recursos.vagasIlimitadas',
+      'planos.recursos.candidatosIlimitados',
+      'planos.recursos.rankingIA',
+      'planos.recursos.emailsAutomaticos',
+      'planos.recursos.paginaPersonalizada',
+      'planos.recursos.branding',
+      'planos.recursos.suporteDedicado',
+      'planos.recursos.entrevistaIA',
+      'planos.recursos.api',
     ],
   },
   {
     id: 'test',
     name: 'Teste',
+    nameKey: 'planos.test.nome',
     price: 2,
     priceLabel: 'R$ 2',
-    description: 'Plano para teste interno do fluxo de pagamento.',
+    descriptionKey: 'planos.test.descricao',
     maxActiveJobs: 1,
     hidden: true,
-    features: ['Apenas para testes internos'],
+    featureKeys: ['planos.recursos.apenasTeste'],
   },
 ];
 

@@ -105,7 +105,8 @@
       "semCartao": "No credit card for the trial",
       "cancele": "Cancel anytime",
       "stripe": "Secure payments via Stripe"
-    }
+    },
+    "erroPagamento": "Could not start the payment"
   },
   "faq": {
     "titulo": "Frequently asked questions",
@@ -175,7 +176,9 @@
       "perfil": "Profile",
       "assinatura": "Subscription",
       "configuracoes": "Settings",
-      "sair": "Sign out"
+      "sair": "Sign out",
+      "vagasAtivasLimite": "{atual}/{limite} active jobs",
+      "vagasAtivas": "{atual} active jobs"
     },
     "status": {
       "todos": "All statuses",
@@ -231,7 +234,8 @@
     "consentimentoPrefixo": "I have read and accept the",
     "consentimentoMeio": "and the",
     "termos": "Terms of Use",
-    "privacidade": "Privacy Policy"
+    "privacidade": "Privacy Policy",
+    "analisaremos": "We will review your application and get back to you soon."
   },
   "painel": {
     "titulo": "Dashboard",
@@ -296,7 +300,14 @@
     "linkCopiado": "Link copied",
     "erroCopiar": "Could not copy the link",
     "duplicada": "Role duplicated as a draft. Review it and publish when ready.",
-    "erroDuplicar": "Could not duplicate the role"
+    "erroDuplicar": "Could not duplicate the role",
+    "vazioDica": "Create your first job to get started",
+    "estados": {
+      "rascunho": "Draft",
+      "ativa": "Active",
+      "fechada": "Closed",
+      "pausada": "On hold"
+    }
   },
   "formVaga": {
     "vagaCriada": "Role created",
@@ -456,7 +467,11 @@
     },
     "removendo": "Removing...",
     "salvando": "Saving...",
-    "recalculando": "Recalculating..."
+    "recalculando": "Recalculating...",
+    "emailEntrevista": "An interview scheduling email will be sent to the candidate.",
+    "emailContratacao": "A hiring email will be sent to the candidate.",
+    "emailRejeicao": "A rejection email will be sent to the candidate.",
+    "movendoPara": "You are moving this candidate to"
   },
   "gaveta": {
     "verAplicacao": "View the full application",
@@ -522,9 +537,13 @@
     "empresaPlaceholder": "Company name",
     "telefone": "Phone",
     "telefonePlaceholder": "+1 555 000 0000",
-    "erroCarregar": "Could not load the profile",
+    "erroCarregar": "Could not load settings",
     "atualizado": "Profile updated",
-    "erroAtualizar": "Could not update the profile"
+    "erroAtualizar": "Could not update the profile",
+    "linkedinAjuda": "Profile or company link. It shows on your public page for visitors.",
+    "slugEmUso": "This slug is already taken",
+    "erroSalvarSlug": "Could not save the slug",
+    "reiniciarTutorialTexto": "Restart the first-steps tutorial to walk through the interactive guide again."
   },
   "salvos": {
     "titulo": "Saved candidates",
@@ -538,7 +557,10 @@
     "ver": "View",
     "carregando": "Loading candidates...",
     "nenhum": "No saved candidates",
-    "remover": "Remove from saved"
+    "remover": "Remove from saved",
+    "vazioDica": "Save candidates from the actions menu (⋯) on the job page to see them here",
+    "vazioFiltro": "Try another status filter",
+    "removendo": "Removing..."
   },
   "assinatura": {
     "titulo": "Subscription",
@@ -566,7 +588,17 @@
     "vagasAtivas": "Active roles",
     "inclui": "Includes:",
     "querMais": "Want more?",
-    "verPlanosPrecos": "See plans and pricing"
+    "verPlanosPrecos": "See plans and pricing",
+    "testeExpirouTexto": "Your trial has ended. Subscribe to a plan to keep using Rankea.",
+    "canceladaTexto": "Your subscription was canceled. You keep access until the end of the paid period.",
+    "cobrancaAuto": "After the trial, your subscription is charged automatically unless you cancel.",
+    "ilimitadas": "Unlimited",
+    "diasRestantes": "{n, plural, one {# day left} other {# days left}}",
+    "ate": "Up to {n}",
+    "pagamentoFalhou": "Your subscription payment failed. Update your payment method to keep using Rankea.",
+    "portalTexto": "Open the Stripe billing portal to update your payment method, see invoices, change plan or cancel your subscription.",
+    "verPlanosTexto": "See every available plan and pick the one that fits you best.",
+    "erroPortal": "Could not open the billing portal"
   },
   "auth": {
     "entrar": "Sign in",
@@ -590,6 +622,380 @@
     "repitaSenha": "Repeat your password",
     "loginOk": "Signed in",
     "contaCriada": "Account created",
-    "contaCriadaConfirmar": "Account created. Check your email to confirm it."
+    "contaCriadaConfirmar": "Account created. Check your email to confirm it.",
+    "lateralTexto": "Post jobs, receive candidates and let the AI rank the best ones. Start free: 10 active jobs and unlimited candidates."
+  },
+  "kanban": {
+    "novos": "New",
+    "emAnalise": "In review",
+    "entrevista": "Interview",
+    "emValidacao": "In validation",
+    "encerrados": "Closed",
+    "contratados": "Hired",
+    "nenhumCandidato": "No candidates",
+    "rolarEsq": "Scroll columns left",
+    "rolarDir": "Scroll columns right",
+    "lista": "List",
+    "quadro": "Board",
+    "resp": "Ans:"
+  },
+  "secaoCand": {
+    "buscar": "Search by name, email or keyword",
+    "limparBusca": "Clear search",
+    "nenhumEncontrado": "No candidates found",
+    "carregando": "Loading candidates...",
+    "nenhumAinda": "No candidates yet",
+    "erroCarregar": "Could not load the candidates",
+    "todosExc": "All (excl. closed)",
+    "emRevisao": "In review",
+    "vazioDica": "Share the job to start receiving applications",
+    "contagem": "{n, plural, one {# candidate} other {# candidates}}"
+  },
+  "comum": {
+    "voltar": "Back",
+    "cancelar": "Cancel",
+    "carregando": "Loading...",
+    "ver": "View",
+    "sim": "Yes",
+    "nao": "No",
+    "menu": "Menu",
+    "abrirMenu": "Open menu",
+    "fecharMenu": "Close menu",
+    "fecharAviso": "Dismiss",
+    "porMes": "/month",
+    "recomendado": "Recommended",
+    "maisPopular": "Most popular",
+    "processando": "Processing...",
+    "redirecionando": "Redirecting...",
+    "copiar": "Copy",
+    "remover": "Remove",
+    "voltarInicio": "Back to home",
+    "continuar": "Continue"
+  },
+  "upgrade": {
+    "titulo": "Upgrade your plan",
+    "subtitulo": "Pick the plan that fits your operation",
+    "comparacao": "Full comparison",
+    "recurso": "Feature",
+    "teste": "30 day trial",
+    "verComparacao": "See the full plan comparison",
+    "verPlanos": "See plans →"
+  },
+  "editor": {
+    "sugestaoIA": "AI suggestion",
+    "descartar": "Discard",
+    "aplicar": "Apply",
+    "naoEscreveu": "The AI left this out because you did not provide it:",
+    "negrito": "Bold",
+    "italico": "Italic",
+    "titulo1": "Heading 1",
+    "titulo2": "Heading 2",
+    "titulo3": "Heading 3",
+    "lista": "Bullet list",
+    "listaNumerada": "Numbered list",
+    "citacao": "Quote",
+    "linha": "Horizontal rule",
+    "desfazer": "Undo",
+    "refazer": "Redo",
+    "iaAjuda": "Cleans up the text and organizes it into sections, without inventing anything",
+    "iaOk": "Description updated. Use Undo to go back."
+  },
+  "autenticacao": {
+    "diasGratis": "30 days free",
+    "contrateInteligencia": "Hire on evidence.",
+    "semCompromisso": "No commitment. Cancel anytime.",
+    "recuperarSenha": "Reset password",
+    "informeEmail": "Enter your email and we will send you a link to reset your password.",
+    "verifiqueCaixa": "Check your inbox, and your spam folder. The link expires in 1 hour.",
+    "voltarLogin": "Back to sign in",
+    "enviarLink": "Send reset link",
+    "novaSenha": "New password",
+    "digiteConfirme": "Enter and confirm your new password.",
+    "redefinir": "Reset password",
+    "solicitarNovo": "Request a new link",
+    "validando": "Checking the link...",
+    "repitaSenha": "Repeat the password",
+    "senhasNaoCoincidem": "The passwords do not match.",
+    "senhaMinima6": "The password must be at least 6 characters.",
+    "configIndisponivel": "Setup unavailable.",
+    "senhaAlterada": "Password changed. Please sign in.",
+    "configIndisponivelTarde": "Setup unavailable. Try again later.",
+    "seEmailExistir": "If that email exists, you will receive a link to reset the password."
+  },
+  "candDetalhe": {
+    "candidatouPara": "Applied to:",
+    "perfilLinkedin": "LinkedIn profile",
+    "verCurriculo": "View resume",
+    "atualizarStatus": "Update status",
+    "alertaAutomatico": "Candidate flagged automatically",
+    "notasEntrevista": "Interview notes and transcript",
+    "salvarNotas": "Save notes",
+    "respostasAplicacao": "Application answers",
+    "semResposta": "No answer",
+    "resumoCurriculo": "Resume summary",
+    "avaliacaoIA": "AI evaluation",
+    "notaCurriculo": "Resume score",
+    "qualidadeRespostas": "Answer quality",
+    "nivelExperiencia": "Experience level",
+    "avaliacaoAndamento": "AI evaluation in progress. Scores will be available shortly.",
+    "detalhesVaga": "Role details",
+    "verVaga": "View role",
+    "historico": "History",
+    "semEventos": "No events recorded yet.",
+    "notasPlaceholder": "e.g. Strengths: experience with X. Paste the interview transcript here...",
+    "erroCarregar": "Could not load the candidate",
+    "notasSalvas": "Notes saved",
+    "erroSalvarNotas": "Could not save the notes"
+  },
+  "config": {
+    "erroCarregar": "Could not load the settings.",
+    "perfilPublico": "Public profile",
+    "perfilPublicoSub": "Set up your public page, branding and email personalisation",
+    "salvar": "Save settings",
+    "paginaPublica": "Public page",
+    "paginaPublicaSub": "Set up your public recruiter profile",
+    "ativar": "Enable the public page",
+    "ativarSub": "Candidates will be able to see your open roles",
+    "urlPagina": "Public page URL",
+    "verificando": "Checking...",
+    "disponivel": "Available",
+    "slugAtual": "Your current slug",
+    "abrir": "Open",
+    "tutorial": "Guided tour",
+    "reiniciarTutorial": "Restart the welcome tour",
+    "sairMesmo": "Leave anyway",
+    "alteracoesNaoSalvasTexto": "You have unsaved changes. Leave this page anyway?",
+    "seuSlug": "your-slug",
+    "alteracoesNaoSalvas": "Unsaved changes",
+    "definaSlug": "Set a slug before enabling the public page",
+    "verifiqueSlug": "Check the slug availability",
+    "salvas": "Settings saved",
+    "branding": "Branding",
+    "headline": "Headline",
+    "logo": "Logo",
+    "remover": "Remove",
+    "formatoLogo": "PNG, JPG or SVG, 2MB max",
+    "corMarca": "Brand colour",
+    "ouHex": "Or HEX:",
+    "nomeExibicao": "Display name",
+    "exConsultoria": "e.g. Prime HR Consulting",
+    "nomeExibicaoAjuda": "The name shown on your public page. If empty, your name or company is used.",
+    "fraseCurta": "A short line about you or your company",
+    "linkedinEmpresa": "https://linkedin.com/company/your-company",
+    "envieImagem": "Upload an image file",
+    "imagemMax": "The image must be 2MB or smaller",
+    "logoEnviado": "Logo uploaded",
+    "erroLogo": "Could not upload the logo",
+    "personalizacaoEmail": "Email personalisation",
+    "nomeRemetente": "Sender name",
+    "exEquipe": "e.g. Recruiting Team",
+    "replyTo": "Reply-to email",
+    "exRecrutamento": "recruiting@yourcompany.com",
+    "replyToAjuda": "Candidates will reply to this address",
+    "assinatura": "Email signature",
+    "assinaturaAjuda": "Plain text. Added at the end of the emails you send.",
+    "modelos": "Email templates",
+    "assunto": "Subject",
+    "assuntoDoisPontos": "Subject:",
+    "corpoHtml": "Email body (HTML)",
+    "previaEmail": "Email preview",
+    "previa": "Preview",
+    "expandaModelo": "Open a template on the left to see how the email will look.",
+    "editeCorpo": "Edit the HTML body to see the preview.",
+    "candidaturaRecebida": "Application received",
+    "entrevistaCalendly": "Interview (Calendly)",
+    "rejeicao": "Rejection",
+    "agendeEntrevista": "Book your interview using the link below:",
+    "linkNaoAbrir": "If the link does not open, copy and paste it into your browser:",
+    "linkCalendlyAqui": "[The Calendly link goes here]",
+    "previaNome": "Mary Smith",
+    "previaVaga": "Full Stack Developer",
+    "previaRemetente": "HR Team",
+    "previaAssinatura": "Best regards,\nHR Team",
+    "variaveis": "Variables: candidate_name, job_title, sender_name, signature. For \"Interview\": calendly_link",
+    "dicaRecebida": "Email sent when the candidate submits an application. Use the variables in the text.",
+    "dicaEntrevista": "Include {variavel} where the Calendly button/link should appear.",
+    "dicaRejeicao": "Email sent when the candidate is closed out.",
+    "modelosTexto": "Customize the subject and body of every email sent to candidates. Leave blank to use the default template."
+  },
+  "planos": {
+    "starter": {
+      "nome": "Starter",
+      "descricao": "For independent recruiters getting started."
+    },
+    "professional": {
+      "nome": "Professional",
+      "descricao": "For consultancies and growing recruiting teams."
+    },
+    "enterprise": {
+      "nome": "Enterprise",
+      "descricao": "For teams and high-volume operations."
+    },
+    "test": {
+      "nome": "Test",
+      "descricao": "Internal plan for testing the payment flow."
+    },
+    "recursos": {
+      "vagas3": "Up to 3 active jobs",
+      "vagas10": "Up to 10 active jobs",
+      "vagasIlimitadas": "Unlimited jobs",
+      "candidatosIlimitados": "Unlimited candidates",
+      "rankingIA": "AI ranking",
+      "emailsAutomaticos": "Automated emails",
+      "paginaPublica": "Public job page",
+      "paginaPersonalizada": "Custom public page",
+      "branding": "Custom branding",
+      "suportePrioritario": "Priority support",
+      "suporteDedicado": "Dedicated support",
+      "entrevistaIA": "AI interview (coming soon)",
+      "api": "Integration API (coming soon)",
+      "apenasTeste": "Internal testing only"
+    }
+  },
+  "detalhe": {
+    "notasPlaceholder": "Add notes, interview notes or paste the full transcript."
+  },
+  "vaga": {
+    "pesosDescricao": "Set how the AI should weigh each aspect when evaluating candidates.",
+    "naoSalvo": "Unsaved changes",
+    "excluirVaga": "Delete job",
+    "intervaloAjuda": "If the numeric answer falls outside the range, the candidate is flagged or eliminated.",
+    "notaInternaAjuda": "Visible to recruiters only. Use it for interview questions or notes.",
+    "confirmarSair": "You have unsaved changes in the job details. Save before leaving?",
+    "confirmarExcluir": "Delete this job? This cannot be undone. Every candidate attached to it is removed too.",
+    "semPerguntas": "No questions yet. Click \"Add question\" to create one."
+  },
+  "publica": {
+    "semResultado": "No jobs match the filters.",
+    "buscar": "Search by role or location",
+    "candidatar": "Apply",
+    "compartilheRede": "Share these jobs with your network",
+    "linkedin": "Share on LinkedIn",
+    "whatsapp": "Share on WhatsApp",
+    "copiarLink": "Copy link",
+    "semVagasTexto": "No open jobs right now. Check back soon!",
+    "semVagas": "No open jobs right now",
+    "naoEncontrou": "Didn't find the right job?",
+    "contato": "Get in touch",
+    "talentosTexto": "We are always looking for good people. Send your resume and tell us how you can contribute.",
+    "chamadaPadrao": "We are hiring. Take a look at our openings and join the team."
+  },
+  "senha": {
+    "linkInvalido": "Invalid or expired link. Request a new recovery link."
+  },
+  "rodape": {
+    "termos": "Terms of Use",
+    "privacidade": "Privacy Policy",
+    "precos": "Pricing"
+  },
+  "paywall": {
+    "testeAcabando": "Heads up: your trial is ending!",
+    "naoPerca": "Don't lose access to AI ranking and your active jobs.",
+    "erroSessao": "Could not start the checkout session",
+    "testeExpirou": "Your trial has ended",
+    "restamNoTeste": "{n, plural, one {# day left} other {# days left}} in your free trial",
+    "escolhaPlano": "Pick a plan to continue",
+    "expirouPonto": "Your trial has ended.",
+    "ultimoDia": "Last day of the free trial!",
+    "restamNoTestePonto": "{n} days left in your free trial.",
+    "testeExpiradoCurto": "Trial ended",
+    "restantesCurto": "{n, plural, one {# day left} other {# days left}}",
+    "verPlanos": "See plans"
+  },
+  "onboarding": {
+    "tudoProntoTexto": "You finished every first step. Now just focus on the candidates.",
+    "configurarPerfil": "Set up public profile",
+    "tudoPronto": "All set!",
+    "reiniciar": "Restart tutorial",
+    "dispensar": "Dismiss",
+    "primeirosPassos": "First steps",
+    "ocultar": "Hide checklist",
+    "linkExemplo": "Job link (example)",
+    "linkExemploTexto": "It shows on every job you create, in the list and on the job page.",
+    "kanbanExemplo": "Candidate kanban (example)",
+    "kanbanExemploTexto": "It fills in as soon as candidates start applying.",
+    "slugTitulo": "Set up your public page",
+    "slugLabel": "Your public page URL",
+    "slugVerificando": "Checking availability...",
+    "slugDisponivel": "Available!",
+    "slugPreview": "URL preview:",
+    "slugDepois": "You can change this later in Settings.",
+    "slugOk": "Slug set successfully!",
+    "pular": "Skip for now",
+    "passos": {
+      "perfil": "Complete profile",
+      "criarVaga": "Create first job",
+      "perguntas": "Add questions to the job",
+      "ia": "Set up AI evaluation",
+      "compartilhar": "Share the job",
+      "analisar": "Review candidates"
+    },
+    "copiar": "Copy",
+    "tour": {
+      "perfil": {
+        "titulo": "Complete your profile",
+        "texto": "Start by setting up your profile and identity as a recruiter."
+      },
+      "publico": {
+        "titulo": "Set up your public profile",
+        "texto": "Customize your public page, branding and how candidates find you."
+      },
+      "vaga": {
+        "titulo": "Create your first job",
+        "texto": "Click \"Create job\" in the sidebar to open the creation form."
+      },
+      "perguntas": {
+        "titulo": "Add questions to the job",
+        "texto": "Sharp questions automate your screening. The AI uses the answers to score each candidate."
+      },
+      "ia": {
+        "titulo": "Set up AI evaluation",
+        "texto": "Set the weight of the resume vs. the answers and give extra instructions so the AI prioritizes what matters for the job."
+      },
+      "compartilhar": {
+        "titulo": "Share your job",
+        "texto": "Every job gets a unique link. Share it on social or send it straight to candidates, with no signup required."
+      },
+      "candidatos": {
+        "titulo": "Follow your candidates",
+        "texto": "Candidates arrive ranked by the AI. Move them through the Kanban as the process advances."
+      }
+    },
+    "proximo": "Next",
+    "concluir": "Finish",
+    "concluirBang": "Finish!",
+    "slugExemplo": "your-slug",
+    "slugSubtitulo": "Pick a slug for your recruiter page. Candidates will see your open jobs there."
+  },
+  "aplicar": {
+    "naoEncontrada": "Job not found",
+    "naoEncontradaTexto": "This job may have been removed or is no longer available.",
+    "encerradas": "Applications closed",
+    "encerradasTexto": "This job is no longer accepting applications.",
+    "enviada": "Application sent!",
+    "emailEnviadoPara": "A confirmation email was sent to",
+    "removerArquivo": "Remove file",
+    "selecioneOpcoes": "Select one or more options"
+  },
+  "contrato": {
+    "integral": "Full-time",
+    "meioPeriodo": "Part-time",
+    "contrato": "Contract",
+    "estagio": "Internship",
+    "freelance": "Freelance"
+  },
+  "historico": {
+    "recebida": "Application received",
+    "statusAlterado": "Status changed",
+    "emailEntrevista": "Interview email sent",
+    "emailRejeicao": "Rejection email sent",
+    "recalculo": "Score recalculation requested",
+    "dataAplicacao": "Application date recorded"
+  },
+  "depoimento": {
+    "cargo": "Independent HR Consultant"
+  },
+  "cadastro": {
+    "mesmoEmail": "Use the same email as the payment so your subscription is linked automatically."
   }
 }

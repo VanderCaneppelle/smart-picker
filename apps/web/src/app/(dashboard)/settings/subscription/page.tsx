@@ -24,10 +24,13 @@ import {
   getPlanById,
   PLANS,
 } from '@/lib/subscription';
+import { usePlanoTraduzido, useIntlLocale } from '@/lib/plan-i18n';
 import { useTranslations } from 'next-intl';
 
 export default function SubscriptionPage() {
   const t = useTranslations();
+  const tp = usePlanoTraduzido();
+  const localeIntl = useIntlLocale();
   const router = useRouter();
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,7 +56,7 @@ export default function SubscriptionPage() {
         window.open(url, '_blank', 'noopener,noreferrer');
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Erro ao abrir portal de pagamento');
+      toast.error(err instanceof Error ? err.message : t('assinatura.erroPortal'));
     } finally {
       setIsOpeningPortal(false);
     }
@@ -78,7 +81,7 @@ export default function SubscriptionPage() {
   const isCanceled = subscription.status === 'canceled';
 
   const nextBillingDate = subscription.currentPeriodEnd
-    ? new Date(subscription.currentPeriodEnd).toLocaleDateString('pt-BR', {
+    ? new Date(subscription.currentPeriodEnd).toLocaleDateString(localeIntl, {
         day: 'numeric',
         month: 'long',
         year: 'numeric',
@@ -140,7 +143,7 @@ export default function SubscriptionPage() {
               {plan.id === 'starter' && <Rocket className="h-4 w-4 text-emerald-600" />}
               {plan.id === 'professional' && <Crown className="h-4 w-4 text-emerald-600" />}
               {plan.id === 'enterprise' && <Building2 className="h-4 w-4 text-emerald-600" />}
-              <span className="text-sm font-medium text-emerald-700 capitalize">{plan.name}</span>
+              <span className="text-sm font-medium text-emerald-700 capitalize">{tp(plan).nome}</span>
             </div>
           )}
         </div>
@@ -149,10 +152,8 @@ export default function SubscriptionPage() {
         {isTrialing && (
           <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800">
-              <strong>{daysRemaining} {daysRemaining === 1 ? 'dia restante' : 'dias restantes'}</strong>{t('assinatura.noTesteGratis')}</p>
-            <p className="text-xs text-blue-600 mt-1">
-              Após o período de teste, sua assinatura será cobrada automaticamente se você não cancelar.
-            </p>
+              <strong>{t('assinatura.diasRestantes', { n: daysRemaining })}</strong>{t('assinatura.noTesteGratis')}</p>
+            <p className="text-xs text-blue-600 mt-1">{t('assinatura.cobrancaAuto')}</p>
           </div>
         )}
 
@@ -161,7 +162,7 @@ export default function SubscriptionPage() {
           <div className="mt-4 space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">{t('assinatura.planoAtual')}</span>
-              <span className="font-medium text-gray-900">{plan.name} · {plan.priceLabel}/mês</span>
+              <span className="font-medium text-gray-900">{tp(plan).nome} · {tp(plan).preco}{t('comum.porMes')}</span>
             </div>
             {nextBillingDate && (
               <div className="flex items-center justify-between text-sm">
@@ -175,9 +176,7 @@ export default function SubscriptionPage() {
         {/* Expired trial */}
         {isExpired && (
           <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-            <p className="text-sm text-amber-800 mb-3">
-              Seu período de teste expirou. Assine um plano para continuar usando o Rankea.
-            </p>
+            <p className="text-sm text-amber-800 mb-3">{t('assinatura.testeExpirouTexto')}</p>
             <Link
               href="/pricing"
               className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium text-sm hover:bg-emerald-700 transition-colors"
@@ -188,9 +187,7 @@ export default function SubscriptionPage() {
         {/* Past due */}
         {isPastDue && (
           <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-800 mb-3">
-              O pagamento da sua assinatura falhou. Atualize seu método de pagamento para continuar usando o Rankea.
-            </p>
+            <p className="text-sm text-red-800 mb-3">{t('assinatura.pagamentoFalhou')}</p>
             <Button
               onClick={handleOpenPortal}
               isLoading={isOpeningPortal}
@@ -202,9 +199,7 @@ export default function SubscriptionPage() {
         {/* Canceled */}
         {isCanceled && (
           <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-            <p className="text-sm text-gray-800 mb-3">
-              Sua assinatura foi cancelada. Você ainda tem acesso até o fim do período pago.
-            </p>
+            <p className="text-sm text-gray-800 mb-3">{t('assinatura.canceladaTexto')}</p>
             {nextBillingDate && (
               <p className="text-xs text-gray-600">
                 Acesso até: {nextBillingDate}
@@ -218,10 +213,7 @@ export default function SubscriptionPage() {
       {(isActive || isTrialing) && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('assinatura.gerenciar')}</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Abra o portal de pagamento do Stripe para atualizar seu método de pagamento, ver faturas,
-            trocar de plano ou cancelar sua assinatura.
-          </p>
+          <p className="text-sm text-gray-600 mb-4">{t('assinatura.portalTexto')}</p>
           <Button
             onClick={handleOpenPortal}
             isLoading={isOpeningPortal}
@@ -238,23 +230,25 @@ export default function SubscriptionPage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">{t('assinatura.plano')}</span>
-              <span className="text-sm font-medium text-gray-900">{plan.name}</span>
+              <span className="text-sm font-medium text-gray-900">{tp(plan).nome}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">{t('assinatura.preco')}</span>
-              <span className="text-sm font-medium text-gray-900">{plan.priceLabel}/mês</span>
+              <span className="text-sm font-medium text-gray-900">{tp(plan).preco}{t('comum.porMes')}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">{t('assinatura.vagasAtivas')}</span>
               <span className="text-sm font-medium text-gray-900">
-                {plan.maxActiveJobs === Infinity ? 'Ilimitadas' : `Até ${plan.maxActiveJobs}`}
+                {plan.maxActiveJobs === Infinity
+                  ? t('assinatura.ilimitadas')
+                  : t('assinatura.ate', { n: plan.maxActiveJobs })}
               </span>
             </div>
           </div>
           <div className="mt-4 pt-4 border-t border-gray-200">
             <p className="text-xs font-medium text-gray-700 mb-2">{t('assinatura.inclui')}</p>
             <ul className="space-y-1">
-              {plan.features.map((feature, i) => (
+              {tp(plan).recursos.map((feature, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs text-gray-600">
                   <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
                   <span>{feature}</span>
@@ -269,9 +263,7 @@ export default function SubscriptionPage() {
       {(isTrialing || isExpired) && (
         <div className="mt-6 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('assinatura.querMais')}</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Veja todos os planos disponíveis e escolha o que melhor se adapta às suas necessidades.
-          </p>
+          <p className="text-sm text-gray-600 mb-4">{t('assinatura.verPlanosTexto')}</p>
           <Link
             href="/pricing"
             className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium text-sm hover:bg-emerald-700 transition-colors"
