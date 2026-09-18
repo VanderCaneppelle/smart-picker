@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyAuth, unauthorizedResponse, jobBelongsToUser } from '@/lib/auth';
+import { requireAccount, jobBelongsToAccount } from '@/lib/auth';
 import { triggerWorkerProcess } from '@/lib/worker';
 import { logCandidateEvent } from '@/lib/candidate-history';
 
@@ -11,10 +11,8 @@ interface RouteParams {
 // POST /api/candidates/:id/recalculate-score - Mark candidate for rescoring and trigger worker
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return unauthorizedResponse();
-    }
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
 
     const { id } = await params;
 
@@ -23,7 +21,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       include: { job: { select: { user_id: true } } },
     });
 
-    if (!candidate || !jobBelongsToUser(candidate.job, user)) {
+    if (!candidate || !jobBelongsToAccount(candidate.job, auth.ctx)) {
       return Response.json(
         { error: 'Not Found', message: 'Candidate not found' },
         { status: 404 }
@@ -42,7 +40,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       eventType: 'score_recalculated',
       message: 'Recálculo de nota solicitado',
       metadata: { source: 'manual_recalculate' },
-      createdBy: user.id,
+      createdBy: auth.ctx.id,
     });
 
     // Trigger the worker to recalculate score only (no emails)

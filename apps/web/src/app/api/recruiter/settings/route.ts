@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { requireAccount } from '@/lib/auth';
 import { z } from 'zod';
 import { slugSchema } from '@/lib/slug';
 
@@ -40,8 +40,9 @@ const UpdateSettingsSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) return unauthorizedResponse();
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
+    const user = { id: auth.ctx.accountId };
 
     const recruiter = await prisma.recruiter.findUnique({
       where: { id: user.id },
@@ -104,8 +105,10 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) return unauthorizedResponse();
+    // Página pública, branding e templates são da CONTA: só o dono edita.
+    const auth = await requireAccount(request, { ownerOnly: true });
+    if (auth.response) return auth.response;
+    const user = { id: auth.ctx.accountId };
 
     const body = await request.json();
     const validation = UpdateSettingsSchema.safeParse(body);

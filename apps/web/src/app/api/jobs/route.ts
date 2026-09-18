@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { requireAccount } from '@/lib/auth';
 import { CreateJobSchema, JobFiltersSchema } from '@hunter/core';
 import { Prisma } from '@prisma/client';
 import { getActiveJobsLimit } from '@/lib/subscription-service';
@@ -8,10 +8,8 @@ import { getActiveJobsLimit } from '@/lib/subscription-service';
 // GET /api/jobs - List jobs (protected - only own jobs)
 export async function GET(request: NextRequest) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return unauthorizedResponse();
-    }
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
 
     const { searchParams } = new URL(request.url);
     
@@ -30,7 +28,9 @@ export async function GET(request: NextRequest) {
 
     const where: Prisma.JobWhereInput = {
       deleted_at: null,
-      user_id: user.id, // Multi-tenant: apenas vagas do recrutador
+      // Multi-tenant pela CONTA, não pela pessoa: membro da equipe enxerga as
+      // vagas da conta inteira, inclusive as que o dono criou.
+      user_id: auth.ctx.accountId,
     };
 
     if (filters.data.status) {
@@ -75,10 +75,8 @@ export async function GET(request: NextRequest) {
 // POST /api/jobs - Create a new job (protected)
 export async function POST(request: NextRequest) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return unauthorizedResponse();
-    }
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
 
     const body = await request.json();
     const validation = CreateJobSchema.safeParse(body);
@@ -95,7 +93,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (validation.data.status === 'active') {
-      const info = await getActiveJobsLimit(user.id);
+      const info = await getActiveJobsLimit(auth.ctx.accountId);
       if (!info.canCreate) {
         return Response.json(
           {
@@ -113,14 +111,16 @@ export async function POST(request: NextRequest) {
 
     // A vaga nasce no idioma do recrutador e fica congelada nele. Ver o comentário
     // do campo no schema: vaga divulgada não troca de língua debaixo do candidato.
+    // Idioma de QUEM CRIA, não o da conta: quem escreve a vaga escreve na própria
+    // língua, e é essa que o candidato vai ler.
     const dono = await prisma.recruiter.findUnique({
-      where: { id: user.id },
+      where: { id: auth.ctx.id },
       select: { locale: true },
     });
 
     const job = await prisma.job.create({
       data: {
-        user_id: user.id,
+        user_id: auth.ctx.accountId,
         locale: dono?.locale ?? 'pt',
         title: validation.data.title,
         location: validation.data.location,

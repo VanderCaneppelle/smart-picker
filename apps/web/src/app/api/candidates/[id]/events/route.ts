@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyAuth, unauthorizedResponse, jobBelongsToUser } from '@/lib/auth';
+import { requireAccount, jobBelongsToAccount } from '@/lib/auth';
 import { migrateLegacyCandidateStatusesForRecruiter } from '@/lib/candidate-status';
 
 interface RouteParams {
@@ -23,10 +23,10 @@ interface CandidateEventRow {
 // GET /api/candidates/:id/events - Timeline de eventos do candidato (protected)
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) return unauthorizedResponse();
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
 
-    await migrateLegacyCandidateStatusesForRecruiter(user.id);
+    await migrateLegacyCandidateStatusesForRecruiter(auth.ctx.accountId);
 
     const { id } = await params;
 
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       include: { job: { select: { user_id: true } } },
     });
 
-    if (!candidate || !jobBelongsToUser(candidate.job, user)) {
+    if (!candidate || !jobBelongsToAccount(candidate.job, auth.ctx)) {
       return Response.json(
         { error: 'Not Found', message: 'Candidate not found' },
         { status: 404 }

@@ -15,7 +15,7 @@ import {
   needsSubscription,
   getTrialDaysRemaining,
 } from '@/lib/subscription';
-import { TrendingUp, LogOut, Briefcase, PlusCircle, LayoutDashboard, Users, User, ChevronDown, Menu, X, Settings, CreditCard } from 'lucide-react';
+import { TrendingUp, LogOut, Briefcase, PlusCircle, LayoutDashboard, Users, User, ChevronDown, Menu, X, Settings, CreditCard, UsersRound } from 'lucide-react';
 import { OnboardingProvider } from '@/contexts/OnboardingContext';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 
@@ -42,26 +42,35 @@ function DashboardShell({
   const t = useTranslations();
   const router = useRouter();
   const pathname = usePathname();
-  const { user, isLoading, isAuthenticated, logout } = useAuth();
+  const { user, isLoading, isAuthenticated, isOwner, mustChangePassword, logout } = useAuth();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (isLoading) return;
+
+    if (!isAuthenticated) {
       router.push('/login');
+      return;
     }
-  }, [isLoading, isAuthenticated, router]);
+
+    // Senha provisória pendente: o painel inteiro volta 403 da API enquanto a flag
+    // estiver ligada, então nem adianta montar. Manda trocar primeiro.
+    if (mustChangePassword) {
+      router.replace('/trocar-senha');
+    }
+  }, [isLoading, isAuthenticated, mustChangePassword, router]);
 
   if (isLoading) {
     return <Loading fullScreen text={t('comum.carregando')} />;
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || mustChangePassword) {
     return null;
   }
 
   return (
     <OnboardingProvider>
       <Suspense fallback={<Loading fullScreen text={t('comum.carregando')} />}>
-        <DashboardLayoutContent pathname={pathname} user={user} onLogout={logout} isAuthenticated={isAuthenticated}>
+        <DashboardLayoutContent pathname={pathname} user={user} onLogout={logout} isAuthenticated={isAuthenticated} isOwner={isOwner}>
           {children}
         </DashboardLayoutContent>
         <OnboardingTour />
@@ -75,12 +84,15 @@ function DashboardLayoutContent({
   user,
   onLogout,
   isAuthenticated,
+  isOwner,
   children,
 }: {
   pathname: string | null;
   user: { email?: string } | null;
   onLogout: () => void;
   isAuthenticated: boolean;
+  /** Usuário de equipe não vê equipe, assinatura nem configuração da conta. */
+  isOwner: boolean;
   children: React.ReactNode;
 }) {
   const t = useTranslations();
@@ -342,29 +354,46 @@ function DashboardLayoutContent({
               <User className={`h-5 w-5 flex-shrink-0 ${isActive('/perfil') ? 'text-white' : 'text-gray-500'}`} />
               {t('app.nav.perfil')}
             </Link>
-            <Link
-              href="/settings/subscription"
-              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                isActive('/settings/subscription')
-                  ? 'bg-emerald-600 text-white border-l-2 border-l-emerald-700 -ml-px pl-[11px]'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-              }`}
-            >
-              <CreditCard className={`h-5 w-5 flex-shrink-0 ${isActive('/settings/subscription') ? 'text-white' : 'text-gray-500'}`} />
-              {t('app.nav.assinatura')}
-            </Link>
-            <Link
-              href="/settings/public-profile"
-              data-onboarding-id="onb-nav-configuracoes"
-              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                isActive('/settings/public-profile')
-                  ? 'bg-emerald-600 text-white border-l-2 border-l-emerald-700 -ml-px pl-[11px]'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-              }`}
-            >
-              <Settings className={`h-5 w-5 flex-shrink-0 ${isActive('/settings/public-profile') ? 'text-white' : 'text-gray-500'}`} />
-              {t('app.nav.configuracoes')}
-            </Link>
+            {isOwner && (
+              <Link
+                href="/equipe"
+                className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  isActive('/equipe')
+                    ? 'bg-emerald-600 text-white border-l-2 border-l-emerald-700 -ml-px pl-[11px]'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                }`}
+              >
+                <UsersRound className={`h-5 w-5 flex-shrink-0 ${isActive('/equipe') ? 'text-white' : 'text-gray-500'}`} />
+                {t('app.nav.equipe')}
+              </Link>
+            )}
+            {isOwner && (
+              <Link
+                href="/settings/subscription"
+                className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  isActive('/settings/subscription')
+                    ? 'bg-emerald-600 text-white border-l-2 border-l-emerald-700 -ml-px pl-[11px]'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                }`}
+              >
+                <CreditCard className={`h-5 w-5 flex-shrink-0 ${isActive('/settings/subscription') ? 'text-white' : 'text-gray-500'}`} />
+                {t('app.nav.assinatura')}
+              </Link>
+            )}
+            {isOwner && (
+              <Link
+                href="/settings/public-profile"
+                data-onboarding-id="onb-nav-configuracoes"
+                className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  isActive('/settings/public-profile')
+                    ? 'bg-emerald-600 text-white border-l-2 border-l-emerald-700 -ml-px pl-[11px]'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                }`}
+              >
+                <Settings className={`h-5 w-5 flex-shrink-0 ${isActive('/settings/public-profile') ? 'text-white' : 'text-gray-500'}`} />
+                {t('app.nav.configuracoes')}
+              </Link>
+            )}
             <button
               type="button"
               onClick={handleLogout}
@@ -498,26 +527,42 @@ function DashboardLayoutContent({
                         <User className="h-5 w-5" />
                         {t('app.nav.perfil')}
                       </Link>
-                      <Link
-                        href="/settings/subscription"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={`flex items-center gap-3 px-3 py-3 rounded-lg ${
-                          isActive('/settings/subscription') ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-gray-100'
-                        }`}
-                      >
-                        <CreditCard className="h-5 w-5" />
-                        {t('app.nav.assinatura')}
-                      </Link>
-                      <Link
-                        href="/settings/public-profile"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={`flex items-center gap-3 px-3 py-3 rounded-lg ${
-                          isActive('/settings/public-profile') ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-gray-100'
-                        }`}
-                      >
-                        <Settings className="h-5 w-5" />
-                        {t('app.nav.configuracoes')}
-                      </Link>
+                      {isOwner && (
+                        <Link
+                          href="/equipe"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={`flex items-center gap-3 px-3 py-3 rounded-lg ${
+                            isActive('/equipe') ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                          }`}
+                        >
+                          <UsersRound className="h-5 w-5" />
+                          {t('app.nav.equipe')}
+                        </Link>
+                      )}
+                      {isOwner && (
+                        <Link
+                          href="/settings/subscription"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={`flex items-center gap-3 px-3 py-3 rounded-lg ${
+                            isActive('/settings/subscription') ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                          }`}
+                        >
+                          <CreditCard className="h-5 w-5" />
+                          {t('app.nav.assinatura')}
+                        </Link>
+                      )}
+                      {isOwner && (
+                        <Link
+                          href="/settings/public-profile"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={`flex items-center gap-3 px-3 py-3 rounded-lg ${
+                            isActive('/settings/public-profile') ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                          }`}
+                        >
+                          <Settings className="h-5 w-5" />
+                          {t('app.nav.configuracoes')}
+                        </Link>
+                      )}
                       <button
                         type="button"
                         onClick={() => {
@@ -549,7 +594,7 @@ function DashboardLayoutContent({
       </div>
 
       {subscription && needsSubscription(subscription) && (
-        <SubscriptionPaywall subscription={subscription} onLogout={handleLogout} />
+        <SubscriptionPaywall subscription={subscription} onLogout={handleLogout} isOwner={isOwner} />
       )}
 
     </div>

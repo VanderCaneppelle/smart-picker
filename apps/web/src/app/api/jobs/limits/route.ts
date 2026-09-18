@@ -1,12 +1,12 @@
 import { NextRequest } from 'next/server';
-import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { requireAccount } from '@/lib/auth';
 import { getActiveJobsLimit } from '@/lib/subscription-service';
 
 export async function GET(request: NextRequest) {
-  const user = await verifyAuth(request);
-  if (!user) return unauthorizedResponse();
+  const auth = await requireAccount(request);
+  if (auth.response) return auth.response;
 
-  const info = await getActiveJobsLimit(user.id);
+  const info = await getActiveJobsLimit(auth.ctx.accountId);
 
   return Response.json({
     current: info.current,

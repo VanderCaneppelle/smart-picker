@@ -23,9 +23,15 @@ import { useTranslations } from 'next-intl';
 interface SubscriptionPaywallProps {
   subscription: SubscriptionInfo;
   onLogout?: () => void;
+  /** Falso para usuário de equipe: ele não pode assinar, então não vê a grade de planos. */
+  isOwner?: boolean;
 }
 
-export function SubscriptionPaywall({ subscription, onLogout }: SubscriptionPaywallProps) {
+export function SubscriptionPaywall({
+  subscription,
+  onLogout,
+  isOwner = true,
+}: SubscriptionPaywallProps) {
   const t = useTranslations();
   const tp = usePlanoTraduzido();
   const daysLeft = getTrialDaysRemaining(subscription.trialEndsAt);
@@ -44,6 +50,32 @@ export function SubscriptionPaywall({ subscription, onLogout }: SubscriptionPayw
       setLoadingPlan(null);
     }
   };
+
+  // Usuário de equipe vê o aviso e a saída, e nada mais: o checkout é do dono, e
+  // mostrar botão de assinar aqui só levaria a um 403.
+  if (!isOwner) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
+          <div className="mx-auto w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mb-4">
+            <AlertCircle className="h-6 w-6 text-amber-600" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900">{t('paywall.membroTitulo')}</h2>
+          <p className="mt-2 text-gray-600">{t('paywall.membroTexto')}</p>
+          {onLogout && (
+            <button
+              type="button"
+              onClick={onLogout}
+              className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900"
+            >
+              <LogOut className="h-4 w-4" />
+              {t('app.nav.sair')}
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[100] bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4">

@@ -13,13 +13,24 @@ import { apiClient, AUTH_LOGOUT_EVENT } from '@/lib/api-client';
 interface User {
   id: string;
   email: string;
+  /** owner = dono da assinatura; member = usuário criado pelo dono. */
+  role?: 'owner' | 'member';
+  account_id?: string;
+  /** Senha provisória ainda não trocada. Enquanto true, a API só aceita a troca. */
+  must_change_password?: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  /** Falso para usuário de equipe: esconde cobrança, equipe e config da conta. */
+  isOwner: boolean;
+  mustChangePassword: boolean;
+  /** Relê o usuário na API. Chamado depois da troca de senha para soltar o bloqueio. */
+  refreshUser: () => Promise<void>;
+  /** Devolve o usuário para a tela de login decidir o destino (painel ou troca de senha). */
+  login: (email: string, password: string) => Promise<User>;
   signup: (
     email: string,
     password: string,
@@ -52,7 +63,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           // Verify token is still valid
           try {
-            await apiClient.getCurrentUser();
+            // A resposta manda no estado: o localStorage pode estar velho quanto a
+            // papel e senha pendente, e é ele que decide se a pessoa é redirecionada
+            // para a troca de senha.
+            const fresh = await apiClient.getCurrentUser();
+            setUser(fresh.user);
+            localStorage.setItem(USER_KEY, JSON.stringify(fresh.user));
           } catch {
             // Token expired, try to refresh
             const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
@@ -98,6 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     setUser(data.user);
+    return data.user;
   }, []);
 
   const signup = useCallback(
@@ -129,6 +146,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const refreshUser = useCallback(async () => {
+    try {
+      const fresh = await apiClient.getCurrentUser();
+      setUser(fresh.user);
+      localStorage.setItem(USER_KEY, JSON.stringify(fresh.user));
+    } catch (error) {
+      console.error('Falha ao recarregar o usuário:', error);
+    }
+  }, []);
+
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
@@ -151,6 +178,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isLoading,
         isAuthenticated: !!user,
+        // Sem papel definido (sessão antiga gravada antes desta feature) o padrão é
+        // dono: é o que toda conta existente é, e evita esconder menu de quem paga.
+        isOwner: user?.role !== 'member',
+        mustChangePassword: user?.must_change_password === true,
+        refreshUser,
         login,
         signup,
         logout,

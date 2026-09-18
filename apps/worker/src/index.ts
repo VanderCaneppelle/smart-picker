@@ -3,6 +3,7 @@ import http from 'node:http';
 import { processCandidate } from './jobs/processQueue.js';
 import { sendScheduleInterviewEmail, sendRejectionEmail } from './jobs/sendEmails.js';
 import { varrerTrials } from './jobs/trialLifecycle.js';
+import { sendTeamInviteEmail } from './lib/teamEmails.js';
 import { prisma } from './lib/db.js';
 import { logCandidateEvent } from './lib/candidateHistory.js';
 
@@ -218,6 +219,81 @@ const server = http.createServer(async (req, res) => {
       res.end(JSON.stringify({ ok: true }));
     } catch (err) {
       console.error('Error sending rejection email:', err);
+      res.writeHead(500);
+      res.end(JSON.stringify({
+        error: err instanceof Error ? err.message : 'Internal server error',
+      }));
+    }
+    return;
+  }
+
+  // Convite de equipe: manda a senha provisória para o novo usuário.
+  //
+  // Diferente dos outros endpoints, este responde SÍNCRONO e com erro de verdade.
+  // A senha só existe nesta requisição, então falha silenciosa aqui deixaria um
+  // usuário criado que ninguém consegue acessar. Quem chama (a API web) depende
+  // desta resposta para decidir se marca o convite como entregue.
+  if (req.method === 'POST' && req.url === '/send-team-invite') {
+    if (!WORKER_SECRET) {
+      res.writeHead(500);
+      res.end(JSON.stringify({ error: 'WORKER_SECRET not configured' }));
+      return;
+    }
+
+    const auth = req.headers.authorization;
+    const token = auth?.startsWith('Bearer ') ? auth.slice(7) : null;
+    if (token !== WORKER_SECRET) {
+      res.writeHead(401);
+      res.end(JSON.stringify({ error: 'Unauthorized' }));
+      return;
+    }
+
+    try {
+      const body = await parseBody(req);
+      const memberId = typeof body.memberId === 'string' ? body.memberId : null;
+      const password = typeof body.password === 'string' ? body.password : null;
+
+      if (!memberId || !password) {
+        res.writeHead(400);
+        res.end(JSON.stringify({ error: 'memberId and password are required' }));
+        return;
+      }
+
+      const member = await prisma.recruiter.findUnique({
+        where: { id: memberId },
+        select: {
+          email: true,
+          name: true,
+          locale: true,
+          account_owner_id: true,
+        },
+      });
+
+      if (!member || !member.account_owner_id) {
+        res.writeHead(404);
+        res.end(JSON.stringify({ error: 'Member not found' }));
+        return;
+      }
+
+      const owner = await prisma.recruiter.findUnique({
+        where: { id: member.account_owner_id },
+        select: { name: true, company: true },
+      });
+
+      await sendTeamInviteEmail({
+        memberName: member.name,
+        memberEmail: member.email,
+        ownerName: owner?.name ?? 'Rankea',
+        companyName: owner?.company ?? null,
+        password,
+        appUrl: process.env.APP_URL || 'https://www.rankea.ai',
+        locale: member.locale === 'en' ? 'en' : 'pt',
+      });
+
+      res.writeHead(200);
+      res.end(JSON.stringify({ ok: true }));
+    } catch (err) {
+      console.error('Error sending team invite email:', err);
       res.writeHead(500);
       res.end(JSON.stringify({
         error: err instanceof Error ? err.message : 'Internal server error',

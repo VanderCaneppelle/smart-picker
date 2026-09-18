@@ -1,13 +1,15 @@
 import { NextRequest } from 'next/server';
-import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { requireAccount } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { stripe, PRICE_LOOKUP_KEYS, getOrCreateStripeCustomer, getPriceByLookupKey } from '@/lib/stripe';
 import type { PlanId } from '@/lib/subscription';
 import { ensureTrialSubscription } from '@/lib/subscription-service';
 
 export async function POST(request: NextRequest) {
-  const user = await verifyAuth(request);
-  if (!user) return unauthorizedResponse();
+  // Cobrança é do dono: um membro não assina nem troca o plano da conta.
+  const auth = await requireAccount(request, { ownerOnly: true });
+  if (auth.response) return auth.response;
+  const user = auth.ctx;
 
   const body = await request.json();
   const planId = body.planId as PlanId;

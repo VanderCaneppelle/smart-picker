@@ -178,7 +178,8 @@
       "configuracoes": "Settings",
       "sair": "Sign out",
       "vagasAtivasLimite": "{atual}/{limite} active jobs",
-      "vagasAtivas": "{atual} active jobs"
+      "vagasAtivas": "{atual} active jobs",
+      "equipe": "Team"
     },
     "status": {
       "todos": "All statuses",
@@ -720,7 +721,8 @@
     "configIndisponivel": "Setup unavailable.",
     "senhaAlterada": "Password changed. Please sign in.",
     "configIndisponivelTarde": "Setup unavailable. Try again later.",
-    "seEmailExistir": "If that email exists, you will receive a link to reset the password."
+    "seEmailExistir": "If that email exists, you will receive a link to reset the password.",
+    "assentoBloqueado": "This account is over its plan user limit. Talk to the account owner."
   },
   "candDetalhe": {
     "candidatouPara": "Applied to:",
@@ -849,7 +851,10 @@
       "suporteDedicado": "Dedicated support",
       "entrevistaIA": "AI interview (coming soon)",
       "api": "Integration API (coming soon)",
-      "apenasTeste": "Internal testing only"
+      "apenasTeste": "Internal testing only",
+      "usuarios1": "1 user",
+      "usuarios3": "Up to 3 users",
+      "usuarios10": "Up to 10 users"
     }
   },
   "detalhe": {
@@ -881,7 +886,18 @@
     "chamadaPadrao": "We are hiring. Take a look at our openings and join the team."
   },
   "senha": {
-    "linkInvalido": "Invalid or expired link. Request a new recovery link."
+    "linkInvalido": "Invalid or expired link. Request a new recovery link.",
+    "trocarTitulo": "Set your password",
+    "trocarSubtitulo": "Your current password was generated for you. Pick your own to continue.",
+    "novaSenha": "New password",
+    "confirmarSenha": "Confirm new password",
+    "senhaAtual": "Current password",
+    "salvar": "Save and continue",
+    "salvando": "Saving...",
+    "minimo8": "The password needs at least 8 characters.",
+    "reutilizada": "Pick a password different from the one in the email.",
+    "atualIncorreta": "Current password is wrong.",
+    "trocada": "Password changed."
   },
   "rodape": {
     "termos": "Terms of Use",
@@ -900,7 +916,9 @@
     "restamNoTestePonto": "{n} days left in your free trial.",
     "testeExpiradoCurto": "Trial ended",
     "restantesCurto": "{n, plural, one {# day left} other {# days left}}",
-    "verPlanos": "See plans"
+    "verPlanos": "See plans",
+    "membroTitulo": "Account without an active subscription",
+    "membroTexto": "This account is suspended. Only the account owner can subscribe or reactivate the plan."
   },
   "onboarding": {
     "tudoProntoTexto": "You finished every first step. Now just focus on the candidates.",
@@ -997,5 +1015,38 @@
   },
   "cadastro": {
     "mesmoEmail": "Use the same email as the payment so your subscription is linked automatically."
+  },
+  "equipe": {
+    "titulo": "Team",
+    "subtitulo": "Who can use this account. Everyone sees the same roles and candidates.",
+    "assentos": "{usados} of {limite} users",
+    "assentosIlimitado": "{usados} users",
+    "adicionar": "Add user",
+    "adicionando": "Creating...",
+    "nome": "Name",
+    "nomePlaceholder": "Name of the person",
+    "email": "Email",
+    "emailPlaceholder": "name@company.com",
+    "cancelar": "Cancel",
+    "criar": "Create access",
+    "dono": "Account owner",
+    "membro": "User",
+    "voce": "you",
+    "senhaPendente": "Has not changed the password yet",
+    "convitePendente": "Invite not delivered",
+    "bloqueado": "No seat on the current plan",
+    "remover": "Remove",
+    "removerConfirma": "Remove {nome} from this account? Access ends right away.",
+    "removido": "User removed.",
+    "reenviar": "Generate new password",
+    "reenviado": "New password sent to {email}.",
+    "criado": "Access created. The temporary password went to {email}.",
+    "criadoSemEmail": "Access created, but the password email did not go out. Use \"Generate new password\" to try again.",
+    "limiteAtingido": "The {plano} plan allows {limite} user(s). Change plan to add more.",
+    "limiteTrial": "During the trial the account has one user. Subscribe to add your team.",
+    "verPlanos": "See plans",
+    "avisoBloqueados": "The account is over the plan limit. The flagged users cannot sign in until you remove someone or change plan.",
+    "vazio": "Just you so far.",
+    "erroCarregar": "Failed to load the team."
   }
 }

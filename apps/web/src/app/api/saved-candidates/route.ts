@@ -1,17 +1,20 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyAuth, unauthorizedResponse, jobBelongsToUser } from '@/lib/auth';
+import { requireAccount, jobBelongsToAccount } from '@/lib/auth';
 import { migrateLegacyCandidateStatusesForRecruiter } from '@/lib/candidate-status';
 
+/**
+ * Salvos é lista PESSOAL, não da conta: cada pessoa tem a sua, e por isso filtra por
+ * ctx.id e não por ctx.accountId. O que é da conta é o direito de salvar: só dá para
+ * marcar candidato de vaga da conta (validado no POST).
+ */
 // GET /api/saved-candidates - Lista candidatos salvos do recrutador (com dados do candidato)
 export async function GET(request: NextRequest) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return unauthorizedResponse();
-    }
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
 
-    await migrateLegacyCandidateStatusesForRecruiter(user.id);
+    await migrateLegacyCandidateStatusesForRecruiter(auth.ctx.accountId);
 
     const saved = (prisma as { savedCandidate?: { findMany: (args: unknown) => Promise<unknown[]> } }).savedCandidate;
     if (!saved) {
@@ -25,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     if (idsOnly) {
       const list = await saved.findMany({
-        where: { recruiter_id: user.id },
+        where: { recruiter_id: auth.ctx.id },
         select: { candidate_id: true },
       }) as { candidate_id: string }[];
       return Response.json({
@@ -34,7 +37,7 @@ export async function GET(request: NextRequest) {
     }
 
     const list = await saved.findMany({
-      where: { recruiter_id: user.id },
+      where: { recruiter_id: auth.ctx.id },
       orderBy: { created_at: 'desc' },
       include: {
         candidate: {
@@ -64,10 +67,8 @@ export async function GET(request: NextRequest) {
 // POST /api/saved-candidates - Salvar candidato (body: { candidate_id })
 export async function POST(request: NextRequest) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return unauthorizedResponse();
-    }
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
 
     const body = await request.json();
     const candidateId =
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
       include: { job: { select: { user_id: true } } },
     });
 
-    if (!candidate || !jobBelongsToUser(candidate.job, user)) {
+    if (!candidate || !jobBelongsToAccount(candidate.job, auth.ctx)) {
       return Response.json(
         { error: 'Not Found', message: 'Candidate not found' },
         { status: 404 }
@@ -104,7 +105,7 @@ export async function POST(request: NextRequest) {
     const existing = await saved.findUnique({
       where: {
         recruiter_id_candidate_id: {
-          recruiter_id: user.id,
+          recruiter_id: auth.ctx.id,
           candidate_id: candidateId,
         },
       },
@@ -112,7 +113,7 @@ export async function POST(request: NextRequest) {
     if (!existing) {
       await saved.create({
         data: {
-          recruiter_id: user.id,
+          recruiter_id: auth.ctx.id,
           candidate_id: candidateId,
         },
       });

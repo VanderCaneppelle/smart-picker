@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyAuth, unauthorizedResponse, jobBelongsToUser } from '@/lib/auth';
+import { requireAccount, jobBelongsToAccount } from '@/lib/auth';
 import { UpdateCandidateSchema } from '@hunter/core';
 import { triggerScheduleInterviewEmail, triggerRejectionEmail } from '@/lib/worker';
 import { migrateLegacyCandidateStatusesForRecruiter } from '@/lib/candidate-status';
@@ -13,12 +13,10 @@ interface RouteParams {
 // GET /api/candidates/:id - Get candidate details (protected)
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return unauthorizedResponse();
-    }
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
 
-    await migrateLegacyCandidateStatusesForRecruiter(user.id);
+    await migrateLegacyCandidateStatusesForRecruiter(auth.ctx.accountId);
 
     const { id } = await params;
 
@@ -38,7 +36,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       },
     });
 
-    if (!candidate || !jobBelongsToUser(candidate.job, user)) {
+    if (!candidate || !jobBelongsToAccount(candidate.job, auth.ctx)) {
       return Response.json(
         { error: 'Not Found', message: 'Candidate not found' },
         { status: 404 }
@@ -60,12 +58,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // PATCH /api/candidates/:id - Update candidate (protected)
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return unauthorizedResponse();
-    }
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
 
-    await migrateLegacyCandidateStatusesForRecruiter(user.id);
+    await migrateLegacyCandidateStatusesForRecruiter(auth.ctx.accountId);
 
     const { id } = await params;
     const body = await request.json();
@@ -82,13 +78,13 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Check if candidate exists and belongs to user's job
+    // Check if candidate exists and belongs to a job of the account
     const existingCandidate = await prisma.candidate.findFirst({
       where: { id, deleted_at: null },
       include: { job: { select: { user_id: true } } },
     });
 
-    if (!existingCandidate || !jobBelongsToUser(existingCandidate.job, user)) {
+    if (!existingCandidate || !jobBelongsToAccount(existingCandidate.job, auth.ctx)) {
       return Response.json(
         { error: 'Not Found', message: 'Candidate not found' },
         { status: 404 }
@@ -131,7 +127,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         toStatus: data.status,
         message: `Status alterado de ${existingCandidate.status} para ${data.status}`,
         metadata: { source: 'candidate_patch' },
-        createdBy: user.id,
+        createdBy: auth.ctx.id,
       });
     }
 
@@ -157,22 +153,20 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 // DELETE /api/candidates/:id - Soft delete candidate (protected)
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return unauthorizedResponse();
-    }
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
 
-    await migrateLegacyCandidateStatusesForRecruiter(user.id);
+    await migrateLegacyCandidateStatusesForRecruiter(auth.ctx.accountId);
 
     const { id } = await params;
 
-    // Check if candidate exists and belongs to user's job
+    // Check if candidate exists and belongs to a job of the account
     const existingCandidate = await prisma.candidate.findFirst({
       where: { id, deleted_at: null },
       include: { job: { select: { user_id: true } } },
     });
 
-    if (!existingCandidate || !jobBelongsToUser(existingCandidate.job, user)) {
+    if (!existingCandidate || !jobBelongsToAccount(existingCandidate.job, auth.ctx)) {
       return Response.json(
         { error: 'Not Found', message: 'Candidate not found' },
         { status: 404 }

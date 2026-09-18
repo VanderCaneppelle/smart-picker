@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { requireAccount } from '@/lib/auth';
 
 interface RouteParams {
   params: Promise<{ candidateId: string }>;
@@ -9,10 +9,8 @@ interface RouteParams {
 // DELETE /api/saved-candidates/:candidateId - Remover candidato dos salvos
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return unauthorizedResponse();
-    }
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
 
     const { candidateId } = await params;
 
@@ -20,7 +18,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     if (saved) {
       await saved.deleteMany({
         where: {
-          recruiter_id: user.id,
+          recruiter_id: auth.ctx.id,
           candidate_id: candidateId,
         },
       });
