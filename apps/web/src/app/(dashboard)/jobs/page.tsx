@@ -129,7 +129,7 @@ function JobsPageContent() {
           action={
             !search && !statusFilter && !typeFilter
               ? {
-                  label: 'Criar Vaga',
+                  label: t('formVaga.titulo'),
                   onClick: () => router.push('/jobs/new'),
                 }
               : undefined
@@ -223,7 +223,7 @@ function JobsPageContent() {
                   className="shrink-0 ml-auto text-xs"
                 >
                   <span className="hidden xl:inline">{t('vagas.verCandidatos')}</span>
-                  <span className="xl:hidden">Ver</span>
+                  <span className="xl:hidden">{t('comum.ver')}</span>
                 </Button>
               </div>
             </div>
@@ -235,8 +235,9 @@ function JobsPageContent() {
 }
 
 export default function JobsPage() {
+  const t = useTranslations();
   return (
-    <Suspense fallback={<Loading text="Carregando..." />}>
+    <Suspense fallback={<Loading text={t('comum.carregando')} />}>
       <JobsPageContent />
     </Suspense>
   );

@@ -8,8 +8,10 @@ import { Button, Input } from '@/components/ui';
 import { AuthLayoutSide } from '@/components/AuthLayoutSide';
 import { TrendingUp } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { useTranslations } from 'next-intl';
 
 export default function ResetPasswordPage() {
+  const t = useTranslations();
   const router = useRouter();
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
@@ -44,22 +46,22 @@ export default function ResetPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== passwordConfirm) {
-      toast.error('As senhas não coincidem.');
+      toast.error(t('autenticacao.senhasNaoCoincidem'));
       return;
     }
     if (password.length < 6) {
-      toast.error('A senha deve ter no mínimo 6 caracteres.');
+      toast.error(t('autenticacao.senhaMinima6'));
       return;
     }
     if (!supabase) {
-      toast.error('Configuração indisponível.');
+      toast.error(t('autenticacao.configIndisponivel'));
       return;
     }
     setIsLoading(true);
     try {
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) throw updateError;
-      toast.success('Senha alterada com sucesso. Faça login.');
+      toast.success(t('autenticacao.senhaAlterada'));
       router.push('/login');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Falha ao alterar senha.');
@@ -79,44 +81,38 @@ export default function ResetPasswordPage() {
             <span className="text-xl font-bold text-gray-900">Rankea</span>
           </Link>
         </div>
-        <h2 className="text-2xl font-bold text-gray-900">Nova senha</h2>
-        <p className="mt-1 text-sm text-gray-500">
-          Digite e confirme sua nova senha.
-        </p>
+        <h2 className="text-2xl font-bold text-gray-900">{t('autenticacao.novaSenha')}</h2>
+        <p className="mt-1 text-sm text-gray-500">{t('autenticacao.digiteConfirme')}</p>
         <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
           <Input
-            label="Nova senha"
+            label={t('autenticacao.novaSenha')}
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
             autoComplete="new-password"
-            placeholder="Mínimo 6 caracteres"
+            placeholder={t('auth.senhaMinima')}
           />
           <Input
-            label="Confirmar senha"
+            label={t('auth.confirmarSenha')}
             type="password"
             value={passwordConfirm}
             onChange={(e) => setPasswordConfirm(e.target.value)}
             required
             minLength={6}
             autoComplete="new-password"
-            placeholder="Repita a senha"
+            placeholder={t('autenticacao.repitaSenha')}
           />
           <Button
             type="submit"
             className="w-full bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500"
             size="lg"
             isLoading={isLoading}
-          >
-            Redefinir senha
-          </Button>
+          >{t('autenticacao.redefinir')}</Button>
         </form>
         <p className="mt-6 text-center text-sm text-gray-600">
-          <Link href="/login" className="font-medium text-emerald-600 hover:text-emerald-500">
-            Voltar para o login
-          </Link>
+          <Link href="/login" className="font-medium text-emerald-600 hover:text-emerald-500">{t('autenticacao.voltarLogin')}</Link>
         </p>
       </div>
     </div>
@@ -141,9 +137,7 @@ export default function ResetPasswordPage() {
               <Link
                 href="/forgot-password"
                 className="mt-4 inline-block font-medium text-emerald-600 hover:text-emerald-500"
-              >
-                Solicitar novo link
-              </Link>
+              >{t('autenticacao.solicitarNovo')}</Link>
             </div>
           </div>
         </div>
@@ -156,7 +150,7 @@ export default function ResetPasswordPage() {
       <div className="min-h-screen flex">
         <AuthLayoutSide />
         <div className="w-full lg:w-1/2 flex flex-col bg-white items-center justify-center px-6">
-          <p className="text-gray-600">Validando link...</p>
+          <p className="text-gray-600">{t('autenticacao.validando')}</p>
         </div>
       </div>
     );

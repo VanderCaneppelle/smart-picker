@@ -12,22 +12,23 @@ import { useTranslations } from 'next-intl';
 type CandidateWithJob = Candidate & { job?: { id: string; title: string } };
 
 const statusOptions = [
-  { value: '', label: 'Todos (exc. encerrados)' },
-  { value: 'new', label: 'Novo' },
-  { value: 'reviewing', label: 'Em revisão' },
-  { value: 'interview', label: 'Entrevista' },
-  { value: 'in_validation', label: 'Em validação' },
-  { value: 'rejected', label: 'Encerrado' },
-  { value: 'hired', label: 'Contratado' },
+  { value: '', labelKey: 'secaoCand.todosExc' },
+  { value: 'new', labelKey: 'candidatos.estados.novo' },
+  { value: 'reviewing', labelKey: 'secaoCand.emRevisao' },
+  { value: 'interview', labelKey: 'candidatos.filtros.entrevista' },
+  { value: 'in_validation', labelKey: 'candidatos.filtros.emValidacao' },
+  { value: 'rejected', labelKey: 'candidatos.estados.encerrado' },
+  { value: 'hired', labelKey: 'candidatos.estados.contratado' },
 ];
 
-const STATUS_LABELS: Record<CandidateStatus | string, string> = {
-  new: 'Novo',
-  reviewing: 'Em revisão',
-  interview: 'Entrevista',
-  in_validation: 'Em validação',
-  rejected: 'Encerrado',
-  hired: 'Contratado',
+/** Chaves, não textos: constante de módulo é avaliada antes de existir idioma. */
+const STATUS_LABEL_KEYS: Record<CandidateStatus | string, string> = {
+  new: 'candidatos.estados.novo',
+  reviewing: 'secaoCand.emRevisao',
+  interview: 'candidatos.filtros.entrevista',
+  in_validation: 'candidatos.filtros.emValidacao',
+  rejected: 'candidatos.estados.encerrado',
+  hired: 'candidatos.estados.contratado',
 };
 
 const getStatusBadgeVariant = (status: string) => {
@@ -51,6 +52,9 @@ const getStatusBadgeVariant = (status: string) => {
 
 export default function CandidatosSalvosPage() {
   const t = useTranslations();
+  /** Rótulo resolvido na renderização: a lista guarda a chave. */
+  const opcoes = (lista: { value: string; labelKey: string }[]) =>
+    lista.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   const router = useRouter();
   const searchParams = useSearchParams();
   const [candidates, setCandidates] = useState<CandidateWithJob[]>([]);
@@ -101,7 +105,7 @@ export default function CandidatosSalvosPage() {
 
       <div className="flex flex-wrap gap-4 mb-6">
         <Select
-          options={statusOptions}
+          options={opcoes(statusOptions)}
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           className="w-full sm:w-48"
@@ -178,7 +182,7 @@ export default function CandidatosSalvosPage() {
                     </td>
                     <td className="px-4 py-3">
                       <Badge variant={getStatusBadgeVariant(c.status)}>
-                        {STATUS_LABELS[c.status] ?? c.status}
+                        {t(STATUS_LABEL_KEYS[c.status] ?? '') ?? c.status}
                       </Badge>
                     </td>
                     <td className="px-4 py-3 flex items-center gap-2">

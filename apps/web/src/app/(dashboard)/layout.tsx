@@ -39,6 +39,7 @@ function DashboardShell({
 }: {
   children: React.ReactNode;
 }) {
+  const t = useTranslations();
   const router = useRouter();
   const pathname = usePathname();
   const { user, isLoading, isAuthenticated, logout } = useAuth();
@@ -50,7 +51,7 @@ function DashboardShell({
   }, [isLoading, isAuthenticated, router]);
 
   if (isLoading) {
-    return <Loading fullScreen text="Carregando..." />;
+    return <Loading fullScreen text={t('comum.carregando')} />;
   }
 
   if (!isAuthenticated) {
@@ -59,7 +60,7 @@ function DashboardShell({
 
   return (
     <OnboardingProvider>
-      <Suspense fallback={<Loading fullScreen text="Carregando..." />}>
+      <Suspense fallback={<Loading fullScreen text={t('comum.carregando')} />}>
         <DashboardLayoutContent pathname={pathname} user={user} onLogout={logout} isAuthenticated={isAuthenticated}>
           {children}
         </DashboardLayoutContent>
@@ -392,7 +393,7 @@ function DashboardLayoutContent({
               type="button"
               onClick={() => setMobileMenuOpen((o) => !o)}
               className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-              aria-label="Abrir menu"
+              aria-label={t('comum.abrirMenu')}
             >
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -403,12 +404,12 @@ function DashboardLayoutContent({
                 <button
                   type="button"
                   className="fixed inset-0 bg-black/20 z-40 lg:hidden"
-                  aria-label="Fechar menu"
+                  aria-label={t('comum.fecharMenu')}
                   onClick={() => setMobileMenuOpen(false)}
                 />
                 <div className="fixed top-0 right-0 bottom-0 w-full max-w-sm bg-white shadow-xl z-50 flex flex-col lg:hidden transform transition-transform duration-200 ease-out translate-x-0">
                   <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-                    <span className="font-semibold text-gray-900">Menu</span>
+                    <span className="font-semibold text-gray-900">{t('comum.menu')}</span>
                     <button
                       type="button"
                       onClick={() => setMobileMenuOpen(false)}

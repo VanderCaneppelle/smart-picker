@@ -200,7 +200,7 @@ export default function CandidateDrawer({
               </h2>
               <div className="flex items-center gap-2.5 mt-1.5">
                 <Badge variant={STATUS_BADGE_VARIANT[candidate.status] ?? 'default'}>
-                  {STATUS_LABEL_KEYS[candidate.status] ?? candidate.status}
+                  {STATUS_LABEL_KEYS[candidate.status] ? t(STATUS_LABEL_KEYS[candidate.status]) : candidate.status}
                 </Badge>
                 {candidate.fit_score != null && (
                   <span className={`text-xl font-bold ${scoreColor(candidate.fit_score)}`}>
@@ -303,7 +303,7 @@ export default function CandidateDrawer({
               </span>.
             </p>
             <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-5">
-              {STATUS_EMAIL_MESSAGE_KEYS[pendingAction]}
+              {t(STATUS_EMAIL_MESSAGE_KEYS[pendingAction])}
             </p>
             <div className="flex justify-end gap-3">
               <button

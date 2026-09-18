@@ -4,6 +4,7 @@ import React, { memo } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import type { Candidate } from '@hunter/core';
 import CandidateKanbanCard from './CandidateKanbanCard';
+import { useTranslations } from 'next-intl';
 
 interface CandidatesKanbanColumnProps {
   status: string;
@@ -23,6 +24,7 @@ function CandidatesKanbanColumn({
   onCardClick,
   highlightCards = false,
 }: CandidatesKanbanColumnProps) {
+  const t = useTranslations();
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
   return (
@@ -43,7 +45,7 @@ function CandidatesKanbanColumn({
 
       <div className="flex-1 p-2 space-y-2 overflow-y-auto max-h-[calc(100vh-320px)]">
         {candidates.length === 0 && (
-          <p className="text-xs text-gray-400 text-center py-8">Nenhum candidato</p>
+          <p className="text-xs text-gray-400 text-center py-8">{t('kanban.nenhumCandidato')}</p>
         )}
         {candidates.map((candidate) => (
           <CandidateKanbanCard

@@ -4,6 +4,7 @@ import React, { memo, useRef, useEffect } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { AlertTriangle } from 'lucide-react';
 import type { Candidate } from '@hunter/core';
+import { useTranslations } from 'next-intl';
 
 interface CandidateKanbanCardProps {
   candidate: Candidate;
@@ -21,6 +22,7 @@ function fitScoreColor(score: number) {
 }
 
 function CardContent({ candidate }: { candidate: Candidate }) {
+  const t = useTranslations();
   return (
     <>
       {/* Row 1: Name + Fit Score */}
@@ -52,7 +54,7 @@ function CardContent({ candidate }: { candidate: Candidate }) {
             <span className="text-gray-300">|</span>
           )}
           {candidate.answer_quality_rating != null && (
-            <span>Resp: <span className="font-medium text-gray-600">{candidate.answer_quality_rating}/5</span></span>
+            <span>{t('kanban.resp')}<span className="font-medium text-gray-600">{candidate.answer_quality_rating}/5</span></span>
           )}
         </div>
       )}

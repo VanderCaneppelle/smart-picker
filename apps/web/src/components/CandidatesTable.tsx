@@ -970,7 +970,7 @@ export default function CandidatesTable({
               </span>.
             </p>
             <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-5">
-              {STATUS_EMAIL_MESSAGE_KEYS[pendingStatusChange.newStatus]}
+              {t(STATUS_EMAIL_MESSAGE_KEYS[pendingStatusChange.newStatus])}
             </p>
             <div className="flex justify-end gap-3">
               <button

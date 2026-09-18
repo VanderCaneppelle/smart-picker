@@ -7,8 +7,10 @@ import { Button, Input } from '@/components/ui';
 import { AuthLayoutSide } from '@/components/AuthLayoutSide';
 import { TrendingUp, Mail } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { useTranslations } from 'next-intl';
 
 export default function ForgotPasswordPage() {
+  const t = useTranslations();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -16,7 +18,7 @@ export default function ForgotPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!supabase) {
-      toast.error('Configuração indisponível. Tente mais tarde.');
+      toast.error(t('autenticacao.configIndisponivelTarde'));
       return;
     }
     setIsLoading(true);
@@ -27,7 +29,7 @@ export default function ForgotPasswordPage() {
       });
       if (error) throw error;
       setSent(true);
-      toast.success('Se o e-mail existir, você receberá um link para redefinir a senha.');
+      toast.success(t('autenticacao.seEmailExistir'));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Falha ao enviar. Tente novamente.');
     } finally {
@@ -49,51 +51,41 @@ export default function ForgotPasswordPage() {
                 <span className="text-xl font-bold text-gray-900">Rankea</span>
               </Link>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900">Recuperar senha</h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Informe seu e-mail e enviaremos um link para redefinir sua senha.
-            </p>
+            <h2 className="text-2xl font-bold text-gray-900">{t('autenticacao.recuperarSenha')}</h2>
+            <p className="mt-1 text-sm text-gray-500">{t('autenticacao.informeEmail')}</p>
 
             {sent ? (
               <div className="mt-8 rounded-xl bg-emerald-50 border border-emerald-200 p-6 text-center">
                 <Mail className="mx-auto h-10 w-10 text-emerald-600 mb-3" />
-                <p className="text-gray-700 text-sm">
-                  Verifique sua caixa de entrada (e o spam). O link expira em 1 hora.
-                </p>
+                <p className="text-gray-700 text-sm">{t('autenticacao.verifiqueCaixa')}</p>
                 <Link
                   href="/login"
                   className="mt-4 inline-block text-sm font-medium text-emerald-600 hover:text-emerald-500"
-                >
-                  Voltar para o login
-                </Link>
+                >{t('autenticacao.voltarLogin')}</Link>
               </div>
             ) : (
               <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
                 <Input
-                  label="E-mail"
+                  label={t('auth.email')}
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   autoComplete="email"
-                  placeholder="voce@exemplo.com"
+                  placeholder={t('auth.emailPlaceholder')}
                 />
                 <Button
                   type="submit"
                   className="w-full bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500"
                   size="lg"
                   isLoading={isLoading}
-                >
-                  Enviar link de recuperação
-                </Button>
+                >{t('autenticacao.enviarLink')}</Button>
               </form>
             )}
 
             <p className="mt-6 text-center text-sm text-gray-600">
               Lembrou a senha?{' '}
-              <Link href="/login" className="font-medium text-emerald-600 hover:text-emerald-500">
-                Entrar
-              </Link>
+              <Link href="/login" className="font-medium text-emerald-600 hover:text-emerald-500">{t('auth.entrar')}</Link>
             </p>
           </div>
         </div>

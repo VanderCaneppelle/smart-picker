@@ -16,12 +16,14 @@ import {
 import { PLANS, type SubscriptionInfo, getTrialDaysRemaining } from '@/lib/subscription';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 interface SubscriptionPaywallProps {
   subscription: SubscriptionInfo;
 }
 
 export function SubscriptionPaywall({ subscription }: SubscriptionPaywallProps) {
+  const t = useTranslations();
   const daysLeft = getTrialDaysRemaining(subscription.trialEndsAt);
   const isExpired = daysLeft === 0;
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
@@ -82,9 +84,7 @@ export function SubscriptionPaywall({ subscription }: SubscriptionPaywallProps) 
               >
                 {plan.highlighted && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="bg-emerald-600 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                      Recomendado
-                    </span>
+                    <span className="bg-emerald-600 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">{t('comum.recomendado')}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-2 mb-3">
@@ -95,7 +95,7 @@ export function SubscriptionPaywall({ subscription }: SubscriptionPaywallProps) 
                 </div>
                 <div className="mb-4">
                   <span className="text-2xl font-bold text-gray-900">{plan.priceLabel}</span>
-                  <span className="text-gray-500 text-sm">/mês</span>
+                  <span className="text-gray-500 text-sm">{t('comum.porMes')}</span>
                 </div>
                 <ul className="space-y-2 mb-5">
                   {plan.features.slice(0, 4).map((f, j) => (
@@ -122,9 +122,7 @@ export function SubscriptionPaywall({ subscription }: SubscriptionPaywallProps) 
                 >
                   {loadingPlan === plan.id ? (
                     <span className="inline-flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Redirecionando...
-                    </span>
+                      <Loader2 className="h-4 w-4 animate-spin" />{t('comum.redirecionando')}</span>
                   ) : (
                     `Assinar ${plan.name}`
                   )}
@@ -137,9 +135,7 @@ export function SubscriptionPaywall({ subscription }: SubscriptionPaywallProps) 
             <Link
               href="/dashboard/upgrade"
               className="text-sm text-emerald-600 hover:text-emerald-700 font-medium inline-flex items-center gap-1"
-            >
-              Ver comparação completa dos planos
-              <ArrowRight className="h-3.5 w-3.5" />
+            >{t('upgrade.verComparacao')}<ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         </div>
@@ -153,6 +149,7 @@ interface TrialBannerProps {
 }
 
 export function TrialBanner({ daysRemaining }: TrialBannerProps) {
+  const t = useTranslations();
   if (daysRemaining > 7) return null;
 
   const urgency = daysRemaining <= 3;
@@ -184,9 +181,7 @@ export function TrialBanner({ daysRemaining }: TrialBannerProps) {
         className={`font-medium whitespace-nowrap ${
           urgency ? 'text-amber-700 hover:text-amber-900' : 'text-emerald-700 hover:text-emerald-900'
         }`}
-      >
-        Ver planos →
-      </Link>
+      >{t('upgrade.verPlanos')}</Link>
     </div>
   );
 }
@@ -198,6 +193,7 @@ interface TrialSidebarBadgeProps {
 }
 
 export function TrialSidebarBadge({ daysRemaining, status, plan }: TrialSidebarBadgeProps) {
+  const t = useTranslations();
   if (status === 'active' && plan) {
     return (
       <div className="px-3 py-2 bg-emerald-50 rounded-lg border border-emerald-100">

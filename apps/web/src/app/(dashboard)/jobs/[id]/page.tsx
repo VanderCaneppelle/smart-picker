@@ -457,7 +457,7 @@ export default function JobDetailPage() {
     newQuestions[index] = { ...newQuestions[index], ...updates };
     
     if (updates.type === 'yes_no') {
-      newQuestions[index].options = ['Sim', 'Não'];
+      newQuestions[index].options = [t('formVaga.sim'), t('formVaga.nao')];
     }
     if (updates.type === 'text' || updates.type === 'textarea' || updates.type === 'number') {
       newQuestions[index].options = [];
@@ -766,7 +766,7 @@ export default function JobDetailPage() {
                                   if (isElim && !question.eliminatory_criteria) {
                                     const criteria: EliminatoryCriteria = {};
                                     if (question.type === 'yes_no') {
-                                      criteria.expected_answer = 'Sim';
+                                      criteria.expected_answer = t('formVaga.sim');
                                     }
                                     if (question.type === 'select' || question.type === 'multiselect') {
                                       criteria.accepted_values = [...(question.options || [])];
@@ -834,7 +834,7 @@ export default function JobDetailPage() {
                         {/* Mostrar opções fixas para yes_no */}
                         {question.type === 'yes_no' && (
                           <div className="mt-3 pl-4 border-l-2 border-gray-200">
-                            <p className="text-sm text-gray-500">{t('formVaga.opcoes')}<span className="font-medium">Sim</span> / <span className="font-medium">Não</span>
+                            <p className="text-sm text-gray-500">{t('formVaga.opcoes')}<span className="font-medium">{t('formVaga.sim')}</span> / <span className="font-medium">{t('formVaga.nao')}</span>
                             </p>
                           </div>
                         )}
@@ -850,7 +850,7 @@ export default function JobDetailPage() {
                               <div>
                                 <label className="block text-sm text-gray-700 mb-1">{t('formVaga.respostaEsperada')}</label>
                                 <select
-                                  value={question.eliminatory_criteria?.expected_answer || 'Sim'}
+                                  value={question.eliminatory_criteria?.expected_answer || t('formVaga.sim')}
                                   onChange={(e) =>
                                     updateQuestion(index, {
                                       eliminatory_criteria: {
@@ -862,8 +862,8 @@ export default function JobDetailPage() {
                                   disabled={!isEditing}
                                   className="text-sm border border-amber-300 rounded-md px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 >
-                                  <option value="Sim">Sim</option>
-                                  <option value="Não">Não</option>
+                                  <option value="Sim">{t('formVaga.sim')}</option>
+                                  <option value="Não">{t('formVaga.nao')}</option>
                                 </select>
                               </div>
                             )}
