@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import Script from 'next/script';
 import { Toaster } from 'sonner';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getMessages } from 'next-intl/server';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -20,13 +22,24 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+/**
+ * O layout raiz atende tanto as rotas dentro de [locale] quanto as de fora (painel,
+ * candidatura, admin). getLocale resolve pela URL quando ela traz o idioma e pelo
+ * cookie no resto, então tudo sai renderizado na língua certa já na primeira pintura.
+ *
+ * As rotas dentro de [locale] recebem um segundo provider, mais interno, que existe
+ * para re-renderizar na troca de idioma. O de dentro vence, como deve ser.
+ */
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="pt-BR" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <head>
         <Script id="microsoft-clarity" strategy="afterInteractive">
           {`
@@ -39,10 +52,12 @@ export default function RootLayout({
         </Script>
       </head>
       <body className="min-h-screen bg-gray-50 antialiased" suppressHydrationWarning>
-        <AuthProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <AuthProvider>
           {children}
           <Toaster position="top-right" richColors />
         </AuthProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

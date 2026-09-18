@@ -8,8 +8,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button, Input } from '@/components/ui';
 import { AuthLayoutSide } from '@/components/AuthLayoutSide';
 import { TrendingUp } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export default function LoginPage() {
+  const t = useTranslations();
   const router = useRouter();
   const { login, isAuthenticated } = useAuth();
   const [email, setEmail] = useState('');
@@ -26,7 +28,7 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await login(email, password);
-      toast.success('Login realizado com sucesso!');
+      toast.success(t('auth.loginOk'));
       router.push('/dashboard');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Falha no login');
@@ -49,54 +51,46 @@ export default function LoginPage() {
                 <span className="text-xl font-bold text-gray-900">Rankea</span>
               </Link>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900">Entrar</h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Acesse sua conta para gerenciar suas vagas
-            </p>
+            <h2 className="text-2xl font-bold text-gray-900">{t('auth.entrar')}</h2>
+            <p className="mt-1 text-sm text-gray-500">{t('auth.entrarSub')}</p>
             <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
               <Input
-                label="E-mail"
+                label={t('auth.email')}
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                placeholder="voce@exemplo.com"
+                placeholder={t('auth.emailPlaceholder')}
               />
               <Input
-                label="Senha"
+                label={t('auth.senha')}
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
-                placeholder="Sua senha"
+                placeholder={t('auth.senhaPlaceholder')}
               />
               <div className="flex justify-end">
                 <Link
                   href="/forgot-password"
                   className="text-sm text-emerald-600 hover:text-emerald-500"
-                >
-                  Esqueci minha senha
-                </Link>
+                >{t('auth.esqueciSenha')}</Link>
               </div>
               <Button
                 type="submit"
                 className="w-full bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500"
                 size="lg"
                 isLoading={isLoading}
-              >
-                Entrar
-              </Button>
+              >{t('auth.entrar')}</Button>
             </form>
             <p className="mt-6 text-center text-sm text-gray-600">
               Não tem conta?{' '}
               <Link
                 href="/signup"
                 className="font-medium text-emerald-600 hover:text-emerald-500"
-              >
-                Criar conta
-              </Link>
+              >{t('auth.criarConta')}</Link>
             </p>
           </div>
         </div>

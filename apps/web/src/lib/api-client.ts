@@ -271,6 +271,7 @@ class ApiClient {
     name?: string;
     company?: string | null;
     phone_number?: string | null;
+    locale?: 'pt' | 'en';
   }): Promise<{
     id: string;
     email: string;

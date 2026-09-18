@@ -7,6 +7,8 @@ const UpdateRecruiterSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   company: z.string().max(200).nullable().optional(),
   phone_number: z.string().max(50).nullable().optional(),
+  // Idioma da interface, dos e-mails e do resumo gerado pela IA.
+  locale: z.enum(['pt', 'en']).optional(),
 });
 
 // GET /api/recruiter/me - Perfil do recrutador logado
@@ -56,8 +58,14 @@ export async function PATCH(request: NextRequest) {
     }
 
     const data = validation.data;
-    const updateData: { name?: string; company?: string | null; phone_number?: string | null } = {};
+    const updateData: {
+      name?: string;
+      company?: string | null;
+      phone_number?: string | null;
+      locale?: string;
+    } = {};
     if (data.name !== undefined) updateData.name = data.name;
+    if (data.locale !== undefined) updateData.locale = data.locale;
     if (data.company !== undefined) updateData.company = data.company;
     if (data.phone_number !== undefined) updateData.phone_number = data.phone_number;
 
