@@ -160,12 +160,18 @@
     "cargo2": "Eng. de Software Sênior",
     "cargo3": "Full Stack Developer",
     "cargo4": "Desenvolvedor Backend",
-    "cargo5": "Software Engineer"
+    "cargo5": "Software Engineer",
+    "nome1": "Ana Silva",
+    "nome2": "Carlos Santos",
+    "nome3": "Maria Oliveira",
+    "nome4": "João Pereira",
+    "nome5": "Fernanda Costa"
   },
   "meta": {
     "titulo": "Rankea | Seleção simples, decisão inteligente",
     "descricao": "Reduza o tempo de triagem e aumente a precisão da sua seleção com ranking automatizado por IA. Feito para consultores de RH.",
-    "ogDescricao": "Ranking automatizado de candidatos por IA. Feito para consultores de RH independentes."
+    "ogDescricao": "Ranking automatizado de candidatos por IA. Feito para consultores de RH independentes.",
+    "palavrasChave": "recrutamento,seleção,RH,IA,ranking,candidatos,triagem"
   },
   "app": {
     "nav": {
@@ -526,7 +532,7 @@
   "perfil": {
     "titulo": "Perfil",
     "subtitulo": "Suas informações de recrutador",
-    "carregando": "Carregando perfil...",
+    "carregando": "Carregando configurações...",
     "naoCarregou": "Não foi possível carregar seu perfil.",
     "gerenciarAssinatura": "Gerenciar assinatura",
     "emailFixo": "O e-mail é definido na sua conta e não pode ser alterado aqui.",
@@ -544,7 +550,9 @@
     "linkedinAjuda": "Link do perfil ou da empresa. Aparece na página pública para visitantes.",
     "slugEmUso": "Este slug já está em uso",
     "erroSalvarSlug": "Erro ao salvar slug",
-    "reiniciarTutorialTexto": "Reinicie o tutorial de primeiros passos para rever o guia interativo desde o início."
+    "reiniciarTutorialTexto": "Reinicie o tutorial de primeiros passos para rever o guia interativo desde o início.",
+    "publicaAtivada": "Página pública ativada!",
+    "publicaDesativada": "Página pública desativada."
   },
   "salvos": {
     "titulo": "Candidatos salvos",
@@ -624,7 +632,13 @@
     "loginOk": "Login realizado com sucesso!",
     "contaCriada": "Conta criada com sucesso!",
     "contaCriadaConfirmar": "Conta criada! Confira seu e-mail para confirmar.",
-    "lateralTexto": "Publique vagas, receba candidatos e deixe a IA ranquear os melhores. Comece grátis: 10 vagas ativas e candidatos ilimitados."
+    "lateralTexto": "Publique vagas, receba candidatos e deixe a IA ranquear os melhores. Comece grátis: 10 vagas ativas e candidatos ilimitados.",
+    "bullets": {
+      "trial": "30 dias de teste grátis, sem cartão",
+      "ranking": "Ranking automático por fit com a vaga",
+      "resumos": "Resumos e notas gerados por IA",
+      "semConta": "Candidatos não precisam criar conta"
+    }
   },
   "kanban": {
     "novos": "Novos",
@@ -699,7 +713,8 @@
     "desfazer": "Desfazer",
     "refazer": "Refazer",
     "iaAjuda": "Corrige o texto e organiza em seções, sem inventar informação",
-    "iaOk": "Descrição atualizada. Use Desfazer se quiser voltar."
+    "iaOk": "Descrição atualizada. Use Desfazer se quiser voltar.",
+    "erroIA": "Não consegui melhorar a descrição."
   },
   "autenticacao": {
     "diasGratis": "30 dias grátis",
@@ -818,7 +833,8 @@
     "dicaRecebida": "E-mail enviado quando o candidato envia a aplicação. Use as variáveis no texto.",
     "dicaEntrevista": "Inclua {variavel} onde deve aparecer o botão/link do Calendly.",
     "dicaRejeicao": "E-mail enviado quando o candidato é encerrado.",
-    "modelosTexto": "Personalize o assunto e o corpo de cada e-mail enviado aos candidatos. Deixe em branco para usar o modelo padrão."
+    "modelosTexto": "Personalize o assunto e o corpo de cada e-mail enviado aos candidatos. Deixe em branco para usar o modelo padrão.",
+    "apareceComo": "Aparecerá como \"Nome via Rankea\""
   },
   "planos": {
     "starter": {
@@ -868,7 +884,9 @@
     "intervaloAjuda": "Se a resposta numérica estiver fora do intervalo, o candidato será flagueado ou eliminado.",
     "confirmarSair": "Você tem alterações não salvas nos detalhes da vaga. Deseja salvar antes de continuar?",
     "notaInternaAjuda": "Visível apenas para recrutadores. Use para perguntas da entrevista ou observações.",
-    "semPerguntas": "Nenhuma pergunta adicionada. Clique em \"Adicionar Pergunta\" para criar uma."
+    "semPerguntas": "Nenhuma pergunta adicionada. Clique em \"Adicionar Pergunta\" para criar uma.",
+    "ativaCompartilhe": "Sua vaga está ativa e aceitando candidaturas. Copie o link e compartilhe!",
+    "instrucoesExemplo": "Ex: Priorize candidatos com experiência em React. Valorize certificações AWS. Candidatos com inglês fluente devem ter pontuação maior..."
   },
   "publica": {
     "semResultado": "Nenhuma vaga encontrada com os filtros aplicados.",
@@ -883,7 +901,8 @@
     "naoEncontrou": "Não encontrou a vaga ideal?",
     "contato": "Entrar em contato",
     "talentosTexto": "Estamos sempre em busca de bons talentos. Envie seu currículo e conte como você pode contribuir.",
-    "chamadaPadrao": "Estamos em busca de talentos. Conheça nossas vagas e faça parte do time."
+    "chamadaPadrao": "Estamos em busca de talentos. Conheça nossas vagas e faça parte do time.",
+    "todosTipos": "Todos os tipos"
   },
   "senha": {
     "linkInvalido": "Link inválido ou expirado. Solicite um novo link de recuperação.",
@@ -918,7 +937,8 @@
     "restantesCurto": "{n, plural, one {# dia restante} other {# dias restantes}}",
     "verPlanos": "Ver planos",
     "membroTitulo": "Conta sem assinatura ativa",
-    "membroTexto": "O acesso desta conta está suspenso. Só o dono da conta pode assinar ou reativar o plano."
+    "membroTexto": "O acesso desta conta está suspenso. Só o dono da conta pode assinar ou reativar o plano.",
+    "dadosSalvos": "Seus dados estão salvos. Assine um plano para voltar a publicar vagas e usar o ranking por IA."
   },
   "onboarding": {
     "tudoProntoTexto": "Você completou todos os primeiros passos. Agora é só focar nos candidatos.",
@@ -983,7 +1003,9 @@
     "concluir": "Concluir",
     "concluirBang": "Concluir!",
     "slugExemplo": "seu-slug",
-    "slugSubtitulo": "Escolha um slug para sua página de recrutador. Candidatos poderão ver suas vagas abertas nessa página."
+    "slugSubtitulo": "Escolha um slug para sua página de recrutador. Candidatos poderão ver suas vagas abertas nessa página.",
+    "concluido": "Concluído",
+    "marcarConcluido": "Marcar como concluído"
   },
   "aplicar": {
     "naoEncontrada": "Vaga não encontrada",
@@ -1009,9 +1031,6 @@
     "emailRejeicao": "E-mail de rejeição enviado",
     "recalculo": "Recálculo de nota solicitado",
     "dataAplicacao": "Data de aplicação registrada"
-  },
-  "depoimento": {
-    "cargo": "Consultora de RH Independente"
   },
   "cadastro": {
     "mesmoEmail": "Use o mesmo e-mail do pagamento para que sua assinatura seja vinculada automaticamente."
@@ -1048,5 +1067,11 @@
     "avisoBloqueados": "A conta está acima do limite do plano. Os usuários marcados não conseguem entrar até você remover alguém ou mudar de plano.",
     "vazio": "Só você por enquanto.",
     "erroCarregar": "Falha ao carregar a equipe."
+  },
+  "numeros": {
+    "triagem": "menos tempo em triagem",
+    "candidatos": "mais candidatos analisados",
+    "publicar": "para publicar uma vaga",
+    "dados": "decisões baseadas em dados"
   }
 }

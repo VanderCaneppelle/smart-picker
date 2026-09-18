@@ -160,12 +160,18 @@
     "cargo2": "Senior Software Engineer",
     "cargo3": "Full Stack Developer",
     "cargo4": "Backend Developer",
-    "cargo5": "Software Engineer"
+    "cargo5": "Software Engineer",
+    "nome1": "Anna Reid",
+    "nome2": "Carl Stevens",
+    "nome3": "Mary Oliver",
+    "nome4": "John Parker",
+    "nome5": "Fiona Coates"
   },
   "meta": {
     "titulo": "Rankea | Screen less, decide better",
-    "descricao": "Cut screening time and hire on evidence with automatic AI ranking of every applicant. Built for recruiters and staffing agencies.",
-    "ogDescricao": "Automatic AI ranking of job applicants. Built for independent recruiters."
+    "descricao": "Cut screening time and hire with more certainty, with AI-ranked candidates. Built for independent recruiters.",
+    "ogDescricao": "AI-ranked candidates. Built for independent recruiters.",
+    "palavrasChave": "recruiting,hiring,HR,AI,ranking,candidates,screening"
   },
   "app": {
     "nav": {
@@ -526,7 +532,7 @@
   "perfil": {
     "titulo": "Profile",
     "subtitulo": "Your recruiter details",
-    "carregando": "Loading profile...",
+    "carregando": "Loading settings...",
     "naoCarregou": "Could not load your profile.",
     "gerenciarAssinatura": "Manage subscription",
     "emailFixo": "Your email comes from your account and cannot be changed here.",
@@ -544,7 +550,9 @@
     "linkedinAjuda": "Profile or company link. It shows on your public page for visitors.",
     "slugEmUso": "This slug is already taken",
     "erroSalvarSlug": "Could not save the slug",
-    "reiniciarTutorialTexto": "Restart the first-steps tutorial to walk through the interactive guide again."
+    "reiniciarTutorialTexto": "Restart the first-steps tutorial to walk through the interactive guide again.",
+    "publicaAtivada": "Public page enabled!",
+    "publicaDesativada": "Public page disabled."
   },
   "salvos": {
     "titulo": "Saved candidates",
@@ -624,7 +632,13 @@
     "loginOk": "Signed in",
     "contaCriada": "Account created",
     "contaCriadaConfirmar": "Account created. Check your email to confirm it.",
-    "lateralTexto": "Post jobs, receive candidates and let the AI rank the best ones. Start free: 10 active jobs and unlimited candidates."
+    "lateralTexto": "Post jobs, receive candidates and let the AI rank the best ones. Start free: 10 active jobs and unlimited candidates.",
+    "bullets": {
+      "trial": "30-day free trial, no credit card",
+      "ranking": "Automatic ranking by fit to the role",
+      "resumos": "AI-written summaries and scores",
+      "semConta": "Candidates do not need an account"
+    }
   },
   "kanban": {
     "novos": "New",
@@ -699,7 +713,8 @@
     "desfazer": "Undo",
     "refazer": "Redo",
     "iaAjuda": "Cleans up the text and organizes it into sections, without inventing anything",
-    "iaOk": "Description updated. Use Undo to go back."
+    "iaOk": "Description updated. Use Undo to go back.",
+    "erroIA": "Could not improve the description."
   },
   "autenticacao": {
     "diasGratis": "30 days free",
@@ -818,7 +833,8 @@
     "dicaRecebida": "Email sent when the candidate submits an application. Use the variables in the text.",
     "dicaEntrevista": "Include {variavel} where the Calendly button/link should appear.",
     "dicaRejeicao": "Email sent when the candidate is closed out.",
-    "modelosTexto": "Customize the subject and body of every email sent to candidates. Leave blank to use the default template."
+    "modelosTexto": "Customize the subject and body of every email sent to candidates. Leave blank to use the default template.",
+    "apareceComo": "Shows as \"Name via Rankea\""
   },
   "planos": {
     "starter": {
@@ -868,7 +884,9 @@
     "notaInternaAjuda": "Visible to recruiters only. Use it for interview questions or notes.",
     "confirmarSair": "You have unsaved changes in the job details. Save before leaving?",
     "confirmarExcluir": "Delete this job? This cannot be undone. Every candidate attached to it is removed too.",
-    "semPerguntas": "No questions yet. Click \"Add question\" to create one."
+    "semPerguntas": "No questions yet. Click \"Add question\" to create one.",
+    "ativaCompartilhe": "Your job is live and accepting applications. Copy the link and share it!",
+    "instrucoesExemplo": "E.g. Favor candidates with React experience. Value AWS certifications. Fluent English should score higher..."
   },
   "publica": {
     "semResultado": "No jobs match the filters.",
@@ -883,7 +901,8 @@
     "naoEncontrou": "Didn't find the right job?",
     "contato": "Get in touch",
     "talentosTexto": "We are always looking for good people. Send your resume and tell us how you can contribute.",
-    "chamadaPadrao": "We are hiring. Take a look at our openings and join the team."
+    "chamadaPadrao": "We are hiring. Take a look at our openings and join the team.",
+    "todosTipos": "All types"
   },
   "senha": {
     "linkInvalido": "Invalid or expired link. Request a new recovery link.",
@@ -918,7 +937,8 @@
     "restantesCurto": "{n, plural, one {# day left} other {# days left}}",
     "verPlanos": "See plans",
     "membroTitulo": "Account without an active subscription",
-    "membroTexto": "This account is suspended. Only the account owner can subscribe or reactivate the plan."
+    "membroTexto": "This account is suspended. Only the account owner can subscribe or reactivate the plan.",
+    "dadosSalvos": "Your data is safe. Subscribe to post jobs again and use AI ranking."
   },
   "onboarding": {
     "tudoProntoTexto": "You finished every first step. Now just focus on the candidates.",
@@ -983,7 +1003,9 @@
     "concluir": "Finish",
     "concluirBang": "Finish!",
     "slugExemplo": "your-slug",
-    "slugSubtitulo": "Pick a slug for your recruiter page. Candidates will see your open jobs there."
+    "slugSubtitulo": "Pick a slug for your recruiter page. Candidates will see your open jobs there.",
+    "concluido": "Done",
+    "marcarConcluido": "Mark as done"
   },
   "aplicar": {
     "naoEncontrada": "Job not found",
@@ -1009,9 +1031,6 @@
     "emailRejeicao": "Rejection email sent",
     "recalculo": "Score recalculation requested",
     "dataAplicacao": "Application date recorded"
-  },
-  "depoimento": {
-    "cargo": "Independent HR Consultant"
   },
   "cadastro": {
     "mesmoEmail": "Use the same email as the payment so your subscription is linked automatically."
@@ -1048,5 +1067,11 @@
     "avisoBloqueados": "The account is over the plan limit. The flagged users cannot sign in until you remove someone or change plan.",
     "vazio": "Just you so far.",
     "erroCarregar": "Failed to load the team."
+  },
+  "numeros": {
+    "triagem": "less time screening",
+    "candidatos": "more candidates reviewed",
+    "publicar": "to publish a job",
+    "dados": "data-backed decisions"
   }
 }

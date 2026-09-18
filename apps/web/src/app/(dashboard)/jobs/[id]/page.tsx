@@ -1069,7 +1069,7 @@ export default function JobDetailPage() {
                 label={t('formVaga.instrucoesIA')}
                 value={scoringInstructions}
                 onChange={(e) => setScoringInstructions(e.target.value)}
-                placeholder="Ex: Priorize candidatos com experiência em React. Valorize certificações AWS. Candidatos com inglês fluente devem ter pontuação maior..."
+                placeholder={t('vaga.instrucoesExemplo')}
                 rows={3}
                 disabled={!isEditing}
               />

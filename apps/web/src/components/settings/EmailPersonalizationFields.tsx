@@ -30,7 +30,7 @@ export default function EmailPersonalizationFields({
         value={senderName}
         onChange={(e) => onSenderNameChange(e.target.value)}
         placeholder={t('config.exEquipe')}
-        helperText={senderName ? `Preview: "${senderName} via Rankea"` : 'Aparecerá como "Nome via Rankea"'}
+        helperText={senderName ? `Preview: "${senderName} via Rankea"` : t('config.apareceComo')}
       />
 
       <Input

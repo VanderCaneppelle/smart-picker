@@ -86,7 +86,7 @@ const RichTextEditor = ({
       const result = await apiClient.polishJobDescription(editor.getHTML(), aiContext);
       setSuggestion(result);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Não consegui melhorar a descrição.');
+      toast.error(err instanceof Error ? err.message : t('editor.erroIA'));
     } finally {
       setPolishing(false);
     }

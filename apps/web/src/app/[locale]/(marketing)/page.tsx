@@ -10,7 +10,6 @@ import {
   CheckCircle2,
   ArrowRight,
   Shield,
-  Star,
   ChevronDown,
   FileText,
   Inbox,
@@ -166,11 +165,11 @@ export default function LandingPage() {
               </div>
               <div className="space-y-3">
                 {[
-                  { name: 'Ana Silva', score: 94, status: t('mock.entrevista'), role: t('mock.cargo1') },
-                  { name: 'Carlos Santos', score: 87, status: t('mock.aprovado'), role: t('mock.cargo2') },
-                  { name: 'Maria Oliveira', score: 82, status: t('mock.revisao'), role: t('mock.cargo3') },
-                  { name: 'João Pereira', score: 76, status: t('mock.novo'), role: t('mock.cargo4') },
-                  { name: 'Fernanda Costa', score: 71, status: t('mock.novo'), role: t('mock.cargo5') },
+                  { name: t('mock.nome1'), score: 94, status: t('mock.entrevista'), role: t('mock.cargo1') },
+                  { name: t('mock.nome2'), score: 87, status: t('mock.aprovado'), role: t('mock.cargo2') },
+                  { name: t('mock.nome3'), score: 82, status: t('mock.revisao'), role: t('mock.cargo3') },
+                  { name: t('mock.nome4'), score: 76, status: t('mock.novo'), role: t('mock.cargo4') },
+                  { name: t('mock.nome5'), score: 71, status: t('mock.novo'), role: t('mock.cargo5') },
                 ].map((candidate, i) => (
                   <div
                     key={i}
@@ -233,10 +232,10 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { value: '80%', label: 'menos tempo em triagem' },
-              { value: '3x', label: 'mais candidatos analisados' },
-              { value: '< 2min', label: 'para publicar uma vaga' },
-              { value: '100%', label: 'decisões baseadas em dados' },
+              { value: '80%', label: t('numeros.triagem') },
+              { value: '3x', label: t('numeros.candidatos') },
+              { value: '< 2min', label: t('numeros.publicar') },
+              { value: '100%', label: t('numeros.dados') },
             ].map((stat, i) => (
               <div key={i} className="text-center">
                 <p className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
@@ -381,36 +380,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Testimonial */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-3xl p-8 sm:p-12 text-white relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-            <div className="relative z-10">
-              <div className="flex items-center gap-1 mb-6">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                ))}
-              </div>
-              <blockquote className="text-xl sm:text-2xl font-medium leading-relaxed mb-8">
-                &ldquo;Antes eu passava 3 horas por vaga analisando currículos. Com o Rankea,
-                em 10 minutos eu já sei quem chamar para entrevista. É como ter um assistente
-                dedicado que nunca erra.&rdquo;
-              </blockquote>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-lg font-bold">
-                  M
-                </div>
-                <div>
-                  <p className="font-semibold">Marina Souza</p>
-                  <p className="text-emerald-200 text-sm">{t('depoimento.cargo')}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Pricing Section */}
       <section id="precos" className="bg-gray-50 py-24 px-4 sm:px-6 lg:px-8">

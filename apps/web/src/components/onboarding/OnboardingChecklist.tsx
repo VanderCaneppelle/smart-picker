@@ -157,7 +157,7 @@ export function OnboardingChecklist() {
                   {/* Clickable checkbox — marks done manually */}
                   <button
                     type="button"
-                    aria-label={done ? 'Concluído' : 'Marcar como concluído'}
+                    aria-label={done ? t('onboarding.concluido') : t('onboarding.marcarConcluido')}
                     onClick={() => handleToggleManual(step.id)}
                     disabled={done}
                     className={`shrink-0 ${done ? 'cursor-default' : 'cursor-pointer'}`}

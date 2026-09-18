@@ -27,10 +27,10 @@ export function AuthLayoutSide() {
           </div>
           <ul className="space-y-4">
             {[
-              '30 dias de teste grátis, sem cartão',
-              'Ranking automático por fit com a vaga',
-              'Resumos e notas gerados por IA',
-              'Candidatos não precisam criar conta',
+              t('auth.bullets.trial'),
+              t('auth.bullets.ranking'),
+              t('auth.bullets.resumos'),
+              t('auth.bullets.semConta'),
             ].map((item, i) => (
               <li key={i} className="flex items-center gap-3">
                 <span className="flex-shrink-0 w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">

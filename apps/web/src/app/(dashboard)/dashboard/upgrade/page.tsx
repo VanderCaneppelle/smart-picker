@@ -17,6 +17,9 @@ import { usePlanoTraduzido } from '@/lib/plan-i18n';
 import { apiClient } from '@/lib/api-client';
 import { useTranslations } from 'next-intl';
 
+/** Marcador de recurso ausente na tabela. */
+const NAO = '\u2013';
+
 export default function UpgradePage() {
   return (
     <Suspense fallback={null}>
@@ -137,22 +140,22 @@ function UpgradeContent() {
               </thead>
               <tbody>
                 {[
-                  { feature: 'Vagas ativas', free: '10', values: ['3', '10', 'Ilimitadas'] },
-                  { feature: 'Candidatos por vaga', free: 'Ilimitados', values: ['Ilimitados', 'Ilimitados', 'Ilimitados'] },
-                  { feature: 'Ranking por IA', free: '✓', values: ['✓', '✓', '✓'] },
-                  { feature: 'E-mails automáticos', free: '✓', values: ['✓', '✓', '✓'] },
-                  { feature: 'Página pública', free: '✓', values: ['✓', '✓', '✓'] },
-                  { feature: 'Branding customizado', free: '—', values: ['—', '✓', '✓'] },
-                  { feature: 'Suporte prioritário', free: '—', values: ['—', '✓', '✓'] },
-                  { feature: 'Suporte dedicado', free: '—', values: ['—', '—', '✓'] },
-                  { feature: 'Entrevista por IA', free: '—', values: ['—', 'Em breve', 'Em breve'] },
-                  { feature: 'API de integração', free: '—', values: ['—', '—', 'Em breve'] },
+                  { feature: t('precos.linhas.vagasAtivas'), free: '10', values: ['3', '10', t('precos.linhas.ilimitadas')] },
+                  { feature: t('precos.linhas.candidatosPorVaga'), free: t('precos.linhas.ilimitados'), values: [t('precos.linhas.ilimitados'), t('precos.linhas.ilimitados'), t('precos.linhas.ilimitados')] },
+                  { feature: t('precos.linhas.rankingIA'), free: '✓', values: ['✓', '✓', '✓'] },
+                  { feature: t('precos.linhas.emailsAutomaticos'), free: '✓', values: ['✓', '✓', '✓'] },
+                  { feature: t('precos.linhas.paginaPublica'), free: '✓', values: ['✓', '✓', '✓'] },
+                  { feature: t('precos.linhas.branding'), free: NAO, values: [NAO, '✓', '✓'] },
+                  { feature: t('precos.linhas.suportePrioritario'), free: NAO, values: [NAO, '✓', '✓'] },
+                  { feature: t('precos.linhas.suporteDedicado'), free: NAO, values: [NAO, NAO, '✓'] },
+                  { feature: t('precos.linhas.entrevistaIA'), free: NAO, values: [NAO, t('precos.emBreve'), t('precos.emBreve')] },
+                  { feature: t('precos.linhas.api'), free: NAO, values: [NAO, NAO, t('precos.emBreve')] },
                 ].map((row, i) => (
                   <tr key={i} className="border-b border-gray-100">
                     <td className="py-3 px-6 font-medium text-gray-900">{row.feature}</td>
                     <td className="py-3 px-6 text-center text-gray-500">{row.free}</td>
                     {row.values.map((v, j) => (
-                      <td key={j} className={`py-3 px-6 text-center ${v === '✓' ? 'text-emerald-600 font-medium' : v === '—' ? 'text-gray-300' : 'text-gray-700'}`}>
+                      <td key={j} className={`py-3 px-6 text-center ${v === '✓' ? 'text-emerald-600 font-medium' : v === NAO ? 'text-gray-300' : 'text-gray-700'}`}>
                         {v}
                       </td>
                     ))}
