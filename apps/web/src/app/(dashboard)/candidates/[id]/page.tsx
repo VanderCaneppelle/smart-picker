@@ -21,6 +21,7 @@ import { apiClient } from '@/lib/api-client';
 import { Button, Badge, Select, Loading, Textarea } from '@/components/ui';
 import type { Candidate, CandidateStatus, ApplicationQuestion, ApplicationAnswer } from '@hunter/core';
 import type { CandidateHistoryEvent } from '@/lib/api-client';
+import { useTranslations } from 'next-intl';
 
 const statusOptions = [
   { value: 'new', label: 'Novo' },
@@ -60,6 +61,7 @@ const getStatusBadgeVariant = (status: string) => {
 };
 
 export default function CandidateDetailPage() {
+  const t = useTranslations();
   const router = useRouter();
   const params = useParams();
   const candidateId = params.id as string;
@@ -78,7 +80,7 @@ export default function CandidateDetailPage() {
       const eventsData = await apiClient.getCandidateEvents(candidateId);
       setEvents(eventsData.events || []);
     } catch (error) {
-      toast.error('Falha ao carregar candidato');
+      toast.error(t('candDetalhe.erroCarregar'));
       console.error(error);
       router.push('/jobs');
     } finally {
@@ -104,9 +106,9 @@ export default function CandidateDetailPage() {
         recruiter_notes: recruiterNotes.trim() || null,
       });
       setCandidate(updated);
-      toast.success('Notas salvas');
+      toast.success(t('candDetalhe.notasSalvas'));
     } catch (error) {
-      toast.error('Falha ao salvar notas');
+      toast.error(t('candDetalhe.erroSalvarNotas'));
       console.error(error);
     } finally {
       setIsSavingNotes(false);
@@ -121,9 +123,9 @@ export default function CandidateDetailPage() {
       setCandidate(updated);
       const eventsData = await apiClient.getCandidateEvents(candidateId);
       setEvents(eventsData.events || []);
-      toast.success('Status atualizado');
+      toast.success(t('candidatos.statusAtualizado'));
     } catch (error) {
-      toast.error('Falha ao atualizar status');
+      toast.error(t('candidatos.erroStatus'));
       console.error(error);
     }
   };
@@ -176,9 +178,7 @@ export default function CandidateDetailPage() {
           size="sm"
           onClick={() => router.back()}
           leftIcon={<ArrowLeft className="h-4 w-4" />}
-        >
-          Voltar
-        </Button>
+        >{t('comum.voltar')}</Button>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -190,8 +190,7 @@ export default function CandidateDetailPage() {
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">{candidate.name}</h1>
                 {job && (
-                  <p className="text-gray-600 mt-1">
-                    Candidatou-se para: <span className="font-medium">{job.title}</span>
+                  <p className="text-gray-600 mt-1">{t('candDetalhe.candidatouPara')}<span className="font-medium">{job.title}</span>
                   </p>
                 )}
               </div>
@@ -226,9 +225,7 @@ export default function CandidateDetailPage() {
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-gray-600 hover:text-blue-600"
                 >
-                  <Linkedin className="h-4 w-4" />
-                  Perfil LinkedIn
-                </a>
+                  <Linkedin className="h-4 w-4" />{t('candDetalhe.perfilLinkedin')}</a>
               )}
 
               <a
@@ -237,16 +234,12 @@ export default function CandidateDetailPage() {
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-gray-600 hover:text-blue-600"
               >
-                <FileText className="h-4 w-4" />
-                Ver Currículo
-              </a>
+                <FileText className="h-4 w-4" />{t('candDetalhe.verCurriculo')}</a>
             </div>
 
             {/* Status Update */}
             <div className="mt-6 pt-4 border-t">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Atualizar Status
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('candDetalhe.atualizarStatus')}</label>
               <Select
                 options={statusOptions}
                 value={candidate.status}
@@ -260,7 +253,7 @@ export default function CandidateDetailPage() {
               <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg flex items-start gap-2 text-orange-800 text-sm">
                 <Flag className="h-4 w-4 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium">Candidato com alerta automático</p>
+                  <p className="font-medium">{t('candDetalhe.alertaAutomatico')}</p>
                   <p className="text-orange-700 mt-1">{candidate.flagged_reason}</p>
                 </div>
               </div>
@@ -269,16 +262,14 @@ export default function CandidateDetailPage() {
             {/* Notas e transcrição da entrevista */}
             <div className="mt-6 pt-4 border-t">
               <h3 className="text-sm font-medium text-gray-900 mb-2 flex items-center gap-2">
-                <StickyNote className="h-4 w-4" />
-                Notas e transcrição da entrevista
-              </h3>
+                <StickyNote className="h-4 w-4" />{t('candDetalhe.notasEntrevista')}</h3>
               <p className="text-xs text-gray-500 mb-2">
                 Adicione observações, notas da entrevista ou cole a transcrição completa.
               </p>
               <Textarea
                 value={recruiterNotes}
                 onChange={(e) => setRecruiterNotes(e.target.value)}
-                placeholder="Ex: Pontos fortes: experiência em X. Transcrever entrevista aqui..."
+                placeholder={t('candDetalhe.notasPlaceholder')}
                 rows={6}
                 className="min-h-[120px]"
               />
@@ -287,9 +278,7 @@ export default function CandidateDetailPage() {
                 onClick={handleSaveNotes}
                 isLoading={isSavingNotes}
                 className="mt-2 bg-emerald-600 hover:bg-emerald-700"
-              >
-                Salvar notas
-              </Button>
+              >{t('candDetalhe.salvarNotas')}</Button>
             </div>
           </div>
 
@@ -297,9 +286,7 @@ export default function CandidateDetailPage() {
           {applicationQuestions.length > 0 && (
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Respostas da Aplicação
-              </h2>
+                <MessageSquare className="h-5 w-5" />{t('candDetalhe.respostasAplicacao')}</h2>
               <div className="space-y-4">
                 {applicationQuestions.map((question) => (
                   <div key={question.id} className="border-b border-gray-100 pb-4 last:border-0">
@@ -309,7 +296,7 @@ export default function CandidateDetailPage() {
                     </p>
                     <p className="text-gray-600">
                       {answersMap.get(question.id) || (
-                        <span className="text-gray-400 italic">Sem resposta</span>
+                        <span className="text-gray-400 italic">{t('candDetalhe.semResposta')}</span>
                       )}
                     </p>
                   </div>
@@ -322,9 +309,7 @@ export default function CandidateDetailPage() {
           {candidate.resume_summary && (
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Resumo do Currículo
-              </h2>
+                <FileText className="h-5 w-5" />{t('candDetalhe.resumoCurriculo')}</h2>
               <p className="text-gray-600 whitespace-pre-wrap">{candidate.resume_summary}</p>
             </div>
           )}
@@ -334,16 +319,14 @@ export default function CandidateDetailPage() {
         <div className="space-y-6">
           {/* AI Scores */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Avaliação IA</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('candDetalhe.avaliacaoIA')}</h2>
 
             <div className="space-y-4">
               {/* Fit Score */}
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
-                    <Target className="h-4 w-4" />
-                    Fit Score
-                  </span>
+                    <Target className="h-4 w-4" />{t('candidatos.colFitScore')}</span>
                   <span
                     className={`font-bold ${
                       candidate.fit_score !== null && candidate.fit_score !== undefined
@@ -380,9 +363,7 @@ export default function CandidateDetailPage() {
               <div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
-                    <Star className="h-4 w-4" />
-                    Nota do Currículo
-                  </span>
+                    <Star className="h-4 w-4" />{t('candDetalhe.notaCurriculo')}</span>
                   <span className="font-bold text-gray-900">
                     {candidate.resume_rating !== null && candidate.resume_rating !== undefined
                       ? `${candidate.resume_rating}/5`
@@ -395,9 +376,7 @@ export default function CandidateDetailPage() {
               <div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
-                    <MessageSquare className="h-4 w-4" />
-                    Qualidade das Respostas
-                  </span>
+                    <MessageSquare className="h-4 w-4" />{t('candDetalhe.qualidadeRespostas')}</span>
                   <span className="font-bold text-gray-900">
                     {candidate.answer_quality_rating !== null && candidate.answer_quality_rating !== undefined
                       ? `${candidate.answer_quality_rating}/5`
@@ -411,9 +390,7 @@ export default function CandidateDetailPage() {
                 <div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
-                      <Briefcase className="h-4 w-4" />
-                      Nível de Experiência
-                    </span>
+                      <Briefcase className="h-4 w-4" />{t('candDetalhe.nivelExperiencia')}</span>
                     <span className="font-medium text-gray-900">{candidate.experience_level}</span>
                   </div>
                 </div>
@@ -421,16 +398,14 @@ export default function CandidateDetailPage() {
             </div>
 
             {candidate.needs_scoring && (
-              <p className="text-sm text-gray-500 mt-4 pt-4 border-t">
-                Avaliação por IA em andamento. As notas estarão disponíveis em breve.
-              </p>
+              <p className="text-sm text-gray-500 mt-4 pt-4 border-t">{t('candDetalhe.avaliacaoAndamento')}</p>
             )}
           </div>
 
           {/* Job Info */}
           {job && (
             <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Detalhes da Vaga</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('candDetalhe.detalhesVaga')}</h2>
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-gray-600">
                   <Briefcase className="h-4 w-4" />
@@ -445,18 +420,16 @@ export default function CandidateDetailPage() {
                   size="sm"
                   onClick={() => router.push(`/jobs/${job.id}`)}
                   className="w-full mt-2"
-                >
-                  Ver Vaga
-                </Button>
+                >{t('candDetalhe.verVaga')}</Button>
               </div>
             </div>
           )}
 
           {/* Histórico */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Histórico</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('candDetalhe.historico')}</h2>
             {historyEvents.length === 0 ? (
-              <p className="text-sm text-gray-500">Nenhum evento registrado ainda.</p>
+              <p className="text-sm text-gray-500">{t('candDetalhe.semEventos')}</p>
             ) : (
               <div className="space-y-3 max-h-80 overflow-auto">
                 {historyEvents.map((event) => (

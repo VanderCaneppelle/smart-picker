@@ -1,6 +1,7 @@
 'use client';
 
 import { Input, Textarea } from '@/components/ui';
+import { useTranslations } from 'next-intl';
 
 interface EmailPersonalizationFieldsProps {
   senderName: string;
@@ -19,34 +20,35 @@ export default function EmailPersonalizationFields({
   onReplyToEmailChange,
   onSignatureChange,
 }: EmailPersonalizationFieldsProps) {
+  const t = useTranslations();
   return (
     <div className="space-y-5">
-      <h3 className="text-lg font-semibold text-gray-900">Personalização de E-mail</h3>
+      <h3 className="text-lg font-semibold text-gray-900">{t('config.personalizacaoEmail')}</h3>
 
       <Input
-        label="Nome do remetente"
+        label={t('config.nomeRemetente')}
         value={senderName}
         onChange={(e) => onSenderNameChange(e.target.value)}
-        placeholder="Ex: Equipe de Recrutamento"
+        placeholder={t('config.exEquipe')}
         helperText={senderName ? `Preview: "${senderName} via Rankea"` : 'Aparecerá como "Nome via Rankea"'}
       />
 
       <Input
-        label="E-mail de resposta (Reply-To)"
+        label={t('config.replyTo')}
         type="email"
         value={replyToEmail}
         onChange={(e) => onReplyToEmailChange(e.target.value)}
-        placeholder="recrutamento@suaempresa.com"
-        helperText="Candidatos responderão para este e-mail"
+        placeholder={t('config.exRecrutamento')}
+        helperText={t('config.replyToAjuda')}
       />
 
       <Textarea
-        label="Assinatura de e-mail"
+        label={t('config.assinatura')}
         value={signature}
         onChange={(e) => onSignatureChange(e.target.value)}
         placeholder={'Ex:\nAtenciosamente,\nEquipe de Recrutamento\nwww.suaempresa.com'}
         rows={3}
-        helperText="Texto simples. Será incluído ao final dos e-mails enviados."
+        helperText={t('config.assinaturaAjuda')}
       />
     </div>
   );
