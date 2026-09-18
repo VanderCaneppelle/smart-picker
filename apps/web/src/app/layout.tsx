@@ -3,26 +3,32 @@ import Script from 'next/script';
 import { Toaster } from 'sonner';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { NextIntlClientProvider } from 'next-intl';
-import { getLocale, getMessages } from 'next-intl/server';
+import { getLocale, getMessages, getTranslations } from 'next-intl/server';
 import { moedaDaRequisicao } from '@/lib/pais';
 import { MoedaProvider } from '@/contexts/MoedaContext';
 import './globals.css';
 
-export const metadata: Metadata = {
-  title: 'Rankea | Seleção simples, decisão inteligente',
-  description: 'Reduza o tempo de triagem e aumente a precisão da sua seleção com ranking automatizado por IA. Feito para consultores de RH.',
-  keywords: ['recrutamento', 'seleção', 'RH', 'IA', 'ranking', 'candidatos', 'triagem'],
-  icons: {
-    icon: '/favicon.png',
-    apple: '/favicon.png',
-  },
-  openGraph: {
-    title: 'Rankea | Seleção simples, decisão inteligente',
-    description: 'Ranking automatizado de candidatos por IA. Feito para consultores de RH independentes.',
-    type: 'website',
-    locale: 'pt_BR',
-  },
-};
+/**
+ * Metadados do layout raiz. generateMetadata em vez de constante: o título e a
+ * descrição precisam do idioma, e ele só existe por requisição. A constante era
+ * avaliada na importação e saía sempre em português, inclusive em /en.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('meta');
+  const locale = await getLocale();
+  return {
+    title: t('titulo'),
+    description: t('descricao'),
+    keywords: t('palavrasChave').split(','),
+    icons: { icon: '/favicon.png', apple: '/favicon.png' },
+    openGraph: {
+      title: t('titulo'),
+      description: t('ogDescricao'),
+      type: 'website',
+      locale: locale === 'en' ? 'en_US' : 'pt_BR',
+    },
+  };
+}
 
 /**
  * O layout raiz atende tanto as rotas dentro de [locale] quanto as de fora (painel,

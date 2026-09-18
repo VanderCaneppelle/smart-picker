@@ -111,7 +111,7 @@ export function SubscriptionPaywall({
           </h2>
           <p className="text-emerald-100 max-w-lg mx-auto">
             {isExpired
-              ? 'Seus dados estão salvos. Assine um plano para voltar a publicar vagas e usar o ranking por IA.'
+              ? t('paywall.dadosSalvos')
               : t('paywall.naoPerca')}
           </p>
         </div>

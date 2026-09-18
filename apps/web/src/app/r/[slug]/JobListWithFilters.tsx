@@ -15,13 +15,14 @@ export interface JobItem {
   show_salary_to_candidates?: boolean;
 }
 
+/** Chaves, não textos: constante de módulo é avaliada antes de existir idioma. */
 const EMPLOYMENT_OPTIONS = [
-  { value: '', label: 'Todos os tipos' },
-  { value: 'full_time', label: 'Tempo integral' },
-  { value: 'part_time', label: 'Meio período' },
-  { value: 'contract', label: 'Contrato' },
-  { value: 'internship', label: 'Estágio' },
-  { value: 'freelance', label: 'Freelance' },
+  { value: '', labelKey: 'publica.todosTipos' },
+  { value: 'full_time', labelKey: 'contrato.integral' },
+  { value: 'part_time', labelKey: 'contrato.meioPeriodo' },
+  { value: 'contract', labelKey: 'contrato.contrato' },
+  { value: 'internship', labelKey: 'contrato.estagio' },
+  { value: 'freelance', labelKey: 'contrato.freelance' },
 ];
 
 function formatEmploymentType(type: string) {
@@ -75,7 +76,7 @@ export function JobListWithFilters({ jobs, brandColor }: JobListWithFiltersProps
           >
             {EMPLOYMENT_OPTIONS.map((opt) => (
               <option key={opt.value || 'all'} value={opt.value}>
-                {opt.label}
+                {t(opt.labelKey)}
               </option>
             ))}
           </select>

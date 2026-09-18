@@ -186,7 +186,7 @@ export default function PublicProfileForm() {
         setSlugAvailability('current');
         initialValues.current.slug = updated.public_slug;
       }
-      toast.success(enabled ? 'Página pública ativada!' : 'Página pública desativada.');
+      toast.success(enabled ? t('perfil.publicaAtivada') : t('perfil.publicaDesativada'));
     } catch (error) {
       setPublicPageEnabled(previousValue);
       toast.error(error instanceof Error ? error.message : 'Erro ao atualizar');
@@ -334,7 +334,7 @@ export default function PublicProfileForm() {
     pendingNavigation.current = null;
   }, []);
 
-  if (isLoading) return <Loading text="Carregando configurações..." />;
+  if (isLoading) return <Loading text={t('perfil.carregando')} />;
   if (!settings) return <div className="text-center py-12 text-gray-500">{t('config.erroCarregar')}</div>;
 
   const slugOk = slugAvailability === 'available' || slugAvailability === 'current';
