@@ -285,7 +285,7 @@ export default function ApplyPage() {
             <h1 className="text-2xl font-bold text-gray-900 mb-3">{t('aplicar.enviada')}</h1>
             <p className="text-gray-600 mb-4">
               {t('candidatura.obrigado')} <strong>{job.title}</strong>.
-              Analisaremos sua candidatura e entraremos em contato em breve.
+              {t('candidatura.analisaremos')}
             </p>
             <p className="text-sm text-gray-500 bg-gray-100 rounded-lg px-4 py-3">{t('aplicar.emailEnviadoPara')}<strong>{email}</strong>
             </p>
@@ -382,7 +382,7 @@ export default function ApplyPage() {
                   value={linkedin}
                   onChange={(e) => setLinkedin(e.target.value)}
                   error={errors.linkedin}
-                  placeholder="https://linkedin.com/in/seu-perfil"
+                  placeholder="https://linkedin.com/in/"
                 />
               </div>
 

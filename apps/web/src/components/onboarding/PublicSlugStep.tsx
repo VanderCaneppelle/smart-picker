@@ -110,7 +110,7 @@ export default function PublicSlugStep() {
                   type="text"
                   value={slug}
                   onChange={(e) => setSlug(e.target.value.toLowerCase())}
-                  placeholder="seu-slug"
+                  placeholder={t('onboarding.slugExemplo')}
                   className={`flex-1 px-3 py-2 border rounded-r-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent ${
                     availability === 'available'
                       ? 'border-emerald-500 focus:ring-emerald-500'

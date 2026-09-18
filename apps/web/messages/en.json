@@ -235,7 +235,8 @@
     "consentimentoPrefixo": "I have read and accept the",
     "consentimentoMeio": "and the",
     "termos": "Terms of Use",
-    "privacidade": "Privacy Policy"
+    "privacidade": "Privacy Policy",
+    "analisaremos": "We will review your application and get back to you soon."
   },
   "painel": {
     "titulo": "Dashboard",
@@ -933,7 +934,8 @@
     },
     "proximo": "Next",
     "concluir": "Finish",
-    "concluirBang": "Finish!"
+    "concluirBang": "Finish!",
+    "slugExemplo": "your-slug"
   },
   "aplicar": {
     "naoEncontrada": "Job not found",

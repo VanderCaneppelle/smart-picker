@@ -27,7 +27,7 @@ function SharePreview() {
         <span className="text-xs font-semibold text-emerald-700">{t('onboarding.linkExemplo')}</span>
       </div>
       <div className="flex items-center gap-2 bg-white rounded-lg border border-emerald-200 px-3 py-2">
-        <span className="text-xs text-gray-500 flex-1 truncate">rankea.ai/jobs/sua-vaga/apply</span>
+        <span className="text-xs text-gray-500 flex-1 truncate">rankea.ai/jobs/.../apply</span>
         <div className="flex items-center gap-1 shrink-0 bg-emerald-100 rounded px-2 py-0.5">
           <ClipboardCopy className="h-3 w-3 text-emerald-600" />
           <span className="text-[10px] font-medium text-emerald-700">{t('publica.copiarLink')}</span>
