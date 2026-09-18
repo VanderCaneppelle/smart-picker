@@ -178,7 +178,8 @@
       "configuracoes": "Configurações",
       "sair": "Sair",
       "vagasAtivasLimite": "{atual}/{limite} vagas ativas",
-      "vagasAtivas": "{atual} vagas ativas"
+      "vagasAtivas": "{atual} vagas ativas",
+      "equipe": "Equipe"
     },
     "status": {
       "todos": "Todos os status",
@@ -720,7 +721,8 @@
     "configIndisponivel": "Configuração indisponível.",
     "senhaAlterada": "Senha alterada com sucesso. Faça login.",
     "configIndisponivelTarde": "Configuração indisponível. Tente mais tarde.",
-    "seEmailExistir": "Se o e-mail existir, você receberá um link para redefinir a senha."
+    "seEmailExistir": "Se o e-mail existir, você receberá um link para redefinir a senha.",
+    "assentoBloqueado": "A conta está acima do limite de usuários do plano. Fale com o dono da conta."
   },
   "candDetalhe": {
     "candidatouPara": "Candidatou-se para:",
@@ -849,7 +851,10 @@
       "suporteDedicado": "Suporte dedicado",
       "entrevistaIA": "Entrevista por IA (em breve)",
       "api": "API de integração (em breve)",
-      "apenasTeste": "Apenas para testes internos"
+      "apenasTeste": "Apenas para testes internos",
+      "usuarios1": "1 usuário",
+      "usuarios3": "Até 3 usuários",
+      "usuarios10": "Até 10 usuários"
     }
   },
   "detalhe": {
@@ -881,7 +886,18 @@
     "chamadaPadrao": "Estamos em busca de talentos. Conheça nossas vagas e faça parte do time."
   },
   "senha": {
-    "linkInvalido": "Link inválido ou expirado. Solicite um novo link de recuperação."
+    "linkInvalido": "Link inválido ou expirado. Solicite um novo link de recuperação.",
+    "trocarTitulo": "Defina sua senha",
+    "trocarSubtitulo": "Sua senha atual foi gerada automaticamente. Escolha uma sua para continuar.",
+    "novaSenha": "Nova senha",
+    "confirmarSenha": "Confirmar nova senha",
+    "senhaAtual": "Senha atual",
+    "salvar": "Salvar e continuar",
+    "salvando": "Salvando...",
+    "minimo8": "A senha precisa de pelo menos 8 caracteres.",
+    "reutilizada": "Escolha uma senha diferente da que veio no e-mail.",
+    "atualIncorreta": "Senha atual incorreta.",
+    "trocada": "Senha alterada."
   },
   "rodape": {
     "termos": "Termos de Uso",
@@ -900,7 +916,9 @@
     "restamNoTestePonto": "{n} dias restantes no teste grátis.",
     "testeExpiradoCurto": "Teste expirado",
     "restantesCurto": "{n, plural, one {# dia restante} other {# dias restantes}}",
-    "verPlanos": "Ver planos"
+    "verPlanos": "Ver planos",
+    "membroTitulo": "Conta sem assinatura ativa",
+    "membroTexto": "O acesso desta conta está suspenso. Só o dono da conta pode assinar ou reativar o plano."
   },
   "onboarding": {
     "tudoProntoTexto": "Você completou todos os primeiros passos. Agora é só focar nos candidatos.",
@@ -997,5 +1015,38 @@
   },
   "cadastro": {
     "mesmoEmail": "Use o mesmo e-mail do pagamento para que sua assinatura seja vinculada automaticamente."
+  },
+  "equipe": {
+    "titulo": "Equipe",
+    "subtitulo": "Quem tem acesso a esta conta. Todos veem as mesmas vagas e candidatos.",
+    "assentos": "{usados} de {limite} usuários",
+    "assentosIlimitado": "{usados} usuários",
+    "adicionar": "Adicionar usuário",
+    "adicionando": "Criando...",
+    "nome": "Nome",
+    "nomePlaceholder": "Nome de quem vai usar",
+    "email": "E-mail",
+    "emailPlaceholder": "email@empresa.com",
+    "cancelar": "Cancelar",
+    "criar": "Criar acesso",
+    "dono": "Dono da conta",
+    "membro": "Usuário",
+    "voce": "você",
+    "senhaPendente": "Ainda não trocou a senha",
+    "convitePendente": "Convite não entregue",
+    "bloqueado": "Sem assento no plano atual",
+    "remover": "Remover",
+    "removerConfirma": "Remover {nome} desta conta? O acesso é encerrado na hora.",
+    "removido": "Usuário removido.",
+    "reenviar": "Gerar nova senha",
+    "reenviado": "Senha nova enviada para {email}.",
+    "criado": "Acesso criado. A senha provisória foi para {email}.",
+    "criadoSemEmail": "Acesso criado, mas o e-mail com a senha não saiu. Use \"Gerar nova senha\" para tentar de novo.",
+    "limiteAtingido": "O plano {plano} permite {limite} usuário(s). Mude de plano para adicionar mais.",
+    "limiteTrial": "Durante o teste a conta tem um usuário. Assine um plano para adicionar sua equipe.",
+    "verPlanos": "Ver planos",
+    "avisoBloqueados": "A conta está acima do limite do plano. Os usuários marcados não conseguem entrar até você remover alguém ou mudar de plano.",
+    "vazio": "Só você por enquanto.",
+    "erroCarregar": "Falha ao carregar a equipe."
   }
 }

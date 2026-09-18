@@ -26,6 +26,31 @@ model Recruiter {
   created_at   DateTime  @default(now())
   updated_at   DateTime  @updatedAt
 
+  // ============================================
+  // EQUIPE (vários usuários numa mesma assinatura)
+  // ============================================
+
+  /**
+   * null = esta linha É a conta (dono). Preenchido = membro convidado, e aponta para
+   * o dono. Escolhido nulo por padrão de propósito: todo recrutador que já existia
+   * continua dono sem nenhum backfill, e a conta de quem nunca convidar ninguém
+   * segue idêntica ao que era antes.
+   *
+   * A regra de ouro do tenancy: vaga, candidato e assinatura pertencem SEMPRE ao id
+   * do dono. Por isso nenhuma consulta precisa montar lista de ids, basta trocar
+   * user.id por accountId. Ver getAuthContext em src/lib/auth.ts.
+   */
+  account_owner_id String?
+  /** owner | member. Espelha account_owner_id, mas deixa a intenção explícita na query. */
+  role             String  @default("owner")
+  /**
+   * Membro criado pelo dono nasce com senha gerada e esta flag ligada. Enquanto ela
+   * estiver ligada, a API recusa tudo que não seja a troca de senha.
+   */
+  must_change_password Boolean @default(false)
+  /** Quando o e-mail com a senha provisória saiu. null = convite ainda não entregue. */
+  invite_email_sent_at DateTime?
+
   // DEPRECATED: migrar para model Subscription. Mantidos temporariamente via dual-write até concluir rollout.
   subscription_status  String    @default("trialing") // trialing | active | past_due | canceled | unpaid
   trial_ends_at        DateTime?
@@ -55,9 +80,13 @@ model Recruiter {
   savedCandidates      SavedCandidate[]
   emailPersonalization RecruiterEmailPersonalization?
 
+  accountOwner Recruiter?  @relation("AccountMembers", fields: [account_owner_id], references: [id], onDelete: Cascade)
+  members      Recruiter[] @relation("AccountMembers")
+
   @@index([email])
   @@index([subscription_status])
   @@index([stripe_customer_id])
+  @@index([account_owner_id])
 }
 
 model Subscription {

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyAuth, unauthorizedResponse, jobBelongsToUser } from '@/lib/auth';
+import { requireAccount, jobBelongsToAccount } from '@/lib/auth';
 import { migrateLegacyCandidateStatusesForRecruiter } from '@/lib/candidate-status';
 
 interface RouteParams {
@@ -10,21 +10,19 @@ interface RouteParams {
 // GET /api/jobs/:id/candidates - Get candidates for a job (protected)
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return unauthorizedResponse();
-    }
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
 
-    await migrateLegacyCandidateStatusesForRecruiter(user.id);
+    await migrateLegacyCandidateStatusesForRecruiter(auth.ctx.accountId);
 
     const { id } = await params;
 
-    // Check if job exists and user owns it
+    // Check if job exists and belongs to the account
     const job = await prisma.job.findFirst({
       where: { id, deleted_at: null },
     });
 
-    if (!job || !jobBelongsToUser(job, user)) {
+    if (!job || !jobBelongsToAccount(job, auth.ctx)) {
       return Response.json(
         { error: 'Not Found', message: 'Job not found' },
         { status: 404 }

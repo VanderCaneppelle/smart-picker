@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { requireAccount } from '@/lib/auth';
 import { z } from 'zod';
 
 const UpdateRecruiterSchema = z.object({
@@ -14,13 +14,13 @@ const UpdateRecruiterSchema = z.object({
 // GET /api/recruiter/me - Perfil do recrutador logado
 export async function GET(request: NextRequest) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return unauthorizedResponse();
-    }
+    // Perfil é PESSOAL: filtra por ctx.id, nunca por ctx.accountId. Trocar isto faz
+    // o membro editar o nome e o idioma do dono.
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
 
     const recruiter = await prisma.recruiter.findUnique({
-      where: { id: user.id },
+      where: { id: auth.ctx.id },
     });
 
     if (!recruiter) {
@@ -43,10 +43,8 @@ export async function GET(request: NextRequest) {
 // PATCH /api/recruiter/me - Atualizar perfil do recrutador
 export async function PATCH(request: NextRequest) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return unauthorizedResponse();
-    }
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
 
     const body = await request.json();
     const validation = UpdateRecruiterSchema.safeParse(body);
@@ -70,7 +68,7 @@ export async function PATCH(request: NextRequest) {
     if (data.phone_number !== undefined) updateData.phone_number = data.phone_number;
 
     const recruiter = await prisma.recruiter.update({
-      where: { id: user.id },
+      where: { id: auth.ctx.id },
       data: updateData,
     });
 

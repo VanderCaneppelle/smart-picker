@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { requireAccount } from '@/lib/auth';
 
 const MAX_INPUT_CHARS = 12000;
 const MODEL = process.env.OPENAI_POLISH_MODEL || 'gpt-4o-mini';
@@ -71,8 +71,8 @@ Responda apenas com JSON válido, sem cerca de código:
 }
 
 export async function POST(request: NextRequest) {
-  const user = await verifyAuth(request);
-  if (!user) return unauthorizedResponse();
+  const auth = await requireAccount(request);
+  if (auth.response) return auth.response;
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {

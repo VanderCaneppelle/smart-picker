@@ -23,9 +23,20 @@ export async function GET(request: NextRequest) {
   // Supabase costuma vir com connection_limit=1), e um Promise.all de 12 consultas
   // estoura o pool e derruba o endpoint por timeout. São COUNTs rápidos: o custo de
   // rodar em fila é irrelevante perto de não responder.
-  const recruitersTotal = await prisma.recruiter.count();
-  const recruiters7d = await prisma.recruiter.count({ where: { created_at: { gte: d7 } } });
-  const recruiters30d = await prisma.recruiter.count({ where: { created_at: { gte: d30 } } });
+  // account_owner_id: null = só as CONTAS. Sem este filtro, cada usuário convidado
+  // entraria na contagem como se fosse cliente novo e inflaria a métrica de aquisição.
+  const contasWhere = { account_owner_id: null };
+  const recruitersTotal = await prisma.recruiter.count({ where: contasWhere });
+  const recruiters7d = await prisma.recruiter.count({
+    where: { ...contasWhere, created_at: { gte: d7 } },
+  });
+  const recruiters30d = await prisma.recruiter.count({
+    where: { ...contasWhere, created_at: { gte: d30 } },
+  });
+  // Usuários de equipe, contados à parte: dizem quanto a feature está sendo usada.
+  const teamMembersTotal = await prisma.recruiter.count({
+    where: { account_owner_id: { not: null } },
+  });
   const jobsTotal = await prisma.job.count({ where: { deleted_at: null } });
   const jobsActive = await prisma.job.count({ where: { deleted_at: null, status: 'active' } });
   const candidatesTotal = await prisma.candidate.count({ where: { deleted_at: null } });
@@ -69,7 +80,12 @@ export async function GET(request: NextRequest) {
   }
 
   return Response.json({
-    recruiters: { total: recruitersTotal, last7d: recruiters7d, last30d: recruiters30d },
+    recruiters: {
+      total: recruitersTotal,
+      last7d: recruiters7d,
+      last30d: recruiters30d,
+      teamMembers: teamMembersTotal,
+    },
     jobs: { total: jobsTotal, active: jobsActive },
     candidates: { total: candidatesTotal, last7d: candidates7d, last30d: candidates30d },
     subscriptions: {

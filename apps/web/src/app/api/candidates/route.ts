@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { requireAccount } from '@/lib/auth';
 import { triggerWorkerProcess } from '@/lib/worker';
 import { CreateCandidateSchema, CandidateFiltersSchema } from '@hunter/core';
 import type { ApplicationQuestion, ApplicationAnswer } from '@hunter/core';
@@ -19,12 +19,10 @@ import { logCandidateEvent } from '@/lib/candidate-history';
 // GET /api/candidates - List all candidates (protected)
 export async function GET(request: NextRequest) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return unauthorizedResponse();
-    }
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
 
-    await migrateLegacyCandidateStatusesForRecruiter(user.id);
+    await migrateLegacyCandidateStatusesForRecruiter(auth.ctx.accountId);
 
     const { searchParams } = new URL(request.url);
     
@@ -46,7 +44,8 @@ export async function GET(request: NextRequest) {
     const where: Prisma.CandidateWhereInput = {
       deleted_at: null,
       job: {
-        user_id: user.id, // Multi-tenant: apenas candidatos das vagas do recrutador
+        // Multi-tenant pela CONTA: candidatos de todas as vagas da conta.
+        user_id: auth.ctx.accountId,
         deleted_at: null,
       },
     };

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { requireAccount } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { ensureTrialSubscription, getSubscriptionByRecruiterId } from '@/lib/subscription-service';
 
@@ -22,10 +22,17 @@ async function findOrSyncRecruiter(authId: string, email: string) {
 }
 
 export async function GET(request: NextRequest) {
-  const user = await verifyAuth(request);
-  if (!user) return unauthorizedResponse();
+  const auth = await requireAccount(request);
+  if (auth.response) return auth.response;
+  const ctx = auth.ctx;
 
-  const recruiter = await findOrSyncRecruiter(user.id, user.email);
+  // Leitura liberada para membro: o layout do dashboard depende dela para decidir
+  // banner de trial e paywall. Quem não pode é ASSINAR (checkout e portal são do
+  // dono). O self-heal por e-mail só faz sentido para dono, porque o membro sempre
+  // foi criado com o id do Supabase Auth.
+  const recruiter = ctx.isOwner
+    ? await findOrSyncRecruiter(ctx.id, ctx.email)
+    : await prisma.recruiter.findUnique({ where: { id: ctx.accountId } });
 
   if (!recruiter) {
     return Response.json({

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { requireAccount } from '@/lib/auth';
 
 /**
  * Avisos visíveis para o recrutador logado. Só devolve o que está ativo e dentro da
@@ -8,8 +8,8 @@ import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
  * expirado nunca chegar ao navegador.
  */
 export async function GET(request: NextRequest) {
-  const user = await verifyAuth(request);
-  if (!user) return unauthorizedResponse();
+  const auth = await requireAccount(request);
+  if (auth.response) return auth.response;
 
   const now = new Date();
 

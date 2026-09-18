@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
-import { verifyAuth, unauthorizedResponse, jobBelongsToUser } from '@/lib/auth';
+import { requireAccount, jobBelongsToAccount } from '@/lib/auth';
 import { v4 as uuidv4 } from 'uuid';
 import type { ApplicationQuestion } from '@hunter/core';
 
@@ -12,10 +12,8 @@ interface RouteParams {
 // POST /api/jobs/:id/duplicate - Duplicate a job (protected)
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return unauthorizedResponse();
-    }
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
 
     const { id } = await params;
 
@@ -24,7 +22,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       where: { id, deleted_at: null },
     });
 
-    if (!originalJob || !jobBelongsToUser(originalJob, user)) {
+    if (!originalJob || !jobBelongsToAccount(originalJob, auth.ctx)) {
       return Response.json(
         { error: 'Not Found', message: 'Job not found' },
         { status: 404 }
@@ -42,10 +40,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       })
     );
 
-    // Create the duplicate (owned by same user)
+    // A cópia nasce na mesma CONTA da original
     const duplicatedJob = await prisma.job.create({
       data: {
-        user_id: user.id,
+        user_id: auth.ctx.accountId,
         title: `${originalJob.title} (Copy)`,
         location: originalJob.location,
         employment_type: originalJob.employment_type,

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { requireAccount } from '@/lib/auth';
 import { CandidateStatusSchema } from '@hunter/core';
 import { z } from 'zod';
 import { triggerRejectionEmail } from '@/lib/worker';
@@ -15,12 +15,10 @@ const BulkUpdateSchema = z.object({
 // POST /api/candidates/bulk-update - Bulk update candidate statuses
 export async function POST(request: NextRequest) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return unauthorizedResponse();
-    }
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
 
-    await migrateLegacyCandidateStatusesForRecruiter(user.id);
+    await migrateLegacyCandidateStatusesForRecruiter(auth.ctx.accountId);
 
     const body = await request.json();
     const validation = BulkUpdateSchema.safeParse(body);
@@ -43,7 +41,7 @@ export async function POST(request: NextRequest) {
         id: { in: candidate_ids },
         deleted_at: null,
         job: {
-          user_id: user.id,
+          user_id: auth.ctx.accountId,
           deleted_at: null,
         },
       },
@@ -74,7 +72,7 @@ export async function POST(request: NextRequest) {
           toStatus: status,
           message: `Status alterado de ${candidate.status} para ${status} (ação em massa)`,
           metadata: { source: 'bulk_update' },
-          createdBy: user.id,
+          createdBy: auth.ctx.id,
         });
       }
     }

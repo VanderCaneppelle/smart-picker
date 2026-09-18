@@ -9,6 +9,7 @@ import { Button, Input } from '@/components/ui';
 import { AuthLayoutSide } from '@/components/AuthLayoutSide';
 import { TrendingUp } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { ApiError } from '@/lib/api-client';
 
 export default function LoginPage() {
   const t = useTranslations();
@@ -27,11 +28,23 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await login(email, password);
+      const usuario = await login(email, password);
+
+      // Primeiro acesso de quem foi criado pelo dono: a senha veio por e-mail e tem
+      // que ser trocada antes de entrar no painel.
+      if (usuario.must_change_password) {
+        router.push('/trocar-senha');
+        return;
+      }
+
       toast.success(t('auth.loginOk'));
       router.push('/dashboard');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Falha no login');
+      if (error instanceof ApiError && error.data?.code === 'seat_blocked') {
+        toast.error(t('autenticacao.assentoBloqueado'));
+      } else {
+        toast.error(error instanceof Error ? error.message : 'Falha no login');
+      }
     } finally {
       setIsLoading(false);
     }

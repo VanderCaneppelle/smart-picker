@@ -26,6 +26,11 @@ export interface Plan {
   descriptionKey: string;
   featureKeys: string[];
   maxActiveJobs: number;
+  /**
+   * Assentos da conta, contando o dono. starter 1 = só o dono, professional 3 =
+   * dono + 2, enterprise 10 = dono + 9. Ver getMaxUsers.
+   */
+  maxUsers: number;
   highlighted?: boolean;
   hidden?: boolean;
 }
@@ -41,8 +46,10 @@ export const PLANS: Plan[] = [
     priceLabelUsd: 'US$ 29',
     descriptionKey: 'planos.starter.descricao',
     maxActiveJobs: 3,
+    maxUsers: 1,
     featureKeys: [
       'planos.recursos.vagas3',
+      'planos.recursos.usuarios1',
       'planos.recursos.candidatosIlimitados',
       'planos.recursos.rankingIA',
       'planos.recursos.emailsAutomaticos',
@@ -59,9 +66,11 @@ export const PLANS: Plan[] = [
     priceLabelUsd: 'US$ 49',
     descriptionKey: 'planos.professional.descricao',
     maxActiveJobs: 10,
+    maxUsers: 3,
     highlighted: true,
     featureKeys: [
       'planos.recursos.vagas10',
+      'planos.recursos.usuarios3',
       'planos.recursos.candidatosIlimitados',
       'planos.recursos.rankingIA',
       'planos.recursos.emailsAutomaticos',
@@ -81,8 +90,10 @@ export const PLANS: Plan[] = [
     priceLabelUsd: 'US$ 99',
     descriptionKey: 'planos.enterprise.descricao',
     maxActiveJobs: Infinity,
+    maxUsers: 10,
     featureKeys: [
       'planos.recursos.vagasIlimitadas',
+      'planos.recursos.usuarios10',
       'planos.recursos.candidatosIlimitados',
       'planos.recursos.rankingIA',
       'planos.recursos.emailsAutomaticos',
@@ -103,6 +114,7 @@ export const PLANS: Plan[] = [
     priceLabelUsd: 'US$ 1',
     descriptionKey: 'planos.test.descricao',
     maxActiveJobs: 1,
+    maxUsers: 1,
     hidden: true,
     featureKeys: ['planos.recursos.apenasTeste'],
   },
@@ -110,6 +122,11 @@ export const PLANS: Plan[] = [
 
 export const TRIAL_DURATION_DAYS = 30;
 export const TRIAL_MAX_ACTIVE_JOBS = 10;
+/**
+ * O trial é generoso em vagas (10, mais que o Starter) mas fechado em usuários: quem
+ * está avaliando o produto avalia sozinho. Convidar equipe é motivo para assinar.
+ */
+export const TRIAL_MAX_USERS = 1;
 
 
 export interface SubscriptionInfo {
@@ -151,6 +168,23 @@ export function getMaxActiveJobs(info: SubscriptionInfo): number {
     return TRIAL_MAX_ACTIVE_JOBS;
   }
   return 0;
+}
+
+/**
+ * Fonte única do limite de assentos, incluindo o dono. Mesmo formato de
+ * getMaxActiveJobs: sem assinatura válida o limite é 1, e não 0, porque o dono nunca
+ * perde o acesso à própria conta por causa de assento. Quem perde acesso quando o
+ * plano cai são os membros excedentes, e isso é decidido em resolveSeatBlock.
+ */
+export function getMaxUsers(info: SubscriptionInfo): number {
+  if (info.status === 'active' && info.plan) {
+    const plan = PLANS.find((p) => p.id === info.plan);
+    return plan?.maxUsers ?? 1;
+  }
+  if (info.status === 'trialing' && !isTrialExpired(info.trialEndsAt)) {
+    return TRIAL_MAX_USERS;
+  }
+  return 1;
 }
 
 /** Precisa assinar: trial vencido (ou cancelado) e sem plano pago ativo. */
