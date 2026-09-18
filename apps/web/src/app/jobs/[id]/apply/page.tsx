@@ -248,8 +248,8 @@ export default function ApplyPage() {
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="h-8 w-8 text-red-500" />
             </div>
-            <h1 className="text-xl font-semibold text-gray-900 mb-2">Vaga não encontrada</h1>
-            <p className="text-gray-600">Esta vaga pode ter sido removida ou não está mais disponível.</p>
+            <h1 className="text-xl font-semibold text-gray-900 mb-2">{t('aplicar.naoEncontrada')}</h1>
+            <p className="text-gray-600">{t('aplicar.naoEncontradaTexto')}</p>
           </div>
         </div>
       </div>
@@ -265,8 +265,8 @@ export default function ApplyPage() {
             <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="h-8 w-8 text-yellow-500" />
             </div>
-            <h1 className="text-xl font-semibold text-gray-900 mb-2">Candidaturas encerradas</h1>
-            <p className="text-gray-600">Esta vaga não está mais aceitando candidaturas.</p>
+            <h1 className="text-xl font-semibold text-gray-900 mb-2">{t('aplicar.encerradas')}</h1>
+            <p className="text-gray-600">{t('aplicar.encerradasTexto')}</p>
           </div>
         </div>
       </div>
@@ -282,13 +282,12 @@ export default function ApplyPage() {
             <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle className="h-10 w-10 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-3">Candidatura enviada!</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">{t('aplicar.enviada')}</h1>
             <p className="text-gray-600 mb-4">
               {t('candidatura.obrigado')} <strong>{job.title}</strong>.
               Analisaremos sua candidatura e entraremos em contato em breve.
             </p>
-            <p className="text-sm text-gray-500 bg-gray-100 rounded-lg px-4 py-3">
-              Um e-mail de confirmação foi enviado para <strong>{email}</strong>
+            <p className="text-sm text-gray-500 bg-gray-100 rounded-lg px-4 py-3">{t('aplicar.emailEnviadoPara')}<strong>{email}</strong>
             </p>
           </div>
         </div>
@@ -415,9 +414,7 @@ export default function ApplyPage() {
                             setResumeFileName('');
                           }}
                           className="text-red-500 hover:text-red-700 text-sm"
-                        >
-                          Remover arquivo
-                        </button>
+                        >{t('aplicar.removerArquivo')}</button>
                       </div>
                     </div>
                   ) : (
@@ -544,7 +541,7 @@ export default function ApplyPage() {
                             {question.question}
                             {question.required && <span className="text-red-500 ml-1">*</span>}
                           </label>
-                          <p className="text-xs text-gray-500 mb-2">Selecione uma ou mais opções</p>
+                          <p className="text-xs text-gray-500 mb-2">{t('aplicar.selecioneOpcoes')}</p>
                           <div className="space-y-2">
                             {(question.options || []).map((option, optIndex) => {
                               const selectedOptions = answers[question.id] ? answers[question.id].split('|||') : [];

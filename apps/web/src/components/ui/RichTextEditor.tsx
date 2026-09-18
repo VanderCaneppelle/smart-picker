@@ -98,7 +98,7 @@ const RichTextEditor = ({
     editor.commands.setContent(suggestion.html);
     onChange(editor.getHTML());
     setSuggestion(null);
-    toast.success('Descrição atualizada. Use Desfazer se quiser voltar.');
+    toast.success(t('editor.iaOk'));
   };
   const editor = useEditor({
     extensions: [
@@ -266,7 +266,7 @@ const RichTextEditor = ({
               type="button"
               onClick={handlePolish}
               disabled={polishing}
-              title="Corrige o texto e organiza em seções, sem inventar informação"
+              title={t('editor.iaAjuda')}
               className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-[13px] font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {polishing ? (

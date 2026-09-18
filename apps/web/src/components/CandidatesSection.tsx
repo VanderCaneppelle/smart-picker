@@ -129,7 +129,7 @@ export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
     return (
       <EmptyState
         title={t('secaoCand.nenhumAinda')}
-        description="Compartilhe a vaga para começar a receber candidaturas"
+        description={t('secaoCand.vazioDica')}
       />
     );
   }
@@ -180,7 +180,7 @@ export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
             )}
           </div>
           <span className="text-sm text-gray-500 whitespace-nowrap">
-            {displayCandidates.length} candidato{displayCandidates.length !== 1 ? 's' : ''}
+            {t('secaoCand.contagem', { n: displayCandidates.length })}
           </span>
         </div>
       </div>

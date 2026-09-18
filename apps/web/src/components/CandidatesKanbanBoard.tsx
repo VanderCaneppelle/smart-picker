@@ -24,10 +24,11 @@ import { useTranslations } from 'next-intl';
 
 const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['interview', 'hired', 'rejected'];
 
-const STATUS_EMAIL_MESSAGES: Record<string, string> = {
-  interview: 'Um e-mail de agendamento de entrevista será enviado ao candidato.',
-  hired: 'Um e-mail de contratação será enviado ao candidato.',
-  rejected: 'Um e-mail de rejeição será enviado ao candidato.',
+/** Chaves, não textos: constante de módulo é avaliada antes de existir idioma. */
+const STATUS_EMAIL_KEYS: Record<string, string> = {
+  interview: 'candidatos.emailEntrevista',
+  hired: 'candidatos.emailContratacao',
+  rejected: 'candidatos.emailRejeicao',
 };
 
 /** Chaves, não textos: constante de módulo é avaliada antes de existir idioma. */
@@ -251,13 +252,13 @@ export default function CandidatesKanbanBoard({
               <h3 className="text-lg font-semibold text-gray-900">{t('candidatos.confirmarAlteracao')}</h3>
             </div>
             <p className="text-sm text-gray-600 mb-1">
-              Você está movendo o candidato para{' '}
+              {t('candidatos.movendoPara')}{' '}
               <span className="font-medium text-gray-900">
                 {t(STATUS_LABEL_KEYS[pendingDragChange.newStatus] ?? '') || pendingDragChange.newStatus}
               </span>.
             </p>
             <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-5">
-              {STATUS_EMAIL_MESSAGES[pendingDragChange.newStatus]}
+              {t(STATUS_EMAIL_KEYS[pendingDragChange.newStatus] ?? '')}
             </p>
             <div className="flex justify-end gap-3">
               <button

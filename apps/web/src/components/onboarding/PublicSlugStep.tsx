@@ -7,8 +7,10 @@ import { TrendingUp, CheckCircle, XCircle, Loader2, Globe, ArrowRight } from 'lu
 import { apiClient } from '@/lib/api-client';
 import { normalizeSlug, validateSlug } from '@/lib/slug';
 import { Button } from '@/components/ui';
+import { useTranslations } from 'next-intl';
 
 export default function PublicSlugStep() {
+  const t = useTranslations();
   const router = useRouter();
   const [slug, setSlug] = useState('');
   const [availability, setAvailability] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
@@ -67,7 +69,7 @@ export default function PublicSlugStep() {
     setIsSaving(true);
     try {
       await apiClient.updateRecruiterSettings({ public_slug: slug });
-      toast.success('Slug configurado com sucesso!');
+      toast.success(t('onboarding.slugOk'));
       router.push('/dashboard');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Erro ao salvar slug');
@@ -89,7 +91,7 @@ export default function PublicSlugStep() {
               <TrendingUp className="h-7 w-7 text-white" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Configure sua página pública</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('onboarding.slugTitulo')}</h1>
           <p className="text-gray-600 mt-2">
             Escolha um slug para sua página de recrutador. Candidatos poderão ver suas vagas abertas nessa página.
           </p>
@@ -98,8 +100,7 @@ export default function PublicSlugStep() {
         <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                URL da sua página pública <span className="text-red-500">*</span>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('onboarding.slugLabel')}<span className="text-red-500">*</span>
               </label>
               <div className="flex items-center gap-0">
                 <span className="inline-flex items-center px-3 py-2 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm whitespace-nowrap">
@@ -124,13 +125,13 @@ export default function PublicSlugStep() {
                 {availability === 'checking' && (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-                    <span className="text-gray-500">Verificando disponibilidade...</span>
+                    <span className="text-gray-500">{t('onboarding.slugVerificando')}</span>
                   </>
                 )}
                 {availability === 'available' && (
                   <>
                     <CheckCircle className="h-4 w-4 text-emerald-500" />
-                    <span className="text-emerald-600">Disponível!</span>
+                    <span className="text-emerald-600">{t('onboarding.slugDisponivel')}</span>
                   </>
                 )}
                 {(availability === 'taken' || availability === 'invalid') && (
@@ -146,7 +147,7 @@ export default function PublicSlugStep() {
               <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
                 <div className="flex items-center gap-2 text-sm text-emerald-800">
                   <Globe className="h-4 w-4 flex-shrink-0" />
-                  <span className="font-medium">Preview da URL:</span>
+                  <span className="font-medium">{t('onboarding.slugPreview')}</span>
                 </div>
                 <p className="mt-1 text-emerald-700 font-mono text-sm break-all">
                   https://rankea.ai/r/{slug}
@@ -160,9 +161,7 @@ export default function PublicSlugStep() {
                 variant="ghost"
                 onClick={handleSkip}
                 className="flex-1"
-              >
-                Pular por agora
-              </Button>
+              >{t('onboarding.pular')}</Button>
               <Button
                 type="submit"
                 disabled={availability !== 'available'}
@@ -176,9 +175,7 @@ export default function PublicSlugStep() {
           </form>
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-4">
-          Você pode alterar isso depois em Configurações.
-        </p>
+        <p className="text-center text-xs text-gray-400 mt-4">{t('onboarding.slugDepois')}</p>
       </div>
     </div>
   );

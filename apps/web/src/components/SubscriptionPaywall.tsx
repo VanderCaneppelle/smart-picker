@@ -14,6 +14,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { PLANS, type SubscriptionInfo, getTrialDaysRemaining } from '@/lib/subscription';
+import { usePlanoTraduzido } from '@/lib/plan-i18n';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
@@ -24,6 +25,7 @@ interface SubscriptionPaywallProps {
 
 export function SubscriptionPaywall({ subscription }: SubscriptionPaywallProps) {
   const t = useTranslations();
+  const tp = usePlanoTraduzido();
   const daysLeft = getTrialDaysRemaining(subscription.trialEndsAt);
   const isExpired = daysLeft === 0;
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
@@ -61,12 +63,12 @@ export function SubscriptionPaywall({ subscription }: SubscriptionPaywallProps) 
           <h2 className="text-2xl sm:text-3xl font-bold mb-2">
             {isExpired
               ? 'Escolha um plano para continuar'
-              : 'Aproveite: seu teste está acabando!'}
+              : t('paywall.testeAcabando')}
           </h2>
           <p className="text-emerald-100 max-w-lg mx-auto">
             {isExpired
               ? 'Seus dados estão salvos. Assine um plano para voltar a publicar vagas e usar o ranking por IA.'
-              : 'Não perca acesso ao ranking por IA e suas vagas ativas.'}
+              : t('paywall.naoPerca')}
           </p>
         </div>
 
@@ -91,22 +93,22 @@ export function SubscriptionPaywall({ subscription }: SubscriptionPaywallProps) 
                   {i === 0 && <Rocket className="h-4 w-4 text-emerald-600" />}
                   {i === 1 && <Crown className="h-4 w-4 text-emerald-600" />}
                   {i === 2 && <Building2 className="h-4 w-4 text-emerald-600" />}
-                  <h3 className="font-bold text-gray-900">{plan.name}</h3>
+                  <h3 className="font-bold text-gray-900">{tp(plan).nome}</h3>
                 </div>
                 <div className="mb-4">
-                  <span className="text-2xl font-bold text-gray-900">{plan.priceLabel}</span>
+                  <span className="text-2xl font-bold text-gray-900">{tp(plan).preco}</span>
                   <span className="text-gray-500 text-sm">{t('comum.porMes')}</span>
                 </div>
                 <ul className="space-y-2 mb-5">
-                  {plan.features.slice(0, 4).map((f, j) => (
+                  {tp(plan).recursos.slice(0, 4).map((f, j) => (
                     <li key={j} className="flex items-start gap-2">
                       <Check className="h-4 w-4 text-emerald-500 flex-shrink-0 mt-0.5" />
                       <span className="text-xs text-gray-600">{f}</span>
                     </li>
                   ))}
-                  {plan.features.length > 4 && (
+                  {tp(plan).recursos.length > 4 && (
                     <li className="text-xs text-gray-400 pl-6">
-                      +{plan.features.length - 4} mais...
+                      +{tp(plan).recursos.length - 4} mais...
                     </li>
                   )}
                 </ul>
@@ -124,7 +126,7 @@ export function SubscriptionPaywall({ subscription }: SubscriptionPaywallProps) 
                     <span className="inline-flex items-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />{t('comum.redirecionando')}</span>
                   ) : (
-                    `Assinar ${plan.name}`
+                    `Assinar ${tp(plan).nome}`
                   )}
                 </button>
               </div>

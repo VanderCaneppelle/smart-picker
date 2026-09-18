@@ -227,7 +227,7 @@ function DashboardLayoutContent({
                   </Link>
                   {jobsLimit && (
                     <p className={`mt-1.5 px-3 text-xs ${blocked ? 'text-amber-700' : 'text-gray-500'}`}>
-                      {hasLimit ? `${jobsLimit.current}/${limit} vagas ativas` : `${jobsLimit.current} vagas ativas`}
+                      {hasLimit ? t('nav.vagasAtivasLimite', { atual: jobsLimit.current, limite: limit }) : t('nav.vagasAtivas', { atual: jobsLimit.current })}
                     </p>
                   )}
                 </div>
@@ -439,11 +439,11 @@ function DashboardLayoutContent({
                             }`}
                           >
                             <PlusCircle className="h-5 w-5" />
-                            Criar vaga
+                            {t('nav.criarVaga')}
                           </Link>
                           {jobsLimit && (
                             <p className={`px-3 text-xs ${blocked ? 'text-amber-700' : 'text-gray-500'}`}>
-                              {hasLimit ? `${jobsLimit.current}/${limit} vagas ativas` : `${jobsLimit.current} vagas ativas`}
+                              {hasLimit ? t('nav.vagasAtivasLimite', { atual: jobsLimit.current, limite: limit }) : t('nav.vagasAtivas', { atual: jobsLimit.current })}
                             </p>
                           )}
                         </>
@@ -467,7 +467,7 @@ function DashboardLayoutContent({
                       }`}
                     >
                       <Briefcase className="h-5 w-5" />
-                      Vagas
+                      {t('nav.vagas')}
                     </Link>
                     <Link
                       href="/candidatos-salvos"

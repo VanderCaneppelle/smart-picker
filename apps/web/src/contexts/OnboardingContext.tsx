@@ -15,11 +15,12 @@ export type OnboardingStepId =
 
 export interface OnboardingStep {
   id: OnboardingStepId;
-  title: string;
-  description: string;
+  /** Chaves, não textos: a constante é avaliada na importação, antes de existir idioma. */
+  titleKey: string;
+  descriptionKey: string;
   targetId: string;
   tooltipPosition: 'top' | 'bottom' | 'left' | 'right';
-  actionLabel: string;
+  actionLabelKey: string;
   /** URL to navigate to when this step becomes active (forward or backward) */
   navigateTo?: string;
   scrollToTarget?: boolean;
@@ -28,67 +29,67 @@ export interface OnboardingStep {
 export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: 'profile',
-    title: 'Complete seu perfil',
-    description: 'Comece configurando seu perfil e identidade como recrutador.',
+    titleKey: 'onboarding.tour.perfil.titulo',
+    descriptionKey: 'onboarding.tour.perfil.texto',
     targetId: 'onb-nav-perfil',
     tooltipPosition: 'right',
-    actionLabel: 'Próximo',
+    actionLabelKey: 'onboarding.proximo',
     // No navigateTo — "Iniciar guia" navigates to /perfil manually
   },
   {
     id: 'settings',
-    title: 'Configure seu perfil público',
-    description: 'Personalize sua página pública, branding e como os candidatos vão te encontrar.',
+    titleKey: 'onboarding.tour.publico.titulo',
+    descriptionKey: 'onboarding.tour.publico.texto',
     targetId: 'onb-nav-configuracoes',
     tooltipPosition: 'right',
-    actionLabel: 'Próximo',
+    actionLabelKey: 'onboarding.proximo',
     navigateTo: '/settings/public-profile',
   },
   {
     id: 'create-job',
-    title: 'Crie sua primeira vaga',
-    description: 'Clique em "Criar vaga" na sidebar para abrir o formulário de criação.',
+    titleKey: 'onboarding.tour.vaga.titulo',
+    descriptionKey: 'onboarding.tour.vaga.texto',
     targetId: 'onb-nav-criar-vaga',
     tooltipPosition: 'right',
-    actionLabel: 'Próximo',
+    actionLabelKey: 'onboarding.proximo',
     navigateTo: '/jobs/new',
   },
   {
     id: 'add-questions',
-    title: 'Adicione perguntas à vaga',
-    description: 'Perguntas estratégicas automatizam sua triagem. A IA usa as respostas para pontuar cada candidato.',
+    titleKey: 'onboarding.tour.perguntas.titulo',
+    descriptionKey: 'onboarding.tour.perguntas.texto',
     targetId: 'onb-job-questions',
     tooltipPosition: 'top',
-    actionLabel: 'Próximo',
+    actionLabelKey: 'onboarding.proximo',
     scrollToTarget: true,
     navigateTo: '/jobs/new',
   },
   {
     id: 'ia-config',
-    title: 'Configure a avaliação por IA',
-    description: 'Defina o peso do currículo vs. respostas e dê instruções extras para a IA priorizar o que importa para a vaga.',
+    titleKey: 'onboarding.tour.ia.titulo',
+    descriptionKey: 'onboarding.tour.ia.texto',
     targetId: 'onb-job-ia',
     tooltipPosition: 'top',
-    actionLabel: 'Próximo',
+    actionLabelKey: 'onboarding.proximo',
     scrollToTarget: true,
     // No navigateTo — same page as add-questions (/jobs/new)
   },
   {
     id: 'share-job',
-    title: 'Compartilhe sua vaga',
-    description: 'Cada vaga tem um link único. Compartilhe nas redes ou envie direto para candidatos, sem cadastro obrigatório.',
+    titleKey: 'onboarding.tour.compartilhar.titulo',
+    descriptionKey: 'onboarding.tour.compartilhar.texto',
     targetId: 'onb-job-share',
     tooltipPosition: 'bottom',
-    actionLabel: 'Próximo',
+    actionLabelKey: 'onboarding.proximo',
     navigateTo: '/jobs',
   },
   {
     id: 'review-candidates',
-    title: 'Acompanhe os candidatos',
-    description: 'Os candidatos chegam ranqueados pela IA. Mova-os pelo Kanban conforme avança no processo seletivo.',
+    titleKey: 'onboarding.tour.candidatos.titulo',
+    descriptionKey: 'onboarding.tour.candidatos.texto',
     targetId: 'onb-candidates-kanban',
     tooltipPosition: 'top',
-    actionLabel: 'Concluir!',
+    actionLabelKey: 'onboarding.concluirBang',
   },
 ];
 

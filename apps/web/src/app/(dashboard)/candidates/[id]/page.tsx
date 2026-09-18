@@ -22,23 +22,25 @@ import { Button, Badge, Select, Loading, Textarea } from '@/components/ui';
 import type { Candidate, CandidateStatus, ApplicationQuestion, ApplicationAnswer } from '@hunter/core';
 import type { CandidateHistoryEvent } from '@/lib/api-client';
 import { useTranslations } from 'next-intl';
+import { useIntlLocale } from '@/lib/plan-i18n';
 
+/** Chaves, não textos: constante de módulo é avaliada antes de existir idioma. */
 const statusOptions = [
-  { value: 'new', label: 'Novo' },
-  { value: 'reviewing', label: 'Em análise' },
-  { value: 'interview', label: 'Entrevista' },
-  { value: 'in_validation', label: 'Em validação' },
-  { value: 'rejected', label: 'Encerrado' },
-  { value: 'hired', label: 'Contratado' },
+  { value: 'new', labelKey: 'candidatos.estados.novo' },
+  { value: 'reviewing', labelKey: 'secaoCand.emRevisao' },
+  { value: 'interview', labelKey: 'candidatos.filtros.entrevista' },
+  { value: 'in_validation', labelKey: 'candidatos.filtros.emValidacao' },
+  { value: 'rejected', labelKey: 'candidatos.estados.encerrado' },
+  { value: 'hired', labelKey: 'candidatos.estados.contratado' },
 ];
 
-const STATUS_DISPLAY_LABELS: Record<string, string> = {
-  new: 'Novo',
-  reviewing: 'Em análise',
-  interview: 'Entrevista',
-  in_validation: 'Em validação',
-  rejected: 'Encerrado',
-  hired: 'Contratado',
+const STATUS_DISPLAY_KEYS: Record<string, string> = {
+  new: 'candidatos.estados.novo',
+  reviewing: 'secaoCand.emRevisao',
+  interview: 'candidatos.filtros.entrevista',
+  in_validation: 'candidatos.filtros.emValidacao',
+  rejected: 'candidatos.estados.encerrado',
+  hired: 'candidatos.estados.contratado',
 };
 
 const getStatusBadgeVariant = (status: string) => {
@@ -62,6 +64,10 @@ const getStatusBadgeVariant = (status: string) => {
 
 export default function CandidateDetailPage() {
   const t = useTranslations();
+  /** Rótulo resolvido na renderização: a lista guarda a chave. */
+  const opcoes = (lista: { value: string; labelKey: string }[]) =>
+    lista.map((o) => ({ value: o.value, label: t(o.labelKey) }));
+  const localeIntl = useIntlLocale();
   const router = useRouter();
   const params = useParams();
   const candidateId = params.id as string;
@@ -146,11 +152,11 @@ export default function CandidateDetailPage() {
   const answersMap = new Map(applicationAnswers.map((a) => [a.question_id, a.answer]));
 
   const EVENT_LABELS: Record<string, string> = {
-    application_submitted: 'Candidatura recebida',
-    status_changed: 'Status alterado',
-    email_sent_interview: 'E-mail de entrevista enviado',
-    email_sent_rejection: 'E-mail de rejeição enviado',
-    score_recalculated: 'Recálculo de nota solicitado',
+    application_submitted: t('historico.recebida'),
+    status_changed: t('historico.statusAlterado'),
+    email_sent_interview: t('historico.emailEntrevista'),
+    email_sent_rejection: t('historico.emailRejeicao'),
+    score_recalculated: t('historico.recalculo'),
   };
 
   const historyEvents: CandidateHistoryEvent[] = [
@@ -161,7 +167,7 @@ export default function CandidateDetailPage() {
       event_type: 'application_submitted',
       from_status: null,
       to_status: 'new',
-      message: 'Data de aplicação registrada',
+      message: t('historico.dataAplicacao'),
       metadata: null,
       created_by: null,
       created_at: candidate.created_at,
@@ -195,7 +201,7 @@ export default function CandidateDetailPage() {
                 )}
               </div>
               <Badge variant={getStatusBadgeVariant(candidate.status)} className="text-sm">
-                {STATUS_DISPLAY_LABELS[candidate.status] || candidate.status}
+                {t(STATUS_DISPLAY_KEYS[candidate.status] ?? '') || candidate.status}
               </Badge>
             </div>
 
@@ -241,7 +247,7 @@ export default function CandidateDetailPage() {
             <div className="mt-6 pt-4 border-t">
               <label className="block text-sm font-medium text-gray-700 mb-2">{t('candDetalhe.atualizarStatus')}</label>
               <Select
-                options={statusOptions}
+                options={opcoes(statusOptions)}
                 value={candidate.status}
                 onChange={(e) => handleStatusChange(e.target.value as CandidateStatus)}
                 className="w-48"
@@ -263,9 +269,7 @@ export default function CandidateDetailPage() {
             <div className="mt-6 pt-4 border-t">
               <h3 className="text-sm font-medium text-gray-900 mb-2 flex items-center gap-2">
                 <StickyNote className="h-4 w-4" />{t('candDetalhe.notasEntrevista')}</h3>
-              <p className="text-xs text-gray-500 mb-2">
-                Adicione observações, notas da entrevista ou cole a transcrição completa.
-              </p>
+              <p className="text-xs text-gray-500 mb-2">{t('detalhe.notasPlaceholder')}</p>
               <Textarea
                 value={recruiterNotes}
                 onChange={(e) => setRecruiterNotes(e.target.value)}
@@ -439,7 +443,7 @@ export default function CandidateDetailPage() {
                         {EVENT_LABELS[event.event_type] || event.message || event.event_type}
                       </p>
                       <span className="text-xs text-gray-500">
-                        {new Date(event.created_at).toLocaleString('pt-BR', {
+                        {new Date(event.created_at).toLocaleString(localeIntl, {
                           day: '2-digit',
                           month: '2-digit',
                           year: 'numeric',
@@ -450,8 +454,8 @@ export default function CandidateDetailPage() {
                     </div>
                     {event.from_status && event.to_status && (
                       <p className="text-xs text-gray-600 mt-1">
-                        {STATUS_DISPLAY_LABELS[event.from_status] || event.from_status} {'->'}{' '}
-                        {STATUS_DISPLAY_LABELS[event.to_status] || event.to_status}
+                        {t(STATUS_DISPLAY_KEYS[event.from_status] ?? '') || event.from_status} {'->'}{' '}
+                        {t(STATUS_DISPLAY_KEYS[event.to_status] ?? '') || event.to_status}
                       </p>
                     )}
                     {/* Para eventos de status, usamos apenas os rótulos em português acima.

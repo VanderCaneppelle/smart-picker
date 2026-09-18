@@ -119,8 +119,8 @@ export default function CandidatosSalvosPage() {
           title={t('salvos.nenhum')}
           description={
             statusFilter
-              ? 'Tente outro filtro de status'
-              : 'Salve candidatos pelo menu de ações (⋯) na página da vaga para vê-los aqui'
+              ? t('salvos.vazioFiltro')
+              : t('salvos.vazioDica')
           }
         />
       ) : (
@@ -200,7 +200,7 @@ export default function CandidatosSalvosPage() {
                         title={t('salvos.remover')}
                       >
                         <BookmarkCheck className="h-4 w-4" />
-                        {removingId === c.id ? 'Removendo...' : t('salvos.remover')}
+                        {removingId === c.id ? t('salvos.removendo') : t('salvos.remover')}
                       </button>
                     </td>
                   </tr>

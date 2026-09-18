@@ -1008,9 +1008,7 @@ export default function JobDetailPage() {
               <Brain className="h-5 w-5 text-emerald-600" />
               <h2 className="text-lg font-semibold text-gray-900">{t('formVaga.secaoIA')}</h2>
             </div>
-            <p className="text-sm text-gray-500 mb-6">
-              Defina como a IA deve ponderar cada aspecto na avaliação dos candidatos.
-            </p>
+            <p className="text-sm text-gray-500 mb-6">{t('vaga.pesosDescricao')}</p>
             
             <div className="space-y-6">
               {/* Resume Weight */}
@@ -1134,7 +1132,7 @@ export default function JobDetailPage() {
           setShowUnsavedModal(false);
           setPendingAction(null);
         }}
-        title="Alterações não salvas"
+        title={t('vaga.naoSalvo')}
         size="md"
         footer={
           <>
@@ -1159,7 +1157,7 @@ export default function JobDetailPage() {
       <Modal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        title="Excluir Vaga"
+        title={t('vaga.excluirVaga')}
         footer={
           <>
             <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>{t('formVaga.cancelar')}</Button>

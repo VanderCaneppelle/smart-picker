@@ -100,7 +100,7 @@ export default function BrandingFields({
         value={linkedinUrl}
         onChange={(e) => onLinkedinUrlChange(e.target.value)}
         placeholder={t('config.linkedinEmpresa')}
-        helperText="Link do perfil ou da empresa. Aparece na página pública para visitantes."
+        helperText={t('perfil.linkedinAjuda')}
       />
 
       <div>

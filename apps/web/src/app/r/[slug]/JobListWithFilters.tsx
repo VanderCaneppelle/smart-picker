@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { MapPin, Clock, Briefcase, Search } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export interface JobItem {
   id: string;
@@ -33,6 +34,7 @@ interface JobListWithFiltersProps {
 }
 
 export function JobListWithFilters({ jobs, brandColor }: JobListWithFiltersProps) {
+  const t = useTranslations();
   const [search, setSearch] = useState('');
   const [employmentType, setEmploymentType] = useState('');
 
@@ -60,7 +62,7 @@ export function JobListWithFilters({ jobs, brandColor }: JobListWithFiltersProps
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por cargo ou localização"
+            placeholder={t('publica.buscar')}
             className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300 bg-gray-50/50"
           />
         </div>
@@ -82,9 +84,7 @@ export function JobListWithFilters({ jobs, brandColor }: JobListWithFiltersProps
 
       <ul className="space-y-3">
         {filteredJobs.length === 0 ? (
-          <li className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 text-center text-gray-500">
-            Nenhuma vaga encontrada com os filtros aplicados.
-          </li>
+          <li className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 text-center text-gray-500">{t('publica.semResultado')}</li>
         ) : (
           filteredJobs.map((job) => (
             <li
@@ -117,9 +117,7 @@ export function JobListWithFilters({ jobs, brandColor }: JobListWithFiltersProps
                   href={`/jobs/${job.id}/apply`}
                   className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl text-white text-sm font-medium transition-all hover:opacity-90 shadow-sm"
                   style={{ backgroundColor: brandColor }}
-                >
-                  Candidatar-se
-                </Link>
+                >{t('publica.candidatar')}</Link>
               </div>
             </li>
           ))

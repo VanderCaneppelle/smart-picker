@@ -103,7 +103,7 @@ export default function PublicProfileForm() {
           rejectionBodyHtml: data.rejection_body_html?.trim() || DEFAULT_REJECTION_BODY_HTML,
         };
       })
-      .catch(() => toast.error('Erro ao carregar configurações'))
+      .catch(() => toast.error(t('perfil.erroCarregar')))
       .finally(() => setIsLoading(false));
   }, []);
 

@@ -4,7 +4,11 @@
     "precos": "Preços",
     "faq": "FAQ",
     "entrar": "Entrar",
-    "testeGratis": "Teste grátis"
+    "testeGratis": "Teste grátis",
+    "criarVaga": "Criar vaga",
+    "vagas": "Vagas",
+    "vagasAtivasLimite": "{atual}/{limite} vagas ativas",
+    "vagasAtivas": "{atual} vagas ativas"
   },
   "hero": {
     "selo": {
@@ -293,7 +297,14 @@
     "linkCopiado": "Link copiado!",
     "erroCopiar": "Falha ao copiar link",
     "duplicada": "Vaga duplicada como rascunho. Revise e publique quando estiver pronta.",
-    "erroDuplicar": "Falha ao duplicar vaga"
+    "erroDuplicar": "Falha ao duplicar vaga",
+    "vazioDica": "Crie sua primeira vaga para começar",
+    "estados": {
+      "rascunho": "Rascunho",
+      "ativa": "Ativa",
+      "fechada": "Fechada",
+      "pausada": "Pausada"
+    }
   },
   "formVaga": {
     "vagaCriada": "Vaga criada!",
@@ -453,7 +464,11 @@
     },
     "removendo": "Removendo...",
     "salvando": "Salvando...",
-    "recalculando": "Recalculando..."
+    "recalculando": "Recalculando...",
+    "emailEntrevista": "Um e-mail de agendamento de entrevista será enviado ao candidato.",
+    "emailContratacao": "Um e-mail de contratação será enviado ao candidato.",
+    "emailRejeicao": "Um e-mail de rejeição será enviado ao candidato.",
+    "movendoPara": "Você está movendo o candidato para"
   },
   "gaveta": {
     "verAplicacao": "Ver aplicação completa",
@@ -519,9 +534,10 @@
     "empresaPlaceholder": "Nome da empresa",
     "telefone": "Telefone",
     "telefonePlaceholder": "(00) 00000-0000",
-    "erroCarregar": "Erro ao carregar perfil",
+    "erroCarregar": "Erro ao carregar configurações",
     "atualizado": "Perfil atualizado com sucesso",
-    "erroAtualizar": "Erro ao atualizar perfil"
+    "erroAtualizar": "Erro ao atualizar perfil",
+    "linkedinAjuda": "Link do perfil ou da empresa. Aparece na página pública para visitantes."
   },
   "salvos": {
     "titulo": "Candidatos salvos",
@@ -535,7 +551,10 @@
     "ver": "Ver",
     "carregando": "Carregando candidatos...",
     "nenhum": "Nenhum candidato salvo",
-    "remover": "Remover dos salvos"
+    "remover": "Remover dos salvos",
+    "vazioDica": "Salve candidatos pelo menu de ações (⋯) na página da vaga para vê-los aqui",
+    "vazioFiltro": "Tente outro filtro de status",
+    "removendo": "Removendo..."
   },
   "assinatura": {
     "titulo": "Assinatura",
@@ -563,7 +582,13 @@
     "vagasAtivas": "Vagas ativas",
     "inclui": "Inclui:",
     "querMais": "Quer mais recursos?",
-    "verPlanosPrecos": "Ver planos e preços"
+    "verPlanosPrecos": "Ver planos e preços",
+    "testeExpirouTexto": "Seu período de teste expirou. Assine um plano para continuar usando o Rankea.",
+    "canceladaTexto": "Sua assinatura foi cancelada. Você ainda tem acesso até o fim do período pago.",
+    "cobrancaAuto": "Após o período de teste, sua assinatura será cobrada automaticamente se você não cancelar.",
+    "ilimitadas": "Ilimitadas",
+    "diasRestantes": "{n, plural, one {# dia restante} other {# dias restantes}}",
+    "ate": "Até {n}"
   },
   "auth": {
     "entrar": "Entrar",
@@ -611,7 +636,9 @@
     "nenhumAinda": "Nenhum candidato ainda",
     "erroCarregar": "Falha ao carregar candidatos",
     "todosExc": "Todos (exc. encerrados)",
-    "emRevisao": "Em revisão"
+    "emRevisao": "Em revisão",
+    "vazioDica": "Compartilhe a vaga para começar a receber candidaturas",
+    "contagem": "{n, plural, one {# candidato} other {# candidatos}}"
   },
   "comum": {
     "voltar": "Voltar",
@@ -630,7 +657,8 @@
     "processando": "Processando...",
     "redirecionando": "Redirecionando...",
     "copiar": "Copiar",
-    "remover": "Remover"
+    "remover": "Remover",
+    "voltarInicio": "Voltar ao início"
   },
   "upgrade": {
     "titulo": "Atualize seu plano",
@@ -656,7 +684,9 @@
     "citacao": "Citação",
     "linha": "Linha horizontal",
     "desfazer": "Desfazer",
-    "refazer": "Refazer"
+    "refazer": "Refazer",
+    "iaAjuda": "Corrige o texto e organiza em seções, sem inventar informação",
+    "iaOk": "Descrição atualizada. Use Desfazer se quiser voltar."
   },
   "autenticacao": {
     "diasGratis": "30 dias grátis",
@@ -765,6 +795,172 @@
     "rejeicao": "Rejeição",
     "agendeEntrevista": "Agende sua entrevista pelo link abaixo:",
     "linkNaoAbrir": "Se o link não abrir, copie e cole no navegador:",
-    "linkCalendlyAqui": "[Link do Calendly será inserido aqui]"
+    "linkCalendlyAqui": "[Link do Calendly será inserido aqui]",
+    "previaNome": "Maria Silva",
+    "previaVaga": "Desenvolvedor Full Stack",
+    "previaRemetente": "Equipe de RH",
+    "previaAssinatura": "Atenciosamente,\nEquipe de RH",
+    "variaveis": "Variáveis: candidate_name, job_title, sender_name, signature. Para \"Entrevista\": calendly_link",
+    "dicaRecebida": "E-mail enviado quando o candidato envia a aplicação. Use as variáveis no texto.",
+    "dicaEntrevista": "Inclua {variavel} onde deve aparecer o botão/link do Calendly.",
+    "dicaRejeicao": "E-mail enviado quando o candidato é encerrado."
+  },
+  "planos": {
+    "starter": {
+      "nome": "Starter",
+      "descricao": "Para recrutadores autônomos começando."
+    },
+    "professional": {
+      "nome": "Profissional",
+      "descricao": "Para consultorias e recrutadores em crescimento."
+    },
+    "enterprise": {
+      "nome": "Empresarial",
+      "descricao": "Para equipes e operações de alto volume."
+    },
+    "test": {
+      "nome": "Teste",
+      "descricao": "Plano para teste interno do fluxo de pagamento."
+    },
+    "recursos": {
+      "vagas3": "Até 3 vagas ativas",
+      "vagas10": "Até 10 vagas ativas",
+      "vagasIlimitadas": "Vagas ilimitadas",
+      "candidatosIlimitados": "Candidatos ilimitados",
+      "rankingIA": "Ranking por IA",
+      "emailsAutomaticos": "E-mails automáticos",
+      "paginaPublica": "Página pública de vagas",
+      "paginaPersonalizada": "Página pública personalizada",
+      "branding": "Branding customizado",
+      "suportePrioritario": "Suporte prioritário",
+      "suporteDedicado": "Suporte dedicado",
+      "entrevistaIA": "Entrevista por IA (em breve)",
+      "api": "API de integração (em breve)",
+      "apenasTeste": "Apenas para testes internos"
+    }
+  },
+  "detalhe": {
+    "notasPlaceholder": "Adicione observações, notas da entrevista ou cole a transcrição completa."
+  },
+  "vaga": {
+    "pesosDescricao": "Defina como a IA deve ponderar cada aspecto na avaliação dos candidatos.",
+    "naoSalvo": "Alterações não salvas",
+    "excluirVaga": "Excluir Vaga"
+  },
+  "publica": {
+    "semResultado": "Nenhuma vaga encontrada com os filtros aplicados.",
+    "buscar": "Buscar por cargo ou localização",
+    "candidatar": "Candidatar-se",
+    "compartilheRede": "Compartilhe as vagas com sua rede",
+    "linkedin": "Compartilhar no LinkedIn",
+    "whatsapp": "Compartilhar no WhatsApp",
+    "copiarLink": "Copiar link",
+    "semVagasTexto": "Não há vagas abertas no momento. Volte em breve!",
+    "semVagas": "Nenhuma vaga aberta no momento",
+    "naoEncontrou": "Não encontrou a vaga ideal?",
+    "contato": "Entrar em contato"
+  },
+  "senha": {
+    "linkInvalido": "Link inválido ou expirado. Solicite um novo link de recuperação."
+  },
+  "rodape": {
+    "termos": "Termos de Uso",
+    "privacidade": "Política de Privacidade",
+    "precos": "Preços"
+  },
+  "paywall": {
+    "testeAcabando": "Aproveite: seu teste está acabando!",
+    "naoPerca": "Não perca acesso ao ranking por IA e suas vagas ativas."
+  },
+  "onboarding": {
+    "tudoProntoTexto": "Você completou todos os primeiros passos. Agora é só focar nos candidatos.",
+    "configurarPerfil": "Configurar perfil público",
+    "tudoPronto": "Tudo pronto!",
+    "reiniciar": "Reiniciar tutorial",
+    "dispensar": "Dispensar",
+    "primeirosPassos": "Primeiros passos",
+    "ocultar": "Ocultar checklist",
+    "linkExemplo": "Link da vaga (exemplo)",
+    "linkExemploTexto": "Aparecerá em cada vaga criada, direto na listagem e na página da vaga.",
+    "kanbanExemplo": "Kanban de candidatos (exemplo)",
+    "kanbanExemploTexto": "Aparece assim que os candidatos começarem a se inscrever.",
+    "slugTitulo": "Configure sua página pública",
+    "slugLabel": "URL da sua página pública",
+    "slugVerificando": "Verificando disponibilidade...",
+    "slugDisponivel": "Disponível!",
+    "slugPreview": "Preview da URL:",
+    "slugDepois": "Você pode alterar isso depois em Configurações.",
+    "slugOk": "Slug configurado com sucesso!",
+    "pular": "Pular por agora",
+    "passos": {
+      "perfil": "Completar perfil",
+      "criarVaga": "Criar primeira vaga",
+      "perguntas": "Adicionar perguntas à vaga",
+      "ia": "Configurar avaliação por IA",
+      "compartilhar": "Compartilhar vaga",
+      "analisar": "Analisar candidatos"
+    },
+    "copiar": "Copiar",
+    "tour": {
+      "perfil": {
+        "titulo": "Complete seu perfil",
+        "texto": "Comece configurando seu perfil e identidade como recrutador."
+      },
+      "publico": {
+        "titulo": "Configure seu perfil público",
+        "texto": "Personalize sua página pública, branding e como os candidatos vão te encontrar."
+      },
+      "vaga": {
+        "titulo": "Crie sua primeira vaga",
+        "texto": "Clique em \"Criar vaga\" na sidebar para abrir o formulário de criação."
+      },
+      "perguntas": {
+        "titulo": "Adicione perguntas à vaga",
+        "texto": "Perguntas estratégicas automatizam sua triagem. A IA usa as respostas para pontuar cada candidato."
+      },
+      "ia": {
+        "titulo": "Configure a avaliação por IA",
+        "texto": "Defina o peso do currículo vs. respostas e dê instruções extras para a IA priorizar o que importa para a vaga."
+      },
+      "compartilhar": {
+        "titulo": "Compartilhe sua vaga",
+        "texto": "Cada vaga tem um link único. Compartilhe nas redes ou envie direto para candidatos, sem cadastro obrigatório."
+      },
+      "candidatos": {
+        "titulo": "Acompanhe os candidatos",
+        "texto": "Os candidatos chegam ranqueados pela IA. Mova-os pelo Kanban conforme avança no processo seletivo."
+      }
+    },
+    "proximo": "Próximo",
+    "concluir": "Concluir",
+    "concluirBang": "Concluir!"
+  },
+  "aplicar": {
+    "naoEncontrada": "Vaga não encontrada",
+    "naoEncontradaTexto": "Esta vaga pode ter sido removida ou não está mais disponível.",
+    "encerradas": "Candidaturas encerradas",
+    "encerradasTexto": "Esta vaga não está mais aceitando candidaturas.",
+    "enviada": "Candidatura enviada!",
+    "emailEnviadoPara": "Um e-mail de confirmação foi enviado para",
+    "removerArquivo": "Remover arquivo",
+    "selecioneOpcoes": "Selecione uma ou mais opções"
+  },
+  "contrato": {
+    "integral": "Tempo integral",
+    "meioPeriodo": "Meio período",
+    "contrato": "Contrato",
+    "estagio": "Estágio",
+    "freelance": "Freelance"
+  },
+  "historico": {
+    "recebida": "Candidatura recebida",
+    "statusAlterado": "Status alterado",
+    "emailEntrevista": "E-mail de entrevista enviado",
+    "emailRejeicao": "E-mail de rejeição enviado",
+    "recalculo": "Recálculo de nota solicitado",
+    "dataAplicacao": "Data de aplicação registrada"
+  },
+  "depoimento": {
+    "cargo": "Consultora de RH Independente"
   }
 }

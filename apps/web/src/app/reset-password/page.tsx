@@ -23,7 +23,7 @@ export default function ResetPasswordPage() {
     if (!supabase || typeof window === 'undefined') return;
     const hash = window.location.hash;
     if (!hash) {
-      setError('Link inválido ou expirado. Solicite um novo link de recuperação.');
+      setError(t('senha.linkInvalido'));
       return;
     }
     const params = new URLSearchParams(hash.replace(/^#/, ''));
@@ -31,7 +31,7 @@ export default function ResetPasswordPage() {
     const refresh_token = params.get('refresh_token');
     const type = params.get('type');
     if (type !== 'recovery' || !access_token || !refresh_token) {
-      setError('Link inválido ou expirado. Solicite um novo link de recuperação.');
+      setError(t('senha.linkInvalido'));
       return;
     }
     supabase.auth

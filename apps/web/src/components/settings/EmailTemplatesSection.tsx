@@ -5,15 +5,25 @@ import { ChevronDown, ChevronRight, Mail, Calendar, XCircle } from 'lucide-react
 import { Input } from '@/components/ui';
 import { useTranslations } from 'next-intl';
 
-const PLACEHOLDERS = 'Variáveis: {{candidate_name}}, {{job_title}}, {{sender_name}}, {{signature}}. Para "Entrevista": {{calendly_link}}';
-
-const PREVIEW_VARS = {
-  candidate_name: 'Maria Silva',
-  job_title: 'Desenvolvedor Full Stack',
-  sender_name: 'Equipe de RH',
-  signature: 'Atenciosamente,\nEquipe de RH',
-  calendly_link: `<p>{t('config.agendeEntrevista')}</p><div style="text-align: center; margin: 24px 0;"><a href="#" style="display: inline-block; background: #059669; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">{t('config.entrevistaCalendly')}</a></div><p>{t('config.linkNaoAbrir')}<br><a href="#" style="color: #2563eb; word-break: break-all;">https://calendly.com/exemplo</a></p>`,
-};
+/**
+ * Variáveis de exemplo da prévia. Montadas dentro do componente: constante de
+ * módulo é avaliada na importação, antes de existir idioma, e o texto sairia cru.
+ */
+function usarVariaveisPrevia() {
+  const t = useTranslations();
+  return {
+    candidate_name: t('config.previaNome'),
+    job_title: t('config.previaVaga'),
+    sender_name: t('config.previaRemetente'),
+    signature: t('config.previaAssinatura'),
+    calendly_link:
+      `<p>${t('config.agendeEntrevista')}</p>` +
+      '<div style="text-align: center; margin: 24px 0;">' +
+      `<a href="#" style="display: inline-block; background: #059669; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">${t('config.entrevistaCalendly')}</a>` +
+      `</div><p>${t('config.linkNaoAbrir')}<br>` +
+      '<a href="#" style="color: #2563eb; word-break: break-all;">https://calendly.com/exemplo</a></p>',
+  };
+}
 
 function renderPreviewTemplate(
   template: string,
@@ -92,7 +102,7 @@ function TemplateEditor({
               rows={10}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-sm"
             />
-            <p className="mt-1 text-xs text-gray-500">{PLACEHOLDERS}</p>
+            <p className="mt-1 text-xs text-gray-500">{t('config.variaveis')}</p>
           </div>
         </div>
       )}
@@ -120,19 +130,22 @@ function PreviewPanel({
   showCalendlyInPreview,
 }: PreviewPanelProps) {
   const t = useTranslations();
+  const variaveis = usarVariaveisPrevia();
   const previewSubject = useMemo(
-    () => renderPreviewTemplate(subject || defaultSubject, PREVIEW_VARS),
+    () => renderPreviewTemplate(subject || defaultSubject, variaveis),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [subject, defaultSubject]
   );
 
   const previewHtml = useMemo(() => {
     const raw = bodyHtml || defaultBodyHint;
     if (!raw || !raw.trim().startsWith('<')) return '';
-    const vars = { ...PREVIEW_VARS };
+    const vars = { ...variaveis };
     if (!showCalendlyInPreview) {
       vars.calendly_link = `<p><em>${t('config.linkCalendlyAqui')}</em></p>`;
     }
     return renderPreviewTemplate(raw, vars);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bodyHtml, defaultBodyHint, showCalendlyInPreview]);
 
   if (!templateId) {
@@ -215,7 +228,7 @@ export default function EmailTemplatesSection({
         subject: applicationReceivedSubject,
         bodyHtml: applicationReceivedBodyHtml,
         defaultSubject: 'Candidatura recebida: {{job_title}}',
-        defaultBodyHint: 'E-mail enviado quando o candidato envia a aplicação. Use as variáveis no texto.',
+        defaultBodyHint: t('config.dicaRecebida'),
         showCalendlyInPreview: false,
       };
     if (expandedId === 'schedule_interview')
@@ -224,7 +237,7 @@ export default function EmailTemplatesSection({
         subject: scheduleInterviewSubject,
         bodyHtml: scheduleInterviewBodyHtml,
         defaultSubject: "Você foi selecionado(a)! Agende sua entrevista – {{job_title}}",
-        defaultBodyHint: 'Inclua {{calendly_link}} onde deve aparecer o botão/link do Calendly.',
+        defaultBodyHint: t('config.dicaEntrevista', { variavel: '{{calendly_link}}' }),
         showCalendlyInPreview: true,
       };
     if (expandedId === 'rejection')
@@ -233,7 +246,7 @@ export default function EmailTemplatesSection({
         subject: rejectionSubject,
         bodyHtml: rejectionBodyHtml,
         defaultSubject: 'Atualização sobre sua candidatura: {{job_title}}',
-        defaultBodyHint: 'E-mail enviado quando o candidato é encerrado.',
+        defaultBodyHint: t('config.dicaRejeicao'),
         showCalendlyInPreview: false,
       };
     return null;
@@ -265,7 +278,7 @@ export default function EmailTemplatesSection({
             onSubjectChange={onApplicationReceivedSubjectChange}
             onBodyChange={onApplicationReceivedBodyChange}
             defaultSubject="Candidatura recebida: {{job_title}}"
-            defaultBodyHint="E-mail enviado quando o candidato envia a aplicação. Use as variáveis no texto."
+            defaultBodyHint={t('config.dicaRecebida')}
             expandedId={expandedId}
             onToggle={handleToggle}
           />
@@ -278,7 +291,7 @@ export default function EmailTemplatesSection({
             onSubjectChange={onScheduleInterviewSubjectChange}
             onBodyChange={onScheduleInterviewBodyChange}
             defaultSubject="Você foi selecionado(a)! Agende sua entrevista – {{job_title}}"
-            defaultBodyHint="Inclua {{calendly_link}} onde deve aparecer o botão/link do Calendly."
+            defaultBodyHint={t('config.dicaEntrevista', { variavel: '{{calendly_link}}' })}
             showCalendlyInPreview
             expandedId={expandedId}
             onToggle={handleToggle}
@@ -292,7 +305,7 @@ export default function EmailTemplatesSection({
             onSubjectChange={onRejectionSubjectChange}
             onBodyChange={onRejectionBodyChange}
             defaultSubject="Atualização sobre sua candidatura: {{job_title}}"
-            defaultBodyHint="E-mail enviado quando o candidato é encerrado."
+            defaultBodyHint={t('config.dicaRejeicao')}
             expandedId={expandedId}
             onToggle={handleToggle}
           />

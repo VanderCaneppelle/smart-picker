@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Share2, Check, Linkedin, MessageCircle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface ShareSectionProps {
   pageUrl: string;
@@ -9,6 +10,7 @@ interface ShareSectionProps {
 }
 
 export function ShareSection({ pageUrl, title }: ShareSectionProps) {
+  const t = useTranslations();
   const [copied, setCopied] = useState(false);
 
   const encodedUrl = encodeURIComponent(pageUrl);
@@ -28,16 +30,14 @@ export function ShareSection({ pageUrl, title }: ShareSectionProps) {
 
   return (
     <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">
-        Compartilhe as vagas com sua rede
-      </h2>
+      <h2 className="text-lg font-semibold text-gray-800 mb-4">{t('publica.compartilheRede')}</h2>
       <div className="flex flex-wrap items-center gap-3">
         <a
           href={linkedInUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center justify-center w-11 h-11 rounded-full border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors"
-          aria-label="Compartilhar no LinkedIn"
+          aria-label={t('publica.linkedin')}
         >
           <Linkedin className="h-5 w-5" />
         </a>
@@ -46,7 +46,7 @@ export function ShareSection({ pageUrl, title }: ShareSectionProps) {
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center justify-center w-11 h-11 rounded-full border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors"
-          aria-label="Compartilhar no WhatsApp"
+          aria-label={t('publica.whatsapp')}
         >
           <MessageCircle className="h-5 w-5" />
         </a>
@@ -54,7 +54,7 @@ export function ShareSection({ pageUrl, title }: ShareSectionProps) {
           type="button"
           onClick={handleCopyLink}
           className="inline-flex items-center justify-center gap-2 w-11 h-11 rounded-full border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors"
-          aria-label="Copiar link"
+          aria-label={t('publica.copiarLink')}
         >
           {copied ? (
             <Check className="h-5 w-5 text-green-600" />

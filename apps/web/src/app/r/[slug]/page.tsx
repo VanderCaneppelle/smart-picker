@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db';
 import { Briefcase, Globe, Mail, Linkedin } from 'lucide-react';
 import { ShareSection } from './ShareSection';
 import { JobListWithFilters } from './JobListWithFilters';
+import { useTranslations } from 'next-intl';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -78,6 +79,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function RecruiterPublicPage({ params }: PageProps) {
+  const t = useTranslations();
   const { slug } = await params;
   const data = await getRecruiterBySlug(slug);
 
@@ -165,9 +167,7 @@ export default async function RecruiterPublicPage({ params }: PageProps) {
                   href={`mailto:${contactEmail}`}
                   className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white text-gray-800 text-sm font-semibold hover:bg-white/95 shadow-md transition-colors"
                 >
-                  <Mail className="h-4 w-4" />
-                  Entrar em contato
-                </a>
+                  <Mail className="h-4 w-4" />{t('publica.contato')}</a>
               )}
             </div>
           </div>
@@ -180,15 +180,13 @@ export default async function RecruiterPublicPage({ params }: PageProps) {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             {jobs.length > 0
               ? `Vagas abertas (${jobs.length})`
-              : 'Nenhuma vaga aberta no momento'}
+              : t('publica.semVagas')}
           </h2>
 
           {jobs.length === 0 && (
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-12 text-center">
               <Briefcase className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">
-                Não há vagas abertas no momento. Volte em breve!
-              </p>
+              <p className="text-gray-500">{t('publica.semVagasTexto')}</p>
             </div>
           )}
 
@@ -204,9 +202,7 @@ export default async function RecruiterPublicPage({ params }: PageProps) {
               className="rounded-2xl p-8 sm:p-10 text-center text-white shadow-lg"
               style={{ backgroundColor: brandColor }}
             >
-              <h2 className="text-xl font-bold mb-3">
-                Não encontrou a vaga ideal?
-              </h2>
+              <h2 className="text-xl font-bold mb-3">{t('publica.naoEncontrou')}</h2>
               <p className="max-w-xl mx-auto text-white/90 mb-4 text-sm sm:text-base">
                 Estamos sempre em busca de bons talentos. Envie seu currículo e
                 conte como você pode contribuir.
