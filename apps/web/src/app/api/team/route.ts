@@ -8,10 +8,11 @@ import {
   TeamError,
 } from '@/lib/team-service';
 import { sendTeamInviteEmail, TeamInviteEmailError } from '@/lib/worker';
+import { tradutorDeErros, traduzirZod } from '@/lib/erros';
 
 const CreateMemberSchema = z.object({
-  email: z.string().email('E-mail inválido').max(200),
-  name: z.string().min(1, 'Informe o nome').max(200),
+  email: z.string().email('erros.emailInvalido').max(200),
+  name: z.string().min(1, 'erros.informeNome').max(200),
 });
 
 // GET /api/team - Dono, membros e uso de assentos da conta
@@ -38,6 +39,7 @@ export async function GET(request: NextRequest) {
 
 // POST /api/team - Cria um usuário na conta e manda a senha provisória por e-mail
 export async function POST(request: NextRequest) {
+  const t = await tradutorDeErros();
   const auth = await requireAccount(request, { ownerOnly: true });
   if (auth.response) return auth.response;
 
@@ -50,7 +52,7 @@ export async function POST(request: NextRequest) {
         {
           error: 'Bad Request',
           message: 'Validation failed',
-          details: validation.error.flatten(),
+          details: traduzirZod(await tradutorDeErros(), validation.error.flatten()),
         },
         { status: 400 }
       );
@@ -87,7 +89,7 @@ export async function POST(request: NextRequest) {
     }
     console.error('Error creating team member:', error);
     return Response.json(
-      { error: 'Internal Server Error', message: 'Falha ao criar o usuário' },
+      { error: 'Internal Server Error', message: t('erros.criarUsuario') },
       { status: 500 }
     );
   }

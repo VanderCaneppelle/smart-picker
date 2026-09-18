@@ -7,6 +7,7 @@ import {
   TeamError,
 } from '@/lib/team-service';
 import { sendTeamInviteEmail, TeamInviteEmailError } from '@/lib/worker';
+import { tradutorDeErros } from '@/lib/erros';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -28,6 +29,7 @@ function handleError(error: unknown, fallback: string) {
 
 // DELETE /api/team/:id - Remove o usuário da conta e libera o assento
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  const t = await tradutorDeErros();
   const auth = await requireAccount(request, { ownerOnly: true });
   if (auth.response) return auth.response;
 
@@ -40,7 +42,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
         {
           error: 'Bad Request',
           code: 'cannot_remove_owner',
-          message: 'O dono da conta não pode ser removido aqui.',
+          message: t('erros.donoNaoRemove'),
         },
         { status: 400 }
       );

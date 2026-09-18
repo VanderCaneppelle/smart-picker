@@ -1073,5 +1073,33 @@
     "candidatos": "mais candidatos analisados",
     "publicar": "para publicar uma vaga",
     "dados": "decisões baseadas em dados"
+  },
+  "erros": {
+    "uploadTipo": "Tipo de arquivo inválido. Apenas imagens (PNG, JPG, WebP, SVG, GIF) são aceitas.",
+    "uploadTamanho": "Imagem muito grande. Máximo 2MB.",
+    "slugEmUso": "Este slug já está em uso",
+    "definaSlug": "Defina um slug antes de ativar a página pública",
+    "vagaFechada": "Esta vaga não está mais recebendo candidaturas.",
+    "limiteUsuarios": "A conta está acima do limite de usuários do plano. Fale com o dono da conta.",
+    "donoNaoRemove": "O dono da conta não pode ser removido aqui.",
+    "criarUsuario": "Falha ao criar o usuário",
+    "emailInvalido": "E-mail inválido",
+    "informeNome": "Informe o nome",
+    "iaSemChave": "A melhoria por IA não está configurada. Falta OPENAI_API_KEY.",
+    "descricaoLonga": "A descrição está longa demais para ser melhorada de uma vez.",
+    "iaFalhou": "Não consegui melhorar a descrição agora. Tente de novo.",
+    "iaErro": "Erro ao melhorar a descrição.",
+    "semTitulo": "O título da vaga não foi informado.",
+    "linkedinInvalido": "Informe um link válido do LinkedIn",
+    "corInvalida": "Cor inválida"
+  },
+  "slug": {
+    "obrigatorio": "Slug é obrigatório",
+    "minimo": "Mínimo de 3 caracteres",
+    "maximo": "Máximo de 40 caracteres",
+    "hifens": "Não pode conter hífens consecutivos",
+    "formato": "Use apenas letras minúsculas, números e hífens",
+    "formatoLongo": "Use apenas letras minúsculas, números e hífens (sem iniciar/terminar com hífen)",
+    "reservado": "Este slug é reservado"
   }
 }
