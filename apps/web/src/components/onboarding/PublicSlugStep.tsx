@@ -22,7 +22,7 @@ export default function PublicSlugStep() {
     const validation = validateSlug(value);
     if (!validation.valid) {
       setAvailability('invalid');
-      setValidationError(validation.error!);
+      setValidationError(t(validation.errorKey!));
       return;
     }
 

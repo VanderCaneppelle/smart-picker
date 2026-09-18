@@ -117,7 +117,7 @@ export default function PublicProfileForm() {
     const validation = validateSlug(value);
     if (!validation.valid) {
       setSlugAvailability('invalid');
-      setSlugError(validation.error!);
+      setSlugError(t(validation.errorKey!));
       return;
     }
 

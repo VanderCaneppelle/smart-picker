@@ -15,6 +15,7 @@ import {
   type PlanId,
 } from '@/lib/subscription';
 import { logCandidateEvent } from '@/lib/candidate-history';
+import { tradutorDeErros } from '@/lib/erros';
 
 // GET /api/candidates - List all candidates (protected)
 export async function GET(request: NextRequest) {
@@ -107,6 +108,7 @@ export async function GET(request: NextRequest) {
 
 // POST /api/candidates - Create a new candidate (public - for job applications)
 export async function POST(request: NextRequest) {
+  const t = await tradutorDeErros();
   try {
     const body = await request.json();
     const validation = CreateCandidateSchema.safeParse(body);
@@ -155,7 +157,7 @@ export async function POST(request: NextRequest) {
       return Response.json(
         {
           error: 'Gone',
-          message: 'Esta vaga não está mais recebendo candidaturas.',
+          message: t('erros.vagaFechada'),
         },
         { status: 410 }
       );

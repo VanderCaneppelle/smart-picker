@@ -1073,5 +1073,33 @@
     "candidatos": "more candidates reviewed",
     "publicar": "to publish a job",
     "dados": "data-backed decisions"
+  },
+  "erros": {
+    "uploadTipo": "Invalid file type. Only images (PNG, JPG, WebP, SVG, GIF) are accepted.",
+    "uploadTamanho": "Image too large. 2MB maximum.",
+    "slugEmUso": "This slug is already taken",
+    "definaSlug": "Set a slug before turning the public page on",
+    "vagaFechada": "This job is no longer accepting applications.",
+    "limiteUsuarios": "This account is over the plan user limit. Talk to the account owner.",
+    "donoNaoRemove": "The account owner cannot be removed here.",
+    "criarUsuario": "Could not create the user",
+    "emailInvalido": "Invalid email",
+    "informeNome": "Enter a name",
+    "iaSemChave": "AI polishing is not configured. OPENAI_API_KEY is missing.",
+    "descricaoLonga": "The description is too long to polish in one go.",
+    "iaFalhou": "Could not polish the description right now. Try again.",
+    "iaErro": "Error polishing the description.",
+    "semTitulo": "The job title is missing.",
+    "linkedinInvalido": "Enter a valid LinkedIn link",
+    "corInvalida": "Invalid color"
+  },
+  "slug": {
+    "obrigatorio": "Slug is required",
+    "minimo": "At least 3 characters",
+    "maximo": "At most 40 characters",
+    "hifens": "Cannot contain consecutive hyphens",
+    "formato": "Use only lowercase letters, numbers and hyphens",
+    "formatoLongo": "Use only lowercase letters, numbers and hyphens (not starting or ending with one)",
+    "reservado": "This slug is reserved"
   }
 }

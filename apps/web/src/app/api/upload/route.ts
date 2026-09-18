@@ -1,9 +1,11 @@
 import { NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
+import { tradutorDeErros } from '@/lib/erros';
 
 // POST /api/upload - Upload file to Supabase Storage (public - for resume uploads)
 export async function POST(request: NextRequest) {
+  const t = await tradutorDeErros();
   try {
     if (!supabaseAdmin) {
       return Response.json(
@@ -35,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     if (!allowedTypes.includes(file.type)) {
       const msg = isImageBucket
-        ? 'Tipo de arquivo inválido. Apenas imagens (PNG, JPG, WebP, SVG, GIF) são aceitas.'
+        ? t('erros.uploadTipo')
         : 'Invalid file type. Only PDF and Word documents are allowed.';
       return Response.json(
         { error: 'Bad Request', message: msg },
@@ -47,7 +49,7 @@ export async function POST(request: NextRequest) {
     const maxSize = isImageBucket ? 2 * 1024 * 1024 : 10 * 1024 * 1024;
     if (file.size > maxSize) {
       const msg = isImageBucket
-        ? 'Imagem muito grande. Máximo 2MB.'
+        ? t('erros.uploadTamanho')
         : 'File too large. Maximum size is 10MB.';
       return Response.json(
         { error: 'Bad Request', message: msg },

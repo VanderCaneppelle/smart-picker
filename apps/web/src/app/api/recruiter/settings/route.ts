@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { requireAccount } from '@/lib/auth';
 import { z } from 'zod';
 import { slugSchema } from '@/lib/slug';
+import { tradutorDeErros, traduzirZod } from '@/lib/erros';
 
 const UpdateSettingsSchema = z.object({
   public_slug: slugSchema.optional(),
@@ -18,16 +19,16 @@ const UpdateSettingsSchema = z.object({
     .optional()
     .refine(
       (u) => !u || u.trim() === '' || (u.startsWith('http') && u.includes('linkedin.com')),
-      'Informe um link válido do LinkedIn'
+      'erros.linkedinInvalido'
     ),
   brand_color: z
     .string()
-    .regex(/^#[0-9a-fA-F]{6}$/, 'Cor inválida')
+    .regex(/^#[0-9a-fA-F]{6}$/, 'erros.corInvalida')
     .nullable()
     .optional(),
 
   email_sender_name: z.string().max(200).nullable().optional(),
-  reply_to_email: z.string().email('E-mail inválido').nullable().optional(),
+  reply_to_email: z.string().email('erros.emailInvalido').nullable().optional(),
   email_signature: z.string().max(2000).nullable().optional(),
 
   application_received_subject: z.string().max(300).nullable().optional(),
@@ -104,6 +105,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  const t = await tradutorDeErros();
   try {
     // Página pública, branding e templates são da CONTA: só o dono edita.
     const auth = await requireAccount(request, { ownerOnly: true });
@@ -117,7 +119,7 @@ export async function PATCH(request: NextRequest) {
         {
           error: 'Bad Request',
           message: 'Validation failed',
-          details: validation.error.flatten(),
+          details: traduzirZod(await tradutorDeErros(), validation.error.flatten()),
         },
         { status: 400 }
       );
@@ -132,7 +134,7 @@ export async function PATCH(request: NextRequest) {
       });
       if (existing && existing.id !== user.id) {
         return Response.json(
-          { error: 'Conflict', message: 'Este slug já está em uso' },
+          { error: 'Conflict', message: t('erros.slugEmUso') },
           { status: 409 }
         );
       }
@@ -148,7 +150,7 @@ export async function PATCH(request: NextRequest) {
         return Response.json(
           {
             error: 'Bad Request',
-            message: 'Defina um slug antes de ativar a página pública',
+            message: t('erros.definaSlug'),
           },
           { status: 400 }
         );

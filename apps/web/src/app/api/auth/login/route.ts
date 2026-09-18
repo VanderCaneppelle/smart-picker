@@ -4,9 +4,11 @@ import { prisma } from '@/lib/db';
 import { LoginSchema } from '@hunter/core';
 import { ensureTrialSubscription } from '@/lib/subscription-service';
 import { isSeatBlocked } from '@/lib/auth';
+import { tradutorDeErros } from '@/lib/erros';
 
 // POST /api/auth/login - Login with email and password
 export async function POST(request: NextRequest) {
+  const t = await tradutorDeErros();
   try {
     if (!supabaseAdmin) {
       return Response.json(
@@ -66,7 +68,7 @@ export async function POST(request: NextRequest) {
             error: 'Forbidden',
             code: 'seat_blocked',
             message:
-              'A conta está acima do limite de usuários do plano. Fale com o dono da conta.',
+              t('erros.limiteUsuarios'),
           },
           { status: 403 }
         );
