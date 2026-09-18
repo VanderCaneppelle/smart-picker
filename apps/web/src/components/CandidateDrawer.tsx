@@ -8,11 +8,10 @@ import { Button, Badge } from '@/components/ui';
 import type { Candidate, CandidateStatus, ApplicationQuestion } from '@hunter/core';
 import { apiClient, type CandidateHistoryEvent } from '@/lib/api-client';
 
-const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['interview', 'hired', 'rejected'];
+const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['interview', 'rejected'];
 
 const STATUS_EMAIL_MESSAGES: Record<string, string> = {
   interview: 'Um e-mail de agendamento de entrevista será enviado ao candidato.',
-  hired: 'Um e-mail de contratação será enviado ao candidato.',
   rejected: 'Um e-mail de rejeição será enviado ao candidato.',
 };
 
