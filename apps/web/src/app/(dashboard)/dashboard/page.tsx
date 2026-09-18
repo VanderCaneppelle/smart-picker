@@ -243,34 +243,13 @@ export default function DashboardPage() {
             subtitle="agendados ou em andamento"
             icon={UserCheck}
           />
-          <MetricCard
-            title="Ações pendentes"
-            value={overview.pendingReview + overview.staleJobsCount}
-            subtitle={`${overview.pendingReview} revisões · ${overview.staleJobsCount} vagas paradas`}
-            icon={Clock}
-            tone={overview.pendingReview + overview.staleJobsCount > 0 ? 'warning' : 'default'}
-            pulse={overview.pendingReview > 0}
+          <PendingActionsCard
+            pendingReview={overview.pendingReview}
+            pendingReviewCandidates={overview.pendingReviewCandidates}
+            staleJobsCount={overview.staleJobsCount}
+            staleJobs={overview.staleJobs}
           />
         </div>
-
-        {/* Vagas paradas (detalhe quando houver) */}
-        {overview.staleJobs.length > 0 && (
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {overview.staleJobs.map((j) => (
-              <div
-                key={j.id}
-                onClick={() => router.push(`/jobs/${j.id}`)}
-                className="flex items-center gap-3 bg-orange-50 border border-orange-200 rounded-lg px-4 py-3 cursor-pointer hover:bg-orange-100 transition-colors"
-              >
-                <Clock className="h-4 w-4 text-orange-600 shrink-0" />
-                <span className="text-sm text-orange-800 truncate">
-                  <strong>{j.title}</strong>: sem candidatos há mais de 14 dias
-                </span>
-                <ChevronRight className="h-4 w-4 text-orange-400 ml-auto shrink-0" />
-              </div>
-            ))}
-          </div>
-        )}
       </section>
 
       {/* ============ SEÇÃO 2: INTELIGÊNCIA E AUTOMAÇÃO ============ */}
@@ -492,6 +471,144 @@ function SectionHeader({
         <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-50 ring-1 ring-inset ring-emerald-600/20 px-2 py-0.5 rounded-full">
           {badge}
         </span>
+      )}
+    </div>
+  );
+}
+
+interface PendingReviewCandidate {
+  id: string;
+  name: string;
+  jobTitle: string;
+  fitScore: number | null;
+}
+
+interface StaleJob {
+  id: string;
+  title: string;
+}
+
+/**
+ * "Ações pendentes" precisa ser acionável: clicar abre um painel listando cada
+ * pendência (candidatos novos aguardando revisão, vagas paradas), cada uma já
+ * levando direto pra resolução, em vez de só exibir um número solto.
+ */
+function PendingActionsCard({
+  pendingReview,
+  pendingReviewCandidates,
+  staleJobsCount,
+  staleJobs,
+}: {
+  pendingReview: number;
+  pendingReviewCandidates: PendingReviewCandidate[];
+  staleJobsCount: number;
+  staleJobs: StaleJob[];
+}) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+  const total = pendingReview + staleJobsCount;
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    if (open) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [open]);
+
+  const goTo = (path: string) => {
+    setOpen(false);
+    router.push(path);
+  };
+
+  return (
+    <div className="relative" ref={ref}>
+      <div
+        onClick={() => total > 0 && setOpen((v) => !v)}
+        role={total > 0 ? 'button' : undefined}
+        tabIndex={total > 0 ? 0 : undefined}
+        onKeyDown={(e) => total > 0 && e.key === 'Enter' && setOpen((v) => !v)}
+        className={`relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 transition-all ${
+          total > 0
+            ? 'cursor-pointer hover:border-gray-300 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2'
+            : ''
+        }`}
+      >
+        <span aria-hidden className={`absolute inset-y-0 left-0 w-[3px] ${total > 0 ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+
+        {pendingReview > 0 && (
+          <span className="absolute top-3 right-3 flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500" />
+          </span>
+        )}
+
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-gray-500">Ações pendentes</p>
+            <p className="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{total}</p>
+            <p className="mt-1 text-xs text-gray-400">
+              {pendingReview} revisões · {staleJobsCount} vagas paradas
+            </p>
+          </div>
+          <div className={`rounded-lg p-2.5 shrink-0 ${total > 0 ? 'bg-amber-50 text-amber-600' : 'bg-gray-50 text-gray-400'}`}>
+            <Clock className="h-5 w-5" />
+          </div>
+        </div>
+      </div>
+
+      {open && total > 0 && (
+        <div className="absolute z-20 right-0 mt-2 w-80 max-w-[90vw] rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden">
+          {pendingReviewCandidates.length > 0 && (
+            <div className="p-3">
+              <p className="px-2 pb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                Candidatos aguardando revisão
+              </p>
+              {pendingReviewCandidates.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => goTo(`/candidates/${c.id}`)}
+                  className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left hover:bg-gray-50 transition-colors"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-gray-900">{c.name}</p>
+                    <p className="truncate text-xs text-gray-400">{c.jobTitle}</p>
+                  </div>
+                  {c.fitScore != null && (
+                    <span className="shrink-0 text-xs font-semibold text-emerald-600">{c.fitScore}%</span>
+                  )}
+                  <ChevronRight className="h-4 w-4 text-gray-300 shrink-0" />
+                </button>
+              ))}
+              {pendingReview > pendingReviewCandidates.length && (
+                <p className="px-2 pt-1 text-xs text-gray-400">
+                  +{pendingReview - pendingReviewCandidates.length} outro(s) aguardando revisão
+                </p>
+              )}
+            </div>
+          )}
+
+          {staleJobs.length > 0 && (
+            <div className={`p-3 ${pendingReviewCandidates.length > 0 ? 'border-t border-gray-100' : ''}`}>
+              <p className="px-2 pb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                Vagas sem candidatos há 14+ dias
+              </p>
+              {staleJobs.map((j) => (
+                <button
+                  key={j.id}
+                  type="button"
+                  onClick={() => goTo(`/jobs/${j.id}`)}
+                  className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left hover:bg-gray-50 transition-colors"
+                >
+                  <span className="truncate flex-1 text-sm text-gray-900">{j.title}</span>
+                  <ChevronRight className="h-4 w-4 text-gray-300 shrink-0" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

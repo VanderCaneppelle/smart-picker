@@ -63,6 +63,7 @@ export interface DashboardStatsResponse {
     avgCandidatesPerJob: number;
     avgDaysJobOpen: number;
     pendingReview: number;
+    pendingReviewCandidates: { id: string; name: string; jobId: string; jobTitle: string; fitScore: number | null }[];
     staleJobsCount: number;
     staleJobs: { id: string; title: string }[];
   };
