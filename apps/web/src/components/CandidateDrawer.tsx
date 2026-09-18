@@ -9,12 +9,11 @@ import type { Candidate, CandidateStatus, ApplicationQuestion } from '@hunter/co
 import { apiClient, type CandidateHistoryEvent } from '@/lib/api-client';
 import { useTranslations } from 'next-intl';
 
-const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['interview', 'hired', 'rejected'];
+const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['interview', 'rejected'];
 
 /** Chaves, não textos: constante de módulo é avaliada antes de existir idioma. */
 const STATUS_EMAIL_MESSAGE_KEYS: Record<string, string> = {
   interview: 'candidatos.avisoEntrevista',
-  hired: 'candidatos.avisoContratado',
   rejected: 'candidatos.avisoRejeitado',
 };
 
@@ -303,7 +302,7 @@ export default function CandidateDrawer({
               </span>.
             </p>
             <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-5">
-              {STATUS_EMAIL_MESSAGE_KEYS[pendingAction]}
+              {t(STATUS_EMAIL_MESSAGE_KEYS[pendingAction] ?? '')}
             </p>
             <div className="flex justify-end gap-3">
               <button

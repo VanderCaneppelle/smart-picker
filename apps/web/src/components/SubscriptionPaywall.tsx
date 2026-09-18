@@ -12,6 +12,7 @@ import {
   Building2,
   Gift,
   Loader2,
+  LogOut,
 } from 'lucide-react';
 import { PLANS, type SubscriptionInfo, getTrialDaysRemaining } from '@/lib/subscription';
 import { apiClient } from '@/lib/api-client';
@@ -19,9 +20,10 @@ import { toast } from 'sonner';
 
 interface SubscriptionPaywallProps {
   subscription: SubscriptionInfo;
+  onLogout?: () => void;
 }
 
-export function SubscriptionPaywall({ subscription }: SubscriptionPaywallProps) {
+export function SubscriptionPaywall({ subscription, onLogout }: SubscriptionPaywallProps) {
   const daysLeft = getTrialDaysRemaining(subscription.trialEndsAt);
   const isExpired = daysLeft === 0;
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
@@ -41,6 +43,16 @@ export function SubscriptionPaywall({ subscription }: SubscriptionPaywallProps) 
 
   return (
     <div className="fixed inset-0 z-[100] bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+      {onLogout && (
+        <button
+          type="button"
+          onClick={onLogout}
+          className="absolute top-4 right-4 sm:top-6 sm:right-6 inline-flex items-center gap-1.5 text-sm font-medium text-white/70 hover:text-white transition-colors"
+        >
+          <LogOut className="h-4 w-4" />
+          Sair
+        </button>
+      )}
       <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-t-2xl px-6 sm:px-8 py-8 text-white text-center">
