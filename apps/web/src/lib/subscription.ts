@@ -13,8 +13,16 @@ export interface Plan {
   name: string;
   /** Chave de tradução do nome. Constante de módulo não pode guardar texto traduzido. */
   nameKey: string;
+  /** Valor em reais. Espelha o unit_amount do preço no Stripe. */
   price: number;
   priceLabel: string;
+  /**
+   * Valor em dólar. Espelha currency_options.usd do MESMO preço no Stripe
+   * (lookup key em PRICE_LOOKUP_KEYS). Mexeu num, mexe no outro: com
+   * currency_options definido, o Adaptive Pricing não converte, cobra isto.
+   */
+  priceUsd: number;
+  priceLabelUsd: string;
   descriptionKey: string;
   featureKeys: string[];
   maxActiveJobs: number;
@@ -29,6 +37,8 @@ export const PLANS: Plan[] = [
     nameKey: 'planos.starter.nome',
     price: 97,
     priceLabel: 'R$ 97',
+    priceUsd: 29,
+    priceLabelUsd: 'US$ 29',
     descriptionKey: 'planos.starter.descricao',
     maxActiveJobs: 3,
     featureKeys: [
@@ -45,6 +55,8 @@ export const PLANS: Plan[] = [
     nameKey: 'planos.professional.nome',
     price: 197,
     priceLabel: 'R$ 197',
+    priceUsd: 49,
+    priceLabelUsd: 'US$ 49',
     descriptionKey: 'planos.professional.descricao',
     maxActiveJobs: 10,
     highlighted: true,
@@ -65,6 +77,8 @@ export const PLANS: Plan[] = [
     nameKey: 'planos.enterprise.nome',
     price: 397,
     priceLabel: 'R$ 397',
+    priceUsd: 99,
+    priceLabelUsd: 'US$ 99',
     descriptionKey: 'planos.enterprise.descricao',
     maxActiveJobs: Infinity,
     featureKeys: [
@@ -85,6 +99,8 @@ export const PLANS: Plan[] = [
     nameKey: 'planos.test.nome',
     price: 2,
     priceLabel: 'R$ 2',
+    priceUsd: 1,
+    priceLabelUsd: 'US$ 1',
     descriptionKey: 'planos.test.descricao',
     maxActiveJobs: 1,
     hidden: true,
