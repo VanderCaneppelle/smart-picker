@@ -84,7 +84,7 @@ function DashboardLayoutContent({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
-  const { data: jobsLimit } = useActiveJobsLimit();
+  const { data: jobsLimit, refresh: refreshJobsLimit } = useActiveJobsLimit();
   const [vagasExpanded, setVagasExpanded] = useState(() => pathname === '/jobs' || (pathname?.startsWith('/jobs/') && pathname !== '/jobs/new'));
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -105,6 +105,14 @@ function DashboardLayoutContent({
   useEffect(() => {
     fetchSubscription();
   }, [isAuthenticated]);
+
+  // O contador de vagas ativas da sidebar só era buscado uma vez, no mount do
+  // layout. Como o layout persiste entre navegações (SPA), mudar o status de
+  // uma vaga em outra tela deixava o número da sidebar desatualizado até um
+  // reload completo. Refaz a busca a cada troca de rota.
+  useEffect(() => {
+    refreshJobsLimit();
+  }, [pathname, refreshJobsLimit]);
 
   useEffect(() => {
     const subParam = searchParams?.get('subscription');
