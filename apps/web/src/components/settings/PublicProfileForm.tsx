@@ -189,7 +189,7 @@ export default function PublicProfileForm() {
       toast.success(enabled ? t('perfil.publicaAtivada') : t('perfil.publicaDesativada'));
     } catch (error) {
       setPublicPageEnabled(previousValue);
-      toast.error(error instanceof Error ? error.message : 'Erro ao atualizar');
+      toast.error(error instanceof Error ? error.message : t('perfil.erroAtualizar'));
     }
   };
 
@@ -248,7 +248,7 @@ export default function PublicProfileForm() {
       completeStep('settings');
       toast.success(t('config.salvas'));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Erro ao salvar');
+      toast.error(error instanceof Error ? error.message : t('perfil.erroSalvar'));
     } finally {
       setIsSaving(false);
     }

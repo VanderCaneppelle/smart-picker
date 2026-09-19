@@ -4,7 +4,8 @@
     "precos": "Pricing",
     "faq": "FAQ",
     "entrar": "Sign in",
-    "testeGratis": "Start free"
+    "testeGratis": "Start free",
+    "limiteVagas": "Job limit reached. Upgrade your plan."
   },
   "hero": {
     "selo": {
@@ -314,7 +315,8 @@
       "ativa": "Active",
       "fechada": "Closed",
       "pausada": "On hold"
-    }
+    },
+    "ajusteFiltros": "Try adjusting your filters"
   },
   "formVaga": {
     "vagaCriada": "Role created",
@@ -546,13 +548,14 @@
     "telefonePlaceholder": "+1 555 000 0000",
     "erroCarregar": "Could not load settings",
     "atualizado": "Profile updated",
-    "erroAtualizar": "Could not update the profile",
+    "erroAtualizar": "Could not update",
     "linkedinAjuda": "Profile or company link. It shows on your public page for visitors.",
     "slugEmUso": "This slug is already taken",
     "erroSalvarSlug": "Could not save the slug",
     "reiniciarTutorialTexto": "Restart the first-steps tutorial to walk through the interactive guide again.",
     "publicaAtivada": "Public page enabled!",
-    "publicaDesativada": "Public page disabled."
+    "publicaDesativada": "Public page disabled.",
+    "erroSalvar": "Could not save"
   },
   "salvos": {
     "titulo": "Saved candidates",
@@ -714,7 +717,8 @@
     "refazer": "Redo",
     "iaAjuda": "Cleans up the text and organizes it into sections, without inventing anything",
     "iaOk": "Description updated. Use Undo to go back.",
-    "erroIA": "Could not improve the description."
+    "erroIA": "Could not improve the description.",
+    "melhorarIA": "Improve with AI"
   },
   "autenticacao": {
     "diasGratis": "30 days free",
@@ -834,7 +838,8 @@
     "dicaEntrevista": "Include {variavel} where the Calendly button/link should appear.",
     "dicaRejeicao": "Email sent when the candidate is closed out.",
     "modelosTexto": "Customize the subject and body of every email sent to candidates. Leave blank to use the default template.",
-    "apareceComo": "Shows as \"Name via Rankea\""
+    "apareceComo": "Shows as \"Name via Rankea\"",
+    "assinaturaExemplo": "E.g.\nBest regards,\nRecruiting Team\nwww.yourcompany.com"
   },
   "planos": {
     "starter": {
@@ -886,7 +891,9 @@
     "confirmarExcluir": "Delete this job? This cannot be undone. Every candidate attached to it is removed too.",
     "semPerguntas": "No questions yet. Click \"Add question\" to create one.",
     "ativaCompartilhe": "Your job is live and accepting applications. Copy the link and share it!",
-    "instrucoesExemplo": "E.g. Favor candidates with React experience. Value AWS certifications. Fluent English should score higher..."
+    "instrucoesExemplo": "E.g. Favor candidates with React experience. Value AWS certifications. Fluent English should score higher...",
+    "limitePlano": "Plan limit reached",
+    "falhaCriar": "Could not create the job"
   },
   "publica": {
     "semResultado": "No jobs match the filters.",
