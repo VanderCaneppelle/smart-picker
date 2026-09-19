@@ -4,7 +4,8 @@
     "precos": "Preços",
     "faq": "FAQ",
     "entrar": "Entrar",
-    "testeGratis": "Teste grátis"
+    "testeGratis": "Teste grátis",
+    "limiteVagas": "Limite de vagas atingido. Atualize seu plano."
   },
   "hero": {
     "selo": {
@@ -314,7 +315,8 @@
       "ativa": "Ativa",
       "fechada": "Fechada",
       "pausada": "Pausada"
-    }
+    },
+    "ajusteFiltros": "Tente ajustar seus filtros"
   },
   "formVaga": {
     "vagaCriada": "Vaga criada!",
@@ -546,13 +548,14 @@
     "telefonePlaceholder": "(00) 00000-0000",
     "erroCarregar": "Erro ao carregar configurações",
     "atualizado": "Perfil atualizado com sucesso",
-    "erroAtualizar": "Erro ao atualizar perfil",
+    "erroAtualizar": "Erro ao atualizar",
     "linkedinAjuda": "Link do perfil ou da empresa. Aparece na página pública para visitantes.",
     "slugEmUso": "Este slug já está em uso",
     "erroSalvarSlug": "Erro ao salvar slug",
     "reiniciarTutorialTexto": "Reinicie o tutorial de primeiros passos para rever o guia interativo desde o início.",
     "publicaAtivada": "Página pública ativada!",
-    "publicaDesativada": "Página pública desativada."
+    "publicaDesativada": "Página pública desativada.",
+    "erroSalvar": "Erro ao salvar"
   },
   "salvos": {
     "titulo": "Candidatos salvos",
@@ -714,7 +717,8 @@
     "refazer": "Refazer",
     "iaAjuda": "Corrige o texto e organiza em seções, sem inventar informação",
     "iaOk": "Descrição atualizada. Use Desfazer se quiser voltar.",
-    "erroIA": "Não consegui melhorar a descrição."
+    "erroIA": "Não consegui melhorar a descrição.",
+    "melhorarIA": "Melhorar com IA"
   },
   "autenticacao": {
     "diasGratis": "30 dias grátis",
@@ -834,7 +838,8 @@
     "dicaEntrevista": "Inclua {variavel} onde deve aparecer o botão/link do Calendly.",
     "dicaRejeicao": "E-mail enviado quando o candidato é encerrado.",
     "modelosTexto": "Personalize o assunto e o corpo de cada e-mail enviado aos candidatos. Deixe em branco para usar o modelo padrão.",
-    "apareceComo": "Aparecerá como \"Nome via Rankea\""
+    "apareceComo": "Aparecerá como \"Nome via Rankea\"",
+    "assinaturaExemplo": "Ex:\nAtenciosamente,\nEquipe de Recrutamento\nwww.suaempresa.com"
   },
   "planos": {
     "starter": {
@@ -886,7 +891,9 @@
     "notaInternaAjuda": "Visível apenas para recrutadores. Use para perguntas da entrevista ou observações.",
     "semPerguntas": "Nenhuma pergunta adicionada. Clique em \"Adicionar Pergunta\" para criar uma.",
     "ativaCompartilhe": "Sua vaga está ativa e aceitando candidaturas. Copie o link e compartilhe!",
-    "instrucoesExemplo": "Ex: Priorize candidatos com experiência em React. Valorize certificações AWS. Candidatos com inglês fluente devem ter pontuação maior..."
+    "instrucoesExemplo": "Ex: Priorize candidatos com experiência em React. Valorize certificações AWS. Candidatos com inglês fluente devem ter pontuação maior...",
+    "limitePlano": "Limite do plano atingido",
+    "falhaCriar": "Falha ao criar vaga"
   },
   "publica": {
     "semResultado": "Nenhuma vaga encontrada com os filtros aplicados.",

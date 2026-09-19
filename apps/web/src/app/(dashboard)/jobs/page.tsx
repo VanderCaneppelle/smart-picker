@@ -120,10 +120,10 @@ function JobsPageContent() {
         <Loading text={t('vagas.carregando')} />
       ) : filteredJobs.length === 0 ? (
         <EmptyState
-          title="{t('vagas.nenhuma')}"
+          title={t('vagas.nenhuma')}
           description={
             search || statusFilter || typeFilter
-              ? 'Tente ajustar seus filtros'
+              ? t('vagas.ajusteFiltros')
               : t('vagas.vazioDica')
           }
           action={

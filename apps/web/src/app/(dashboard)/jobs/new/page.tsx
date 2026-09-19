@@ -198,11 +198,11 @@ export default function NewJobPage() {
       setShareJob({ id: job.id, title: job.title, status: job.status });
     } catch (error) {
       if (isPlanLimitError(error)) {
-        toast.error(error instanceof Error ? error.message : 'Limite do plano atingido', {
+        toast.error(error instanceof Error ? error.message : t('vaga.limitePlano'), {
           action: { label: 'Atualizar plano', onClick: () => router.push('/dashboard/upgrade') },
         });
       } else {
-        toast.error(error instanceof Error ? error.message : 'Falha ao criar vaga');
+        toast.error(error instanceof Error ? error.message : t('vaga.falhaCriar'));
       }
     } finally {
       setIsSubmitting(false);

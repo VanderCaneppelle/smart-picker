@@ -46,7 +46,7 @@ export default function EmailPersonalizationFields({
         label={t('config.assinatura')}
         value={signature}
         onChange={(e) => onSignatureChange(e.target.value)}
-        placeholder={'Ex:\nAtenciosamente,\nEquipe de Recrutamento\nwww.suaempresa.com'}
+        placeholder={t('config.assinaturaExemplo')}
         rows={3}
         helperText={t('config.assinaturaAjuda')}
       />
