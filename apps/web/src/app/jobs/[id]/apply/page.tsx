@@ -284,10 +284,10 @@ export default function ApplyPage() {
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-3">{t('aplicar.enviada')}</h1>
             <p className="text-gray-600 mb-4">
-              {t('candidatura.obrigado')} <strong>{job.title}</strong>.
+              {t('candidatura.obrigado')} <strong>{job.title}</strong>.{' '}
               {t('candidatura.analisaremos')}
             </p>
-            <p className="text-sm text-gray-500 bg-gray-100 rounded-lg px-4 py-3">{t('aplicar.emailEnviadoPara')}<strong>{email}</strong>
+            <p className="text-sm text-gray-500 bg-gray-100 rounded-lg px-4 py-3">{t('aplicar.emailEnviadoPara')}{' '}<strong>{email}</strong>
             </p>
           </div>
         </div>
