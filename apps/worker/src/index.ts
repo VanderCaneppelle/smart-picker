@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import http from 'node:http';
 import { processCandidate } from './jobs/processQueue.js';
+import { agendarDrenagem } from './jobs/processJobQueue.js';
 import { sendScheduleInterviewEmail, sendRejectionEmail } from './jobs/sendEmails.js';
 import { varrerTrials } from './jobs/trialLifecycle.js';
 import { sendTeamInviteEmail } from './lib/teamEmails.js';
@@ -71,6 +72,50 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(400);
         res.end(JSON.stringify({ ok: false, error: result.error }));
       }
+    } catch (err) {
+      res.writeHead(500);
+      res.end(JSON.stringify({
+        error: err instanceof Error ? err.message : 'Internal server error',
+      }));
+    }
+    return;
+  }
+
+  // Drena a fila de pontuação de uma vaga inteira (importação em lote).
+  //
+  // Responde na hora e processa depois, de propósito: drenar 50 currículos leva minutos,
+  // e quem chama é uma função serverless que desiste em 12 segundos. Se este endpoint
+  // esperasse o fim, o gatilho estouraria por timeout e a mesma fila seria drenada de
+  // novo a cada retentativa, pagando IA em dobro.
+  if (req.method === 'POST' && req.url === '/process-job-queue') {
+    if (!WORKER_SECRET) {
+      res.writeHead(500);
+      res.end(JSON.stringify({ error: 'WORKER_SECRET not configured' }));
+      return;
+    }
+
+    const auth = req.headers.authorization;
+    const token = auth?.startsWith('Bearer ') ? auth.slice(7) : null;
+    if (token !== WORKER_SECRET) {
+      res.writeHead(401);
+      res.end(JSON.stringify({ error: 'Unauthorized' }));
+      return;
+    }
+
+    try {
+      const body = await parseBody(req);
+      const jobId = typeof body.jobId === 'string' ? body.jobId : null;
+
+      if (!jobId) {
+        res.writeHead(400);
+        res.end(JSON.stringify({ error: 'jobId is required' }));
+        return;
+      }
+
+      const { agendada } = agendarDrenagem(jobId);
+
+      res.writeHead(202);
+      res.end(JSON.stringify({ ok: true, agendada }));
     } catch (err) {
       res.writeHead(500);
       res.end(JSON.stringify({
