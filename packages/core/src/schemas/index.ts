@@ -187,6 +187,8 @@ export const UpdateCandidateSchema = z.object({
   needs_scoring: z.boolean().optional(),
   flagged_reason: z.string().nullable().optional(),
   recruiter_notes: z.string().max(50000).nullable().optional(),
+  /** Instrução da chamada, nunca gravada: segura o e-mail que o status dispararia. */
+  skip_email: z.boolean().optional(),
 });
 
 // ============================================

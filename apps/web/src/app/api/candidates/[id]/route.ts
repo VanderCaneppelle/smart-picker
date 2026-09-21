@@ -125,6 +125,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       },
     });
 
+    const emailProvisorioNoEvento =
+      isPlaceholderEmail(existingCandidate.email) &&
+      (data.status === 'interview' || data.status === 'rejected');
+
     if (data.status && data.status !== existingCandidate.status) {
       await logCandidateEvent({
         candidateId: candidate.id,
@@ -133,7 +137,13 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         fromStatus: existingCandidate.status,
         toStatus: data.status,
         message: `Status alterado de ${existingCandidate.status} para ${data.status}`,
-        metadata: { source: 'candidate_patch' },
+        metadata: {
+          source: 'candidate_patch',
+          // Fica no histórico do candidato: seis meses depois ninguém lembra se o
+          // convite não chegou por falha ou porque foi essa a decisão.
+          ...(data.skip_email === true ? { email_skipped: 'recruiter_choice' } : {}),
+          ...(emailProvisorioNoEvento ? { email_skipped: 'placeholder_email' } : {}),
+        },
         createdBy: auth.ctx.id,
       });
     }
@@ -146,11 +156,14 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     // justamente os e-mails de quem se candidatou de verdade. A mudança de status
     // acontece de qualquer jeito; só o envio fica de fora, e a tela avisa.
     const emailProvisorio = isPlaceholderEmail(candidate.email);
+    // O recrutador pode pedir a mudança sem o e-mail, quando já falou com a pessoa por
+    // outro canal. Não é o padrão: precisa ser escolhido no momento da mudança.
+    const enviarEmail = !emailProvisorio && data.skip_email !== true;
 
-    if (!emailProvisorio && data.status === 'interview') {
+    if (enviarEmail && data.status === 'interview') {
       await triggerScheduleInterviewEmail(candidate.id);
     }
-    if (!emailProvisorio && data.status === 'rejected') {
+    if (enviarEmail && data.status === 'rejected') {
       await triggerRejectionEmail(candidate.id);
     }
 

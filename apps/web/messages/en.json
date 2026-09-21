@@ -421,6 +421,8 @@
     "calendlyPlaceholder": "https://calendly.com/your-link"
   },
   "candidatos": {
+    "moverSemEmail": "Move without sending email",
+    "movidoSemEmail": "Status changed. No email was sent.",
     "colCandidato": "Candidate",
     "colAplicacao": "Applied",
     "colLinkedin": "LinkedIn",

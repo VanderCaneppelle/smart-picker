@@ -239,6 +239,12 @@ export interface UpdateCandidateInput {
   needs_scoring?: boolean;
   flagged_reason?: string | null;
   recruiter_notes?: string | null;
+  /**
+   * Instrução da chamada, não campo do candidato: move o candidato sem disparar o
+   * e-mail que aquele status normalmente enviaria. Existe porque quem já falou com a
+   * pessoa por fora quer organizar o quadro sem mandar mensagem de novo.
+   */
+  skip_email?: boolean;
 }
 
 // ============================================

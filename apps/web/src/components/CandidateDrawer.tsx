@@ -24,7 +24,11 @@ const STATUS_EMAIL_MESSAGE_KEYS: Record<string, string> = {
 interface CandidateDrawerProps {
   candidate: Candidate;
   onClose: () => void;
-  onStatusChange: (candidateId: string, newStatus: CandidateStatus) => Promise<void>;
+  onStatusChange: (
+    candidateId: string,
+    newStatus: CandidateStatus,
+    skipEmail?: boolean
+  ) => Promise<void>;
   /** Avisa a lista quando o recrutador corrige nome ou e-mail aqui dentro. */
   onCandidateUpdated?: (candidate: Candidate) => void;
 }
@@ -125,10 +129,10 @@ export default function CandidateDrawer({
   );
 
   const executeQuickAction = useCallback(
-    async (newStatus: CandidateStatus) => {
+    async (newStatus: CandidateStatus, skipEmail = false) => {
       setLoadingAction(newStatus);
       try {
-        await onStatusChange(candidate.id, newStatus);
+        await onStatusChange(candidate.id, newStatus, skipEmail);
         await fetchEvents();
       } finally {
         setLoadingAction(null);
@@ -140,6 +144,14 @@ export default function CandidateDrawer({
   const confirmQuickAction = useCallback(() => {
     if (pendingAction) {
       executeQuickAction(pendingAction);
+      setPendingAction(null);
+    }
+  }, [pendingAction, executeQuickAction]);
+
+  /** Move o candidato segurando o e-mail que aquele status dispararia. */
+  const confirmQuickActionSemEmail = useCallback(() => {
+    if (pendingAction) {
+      executeQuickAction(pendingAction, true);
       setPendingAction(null);
     }
   }, [pendingAction, executeQuickAction]);
@@ -335,11 +347,17 @@ export default function CandidateDrawer({
                 </p>
               )}
             </div>
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
               <button
                 onClick={() => setPendingAction(null)}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
               >{t('candidatos.cancelar')}</button>
+              {!isPlaceholderEmail(candidate.email) && (
+                <button
+                  onClick={confirmQuickActionSemEmail}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
+                >{t('candidatos.moverSemEmail')}</button>
+              )}
               <button
                 onClick={confirmQuickAction}
                 className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors"

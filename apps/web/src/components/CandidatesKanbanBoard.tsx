@@ -118,7 +118,7 @@ export default function CandidatesKanbanBoard({
   );
 
   const handleStatusChange = useCallback(
-    async (candidateId: string, newStatus: CandidateStatus) => {
+    async (candidateId: string, newStatus: CandidateStatus, skipEmail = false) => {
       const candidate = candidates.find((c) => c.id === candidateId);
       if (!candidate || candidate.status === newStatus) return;
 
@@ -129,8 +129,13 @@ export default function CandidatesKanbanBoard({
       );
 
       try {
-        await apiClient.updateCandidate(candidateId, { status: newStatus });
-        toast.success(t('candidatos.statusAtualizado'));
+        await apiClient.updateCandidate(candidateId, {
+          status: newStatus,
+          ...(skipEmail ? { skip_email: true } : {}),
+        });
+        toast.success(
+          skipEmail ? t('candidatos.movidoSemEmail') : t('candidatos.statusAtualizado')
+        );
       } catch {
         setCandidates((prev) =>
           prev.map((c) => (c.id === candidateId ? { ...c, status: oldStatus } : c)),
@@ -286,11 +291,22 @@ export default function CandidatesKanbanBoard({
                 </div>
               );
             })()}
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
               <button
                 onClick={() => setPendingDragChange(null)}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
               >{t('candidatos.cancelar')}</button>
+              <button
+                onClick={() => {
+                  handleStatusChange(
+                    pendingDragChange.candidateId,
+                    pendingDragChange.newStatus,
+                    true
+                  );
+                  setPendingDragChange(null);
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
+              >{t('candidatos.moverSemEmail')}</button>
               <button
                 onClick={confirmDragChange}
                 className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors"
