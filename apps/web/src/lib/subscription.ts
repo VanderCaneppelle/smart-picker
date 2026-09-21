@@ -187,6 +187,46 @@ export function getMaxUsers(info: SubscriptionInfo): number {
   return 1;
 }
 
+export interface ImportLimits {
+  /** Arquivos aceitos num único lote. */
+  perBatch: number;
+  /** Currículos importados no mês corrente, somando todas as vagas da conta. */
+  perMonth: number;
+}
+
+/**
+ * Teto do trial. Sem teto, uma conta de teste sobe 5.000 PDFs e o Rankea vira parser
+ * de currículo grátis, pagando IA por arquivo.
+ */
+export const TRIAL_IMPORT_LIMITS: ImportLimits = { perBatch: 50, perMonth: 100 };
+
+/**
+ * PROVISÓRIO: os tetos mensais dos planos pagos ainda não foram decididos. Os números
+ * abaixo são um ponto de partida seguro (custo de IA por currículo importado), não uma
+ * decisão de produto. Revisar antes de anunciar a importação, e lembrar que a página de
+ * planos hoje anuncia "candidatos ilimitados": ou o texto muda, ou estes tetos somem.
+ */
+const PAID_IMPORT_LIMITS: Record<PlanId, ImportLimits> = {
+  starter: { perBatch: 200, perMonth: 300 },
+  professional: { perBatch: 200, perMonth: 1000 },
+  enterprise: { perBatch: 200, perMonth: Infinity },
+  test: { perBatch: 50, perMonth: 100 },
+};
+
+/**
+ * Fonte única dos limites de importação. Mesmo formato de getMaxActiveJobs: sem
+ * assinatura válida o limite é zero, porque importar currículo custa IA por arquivo.
+ */
+export function getImportLimits(info: SubscriptionInfo): ImportLimits {
+  if (info.status === 'active' && info.plan) {
+    return PAID_IMPORT_LIMITS[info.plan] ?? { perBatch: 0, perMonth: 0 };
+  }
+  if (info.status === 'trialing' && !isTrialExpired(info.trialEndsAt)) {
+    return TRIAL_IMPORT_LIMITS;
+  }
+  return { perBatch: 0, perMonth: 0 };
+}
+
 /** Precisa assinar: trial vencido (ou cancelado) e sem plano pago ativo. */
 export function needsSubscription(info: SubscriptionInfo): boolean {
   if (info.status === 'active' && info.plan) return false;

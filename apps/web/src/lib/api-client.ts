@@ -9,6 +9,8 @@ import type {
   CandidatesListResponse,
   JobFilters,
   CandidateFilters,
+  IngestFile,
+  IngestResult,
 } from '@hunter/core';
 
 import type { SubscriptionInfo } from '@/lib/subscription';
@@ -619,10 +621,32 @@ class ApiClient {
     return this.request('/auth/me');
   }
 
+  /**
+   * Cria um candidato por currículo já enviado ao Storage. Uma chamada por lote: quem
+   * dispara a pontuação é o servidor, uma vez só para a vaga inteira.
+   */
+  async importCandidates(jobId: string, files: IngestFile[]): Promise<IngestResult> {
+    return this.request<IngestResult>('/candidates/import', {
+      method: 'POST',
+      body: JSON.stringify({ job_id: jobId, files }),
+    });
+  }
+
   // Upload
-  async uploadFile(file: File, bucket = 'resumes', isRetry = false): Promise<{
+  async uploadFile(
+    file: File,
+    bucket = 'resumes',
+    isRetry = false,
+    /**
+     * 'import' manda o arquivo para o diretório da conta e exige sessão. O formulário
+     * público de candidatura não passa nada aqui e segue anônimo.
+     */
+    purpose?: 'import'
+  ): Promise<{
     url: string;
     fileName: string;
+    storage_path: string;
+    sha256: string | null;
     originalName: string;
     size: number;
     type: string;
@@ -630,6 +654,7 @@ class ApiClient {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('bucket', bucket);
+    if (purpose) formData.append('purpose', purpose);
 
     const headers: HeadersInit = {};
     if (this.token) {
@@ -645,7 +670,7 @@ class ApiClient {
     if (response.status === 401 && !isRetry) {
       const refreshed = await this.tryRefreshToken();
       if (refreshed) {
-        return this.uploadFile(file, bucket, true);
+        return this.uploadFile(file, bucket, true, purpose);
       }
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent(AUTH_LOGOUT_EVENT));

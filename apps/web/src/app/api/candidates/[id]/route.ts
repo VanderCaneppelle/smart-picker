@@ -96,6 +96,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const data = validation.data;
 
     if (data.status !== undefined) updateData.status = data.status;
+    // Nome e e-mail entram aqui por causa do currículo importado, que nasce com nome de
+    // arquivo e e-mail provisório. Corrigir isso à mão é o que tira o candidato do balde
+    // de revisão, então a correção também limpa needs_review quando a tela pede.
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.email !== undefined) updateData.email = data.email;
+    if (data.needs_review !== undefined) updateData.needs_review = data.needs_review;
     if (data.fit_score !== undefined) updateData.fit_score = data.fit_score;
     if (data.resume_rating !== undefined) updateData.resume_rating = data.resume_rating;
     if (data.answer_quality_rating !== undefined) updateData.answer_quality_rating = data.answer_quality_rating;
