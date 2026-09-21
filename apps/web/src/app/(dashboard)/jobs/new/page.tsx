@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { registrarEvento } from '@/lib/analytics';
 import { ArrowLeft, Plus, Trash2, Brain, ShieldAlert, Info, Share2, ClipboardCopy, Check, ExternalLink } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { apiClient, isPlanLimitError } from '@/lib/api-client';
@@ -195,6 +196,11 @@ export default function NewJobPage() {
       if (scoringInstructions.trim() || resumeWeight !== 5 || answersWeight !== 5) {
         completeStep('ia-config');
       }
+      // Dois eventos, não um: criar vaga é intenção, publicar é o passo que faz a
+      // vaga existir para o mundo. O funil precisa saber onde a pessoa parou.
+      registrarEvento('vaga_criada', { status: job.status });
+      if (job.status === 'active') registrarEvento('vaga_publicada');
+
       setShareJob({ id: job.id, title: job.title, status: job.status });
     } catch (error) {
       if (isPlanLimitError(error)) {

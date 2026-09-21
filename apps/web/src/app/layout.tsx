@@ -5,6 +5,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages, getTranslations } from 'next-intl/server';
 import { moedaDaRequisicao } from '@/lib/pais';
+import { SITE_URL } from '@/lib/site';
 import { MoedaProvider } from '@/contexts/MoedaContext';
 import './globals.css';
 
@@ -17,6 +18,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('meta');
   const locale = await getLocale();
   return {
+    // Sem isto, as URLs de og:image saem com o host da requisição. Em preview da
+    // Vercel ou atrás de proxy, o cartão compartilhado apontaria para um domínio que
+    // não é o do site.
+    metadataBase: new URL(SITE_URL),
     title: t('titulo'),
     description: t('descricao'),
     keywords: t('palavrasChave').split(','),
@@ -47,10 +52,34 @@ export default async function RootLayout({
   const messages = await getMessages();
   // O país vive na requisição, que só o servidor enxerga. Desce por contexto.
   const moeda = await moedaDaRequisicao();
+  const gaId = process.env.NEXT_PUBLIC_GA_ID;
 
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
+        {/*
+          GA4 só carrega se o ID existir. Assim o repositório não depende de conta
+          criada para rodar, e ligar a medição é setar uma variável na Vercel, sem
+          deploy de código. Sem o ID, registrarEvento simplesmente não encontra o
+          gtag e segue em frente.
+        */}
+        {gaId && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga4-init" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                window.gtag = gtag;
+                gtag('js', new Date());
+                gtag('config', '${gaId}');
+              `}
+            </Script>
+          </>
+        )}
         <Script id="microsoft-clarity" strategy="afterInteractive">
           {`
             (function(c,l,a,r,i,t,y){

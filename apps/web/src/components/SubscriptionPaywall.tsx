@@ -17,6 +17,7 @@ import {
 import { PLANS, type SubscriptionInfo, getTrialDaysRemaining } from '@/lib/subscription';
 import { usePlanoTraduzido } from '@/lib/plan-i18n';
 import { apiClient } from '@/lib/api-client';
+import { registrarEvento } from '@/lib/analytics';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 
@@ -41,6 +42,7 @@ export function SubscriptionPaywall({
   const handleSubscribe = async (planId: string) => {
     setLoadingPlan(planId);
     try {
+      registrarEvento('checkout_iniciado', { plano: planId });
       const { url } = await apiClient.createCheckoutSession(planId);
       if (url) {
         window.location.href = url;

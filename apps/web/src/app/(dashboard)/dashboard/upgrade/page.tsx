@@ -15,6 +15,7 @@ import {
 import { PLANS } from '@/lib/subscription';
 import { usePlanoTraduzido } from '@/lib/plan-i18n';
 import { apiClient } from '@/lib/api-client';
+import { registrarEvento } from '@/lib/analytics';
 import { useTranslations } from 'next-intl';
 
 /** Marcador de recurso ausente na tabela. */
@@ -40,6 +41,7 @@ function UpgradeContent() {
   const handlePlanClick = async (planId: string) => {
     setLoadingPlan(planId);
     try {
+      registrarEvento('checkout_iniciado', { plano: planId });
       const { url } = await apiClient.createCheckoutSession(planId);
       if (url) {
         window.location.href = url;

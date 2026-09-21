@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { apiClient, isPlanLimitError } from '@/lib/api-client';
+import { registrarEvento } from '@/lib/analytics';
 import {
   Button,
   Badge,
@@ -365,6 +366,7 @@ export default function JobDetailPage() {
     const url = `${window.location.origin}/jobs/${jobId}/apply`;
     try {
       await navigator.clipboard.writeText(url);
+      registrarEvento('link_vaga_copiado');
       toast.success(t('vagas.linkCopiado'));
     } catch {
       toast.error(t('vagas.erroCopiar'));
@@ -635,6 +637,10 @@ export default function JobDetailPage() {
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
         onImported={(resultado) => {
+          registrarEvento('curriculos_importados', {
+            criados: resultado.created.length,
+            recusados: resultado.rejected.length,
+          });
           setImportToken((n) => n + 1);
           // O contador da aba vem do _count da vaga, que foi buscado uma vez. Somar os
           // criados aqui evita refazer fetchJob, que repovoaria o formulário inteiro e

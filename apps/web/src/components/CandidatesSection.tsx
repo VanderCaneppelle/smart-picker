@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { toast } from 'sonner';
 import { Search, X } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
+import { registrarEvento } from '@/lib/analytics';
 import { Loading, EmptyState, Select } from '@/components/ui';
 import CandidatesViewToggle, {
   resolveInitialView,
@@ -126,6 +127,23 @@ export default function CandidatesSection({ jobId, refreshToken = 0 }: Candidate
   useEffect(() => {
     fetchCandidates();
   }, [fetchCandidates, refreshToken]);
+
+  // Uma vez por vaga aberta na tela: é o momento em que o recrutador olha o ranking,
+  // que é a promessa do produto. Sem isso não dá para saber se quem publica vaga
+  // chega a ver o resultado ou desiste antes.
+  const rankingRegistradoRef = useRef(false);
+  useEffect(() => {
+    rankingRegistradoRef.current = false;
+  }, [jobId]);
+  useEffect(() => {
+    if (rankingRegistradoRef.current || isLoading || candidates.length === 0) return;
+    rankingRegistradoRef.current = true;
+    registrarEvento('ranking_visto', {
+      candidatos: candidates.length,
+      com_nota: candidates.filter((c) => c.fit_score != null).length,
+      importados: candidates.filter((c) => c.source !== 'form').length,
+    });
+  }, [candidates, isLoading, jobId]);
 
   const pontuando = useMemo(
     () => candidates.filter((c) => c.needs_scoring).length,

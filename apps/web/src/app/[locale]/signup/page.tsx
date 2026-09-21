@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
+import { registrarEvento } from '@/lib/analytics';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button, Input } from '@/components/ui';
 import { AuthLayoutSide } from '@/components/AuthLayoutSide';
@@ -68,6 +69,8 @@ function SignUpContent() {
           session_id: sessionId || undefined,
         }
       );
+
+      registrarEvento('signup', { requer_confirmacao: requires_confirmation });
 
       if (requires_confirmation) {
         toast.success(t('auth.contaCriadaConfirmar'));
