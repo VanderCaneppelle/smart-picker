@@ -634,7 +634,23 @@ export default function JobDetailPage() {
         jobId={jobId}
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
-        onImported={() => setImportToken((n) => n + 1)}
+        onImported={(resultado) => {
+          setImportToken((n) => n + 1);
+          // O contador da aba vem do _count da vaga, que foi buscado uma vez. Somar os
+          // criados aqui evita refazer fetchJob, que repovoaria o formulário inteiro e
+          // descartaria edição em andamento.
+          setJob((atual) =>
+            atual
+              ? {
+                  ...atual,
+                  _count: {
+                    ...atual._count,
+                    candidates: (atual._count?.candidates ?? 0) + resultado.created.length,
+                  },
+                }
+              : atual
+          );
+        }}
       />
 
       {activeTab === 'candidates' ? (
