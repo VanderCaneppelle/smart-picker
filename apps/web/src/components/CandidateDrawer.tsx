@@ -5,6 +5,8 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { X, ExternalLink, FileText, Brain, MessageSquare, AlertCircle, Clock3 } from 'lucide-react';
 import { Button, Badge } from '@/components/ui';
+import CandidateSourceBadge from './CandidateSourceBadge';
+import CandidateReviewPanel from './CandidateReviewPanel';
 import type { Candidate, CandidateStatus, ApplicationQuestion } from '@hunter/core';
 import { apiClient, type CandidateHistoryEvent } from '@/lib/api-client';
 import { useTranslations } from 'next-intl';
@@ -22,6 +24,8 @@ interface CandidateDrawerProps {
   candidate: Candidate;
   onClose: () => void;
   onStatusChange: (candidateId: string, newStatus: CandidateStatus) => Promise<void>;
+  /** Avisa a lista quando o recrutador corrige nome ou e-mail aqui dentro. */
+  onCandidateUpdated?: (candidate: Candidate) => void;
 }
 
 const STATUS_LABEL_KEYS: Record<string, string> = {
@@ -62,6 +66,7 @@ export default function CandidateDrawer({
   candidate,
   onClose,
   onStatusChange,
+  onCandidateUpdated,
 }: CandidateDrawerProps) {
   const t = useTranslations();
   const router = useRouter();
@@ -198,10 +203,11 @@ export default function CandidateDrawer({
               <h2 className="text-lg font-semibold text-gray-900 truncate">
                 {candidate.name}
               </h2>
-              <div className="flex items-center gap-2.5 mt-1.5">
+              <div className="flex flex-wrap items-center gap-2.5 mt-1.5">
                 <Badge variant={STATUS_BADGE_VARIANT[candidate.status] ?? 'default'}>
                   {STATUS_LABEL_KEYS[candidate.status] ? t(STATUS_LABEL_KEYS[candidate.status]) : candidate.status}
                 </Badge>
+                <CandidateSourceBadge source={candidate.source} />
                 {candidate.fit_score != null && (
                   <span className={`text-xl font-bold ${scoreColor(candidate.fit_score)}`}>
                     {candidate.fit_score}%
@@ -263,6 +269,13 @@ export default function CandidateDrawer({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
+          {candidate.needs_review && (
+            <CandidateReviewPanel
+              candidate={candidate}
+              onUpdated={onCandidateUpdated}
+              className="mb-6"
+            />
+          )}
           {activeTab === 'summary' && <SummaryTab candidate={candidate} />}
           {activeTab === 'answers' && <AnswersTab candidate={candidate} />}
           {activeTab === 'resume' && <ResumeTab candidate={candidate} />}

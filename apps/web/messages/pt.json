@@ -1081,6 +1081,59 @@
     "publicar": "para publicar uma vaga",
     "dados": "decisões baseadas em dados"
   },
+  "importacao": {
+    "botao": "Importar currículos",
+    "titulo": "Importar currículos",
+    "arraste": "Arraste os currículos aqui ou clique para escolher",
+    "formatos": "PDF, DOC ou DOCX, até 10 MB cada",
+    "semEmail": "Os candidatos importados não recebem nenhum e-mail.",
+    "importar": "Importar",
+    "importarN": "Importar {n} currículo(s)",
+    "cancelar": "Cancelar",
+    "fechar": "Fechar",
+    "remover": "Remover da lista",
+    "erroImportar": "Não foi possível importar. Tente de novo.",
+    "resultadoCriados": "{n} candidato(s) criado(s).",
+    "resultadoRecusados": "{n} arquivo(s) recusado(s).",
+    "pontuandoAgora": "A pontuação começou e aparece na lista conforme termina.",
+    "pontuando": "Pontuando {feitos} de {total}",
+    "status": {
+      "aguardando": "Aguardando",
+      "enviando": "Enviando",
+      "enviado": "Enviado",
+      "erro": "Erro"
+    },
+    "motivo": {
+      "duplicate_file": "Já importado nesta vaga",
+      "unsupported_type": "Formato não aceito",
+      "too_large": "Maior que 10 MB",
+      "batch_limit": "Acima do limite por lote",
+      "monthly_limit": "Limite mensal atingido",
+      "subscription_required": "Assinatura necessária",
+      "upload_failed": "Falha no envio"
+    },
+    "origem": {
+      "import": "importado",
+      "email": "por e-mail",
+      "form": "candidatou-se"
+    },
+    "filtroOrigem": {
+      "todos": "Todas as origens",
+      "import": "Só importados",
+      "form": "Só candidatados"
+    },
+    "revisao": {
+      "selo": "Revisar",
+      "titulo": "Confira os dados deste candidato",
+      "explicacao": "Os dados vieram do currículo e podem estar incompletos.",
+      "nome": "Nome",
+      "email": "E-mail",
+      "salvar": "Salvar",
+      "cancelar": "Cancelar",
+      "salvo": "Dados atualizados",
+      "erro": "Não foi possível salvar"
+    }
+  },
   "erros": {
     "uploadTipo": "Tipo de arquivo inválido. Apenas imagens (PNG, JPG, WebP, SVG, GIF) são aceitas.",
     "uploadTamanho": "Imagem muito grande. Máximo 2MB.",

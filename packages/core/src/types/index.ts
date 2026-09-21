@@ -227,6 +227,10 @@ export interface CreateCandidateInput {
 
 export interface UpdateCandidateInput {
   status?: CandidateStatus;
+  /** Editáveis por causa do currículo importado, que nasce com dado provisório. */
+  name?: string;
+  email?: string;
+  needs_review?: boolean;
   fit_score?: number | null;
   resume_rating?: number | null;
   answer_quality_rating?: number | null;

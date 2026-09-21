@@ -236,6 +236,11 @@ export default function CandidatesKanbanBoard({
           candidate={drawerCandidate}
           onClose={() => setDrawerCandidateId(null)}
           onStatusChange={handleStatusChange}
+          onCandidateUpdated={(atualizado) =>
+            setCandidates((anteriores) =>
+              anteriores.map((c) => (c.id === atualizado.id ? { ...c, ...atualizado } : c))
+            )
+          }
         />
       )}
 

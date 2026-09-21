@@ -1081,6 +1081,59 @@
     "publicar": "to publish a job",
     "dados": "data-backed decisions"
   },
+  "importacao": {
+    "botao": "Import resumes",
+    "titulo": "Import resumes",
+    "arraste": "Drag resumes here, or click to choose",
+    "formatos": "PDF, DOC or DOCX, up to 10 MB each",
+    "semEmail": "Imported candidates receive no email at all.",
+    "importar": "Import",
+    "importarN": "Import {n} resume(s)",
+    "cancelar": "Cancel",
+    "fechar": "Close",
+    "remover": "Remove from list",
+    "erroImportar": "Could not import. Please try again.",
+    "resultadoCriados": "{n} candidate(s) created.",
+    "resultadoRecusados": "{n} file(s) rejected.",
+    "pontuandoAgora": "Scoring has started and shows up in the list as it finishes.",
+    "pontuando": "Scoring {feitos} of {total}",
+    "status": {
+      "aguardando": "Waiting",
+      "enviando": "Uploading",
+      "enviado": "Uploaded",
+      "erro": "Error"
+    },
+    "motivo": {
+      "duplicate_file": "Already imported to this job",
+      "unsupported_type": "Unsupported format",
+      "too_large": "Larger than 10 MB",
+      "batch_limit": "Over the per-batch limit",
+      "monthly_limit": "Monthly limit reached",
+      "subscription_required": "Subscription required",
+      "upload_failed": "Upload failed"
+    },
+    "origem": {
+      "import": "imported",
+      "email": "by email",
+      "form": "applied"
+    },
+    "filtroOrigem": {
+      "todos": "All sources",
+      "import": "Imported only",
+      "form": "Applicants only"
+    },
+    "revisao": {
+      "selo": "Review",
+      "titulo": "Check this candidate's details",
+      "explicacao": "These details came from the resume and may be incomplete.",
+      "nome": "Name",
+      "email": "Email",
+      "salvar": "Save",
+      "cancelar": "Cancel",
+      "salvo": "Details updated",
+      "erro": "Could not save"
+    }
+  },
   "erros": {
     "uploadTipo": "Invalid file type. Only images (PNG, JPG, WebP, SVG, GIF) are accepted.",
     "uploadTamanho": "Image too large. 2MB maximum.",

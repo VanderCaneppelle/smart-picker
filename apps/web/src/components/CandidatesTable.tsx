@@ -23,6 +23,7 @@ import { apiClient } from '@/lib/api-client';
 import { Badge, Select, SortIcon } from '@/components/ui';
 import type { Candidate, CandidateStatus, DisqualificationFlag } from '@hunter/core';
 import { useTranslations } from 'next-intl';
+import CandidateSourceBadge from './CandidateSourceBadge';
 import { useIntlLocale } from '@/lib/plan-i18n';
 
 const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['interview', 'rejected'];
@@ -784,11 +785,19 @@ export default function CandidatesTable({
                     />
                   </td>
 
-                  {/* Candidato: nome + email */}
+                  {/* Candidato: nome + email + origem */}
                   <td className="px-4 py-3">
                     <div className="min-w-0">
                       <p className="font-medium text-gray-900 truncate">{candidate.name}</p>
                       <p className="text-xs text-gray-400 truncate">{candidate.email}</p>
+                      <div className="mt-1 flex flex-wrap items-center gap-1">
+                        <CandidateSourceBadge source={candidate.source} />
+                        {candidate.needs_review && (
+                          <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800">
+                            {t('importacao.revisao.selo')}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </td>
 

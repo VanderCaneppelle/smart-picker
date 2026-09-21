@@ -18,6 +18,7 @@ import {
   Info,
   Pencil,
   X,
+  Upload,
 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { apiClient, isPlanLimitError } from '@/lib/api-client';
@@ -32,6 +33,7 @@ import {
   Loading,
 } from '@/components/ui';
 import CandidatesSection from '@/components/CandidatesSection';
+import ImportResumesModal from '@/components/ImportResumesModal';
 import type { Job, ApplicationQuestion, QuestionType } from '@hunter/core';
 import { useTranslations } from 'next-intl';
 
@@ -100,6 +102,9 @@ export default function JobDetailPage() {
 
   const searchParams = useSearchParams();
   const [job, setJob] = useState<Job | null>(null);
+  const [showImportModal, setShowImportModal] = useState(false);
+  /** Muda a cada importação concluída, para a lista de candidatos recarregar. */
+  const [importToken, setImportToken] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'candidates' | 'details'>(() =>
@@ -548,6 +553,11 @@ export default function JobDetailPage() {
           </div>
 
           <div className="flex items-center gap-1">
+            <Button variant="ghost" size="sm" onClick={() => setShowImportModal(true)}
+              className="flex items-center gap-1.5 text-gray-600 hover:text-gray-900">
+              <Upload className="h-4 w-4" />
+              <span className="hidden sm:inline text-sm">{t('importacao.botao')}</span>
+            </Button>
             <Button data-onboarding-id="onb-job-share" variant="ghost" size="sm" onClick={handleShare}
               className="flex items-center gap-1.5 text-gray-600 hover:text-gray-900">
               <Share2 className="h-4 w-4" />
@@ -620,8 +630,15 @@ export default function JobDetailPage() {
       </div>
 
       {/* Tab Content */}
+      <ImportResumesModal
+        jobId={jobId}
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onImported={() => setImportToken((n) => n + 1)}
+      />
+
       {activeTab === 'candidates' ? (
-        <CandidatesSection jobId={jobId} />
+        <CandidatesSection jobId={jobId} refreshToken={importToken} />
       ) : (
         <div className="space-y-8">
           {/* Basic Info */}

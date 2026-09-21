@@ -22,6 +22,8 @@ import { Button, Badge, Select, Loading, Textarea } from '@/components/ui';
 import type { Candidate, CandidateStatus, ApplicationQuestion, ApplicationAnswer } from '@hunter/core';
 import type { CandidateHistoryEvent } from '@/lib/api-client';
 import { useTranslations } from 'next-intl';
+import CandidateSourceBadge from '@/components/CandidateSourceBadge';
+import CandidateReviewPanel from '@/components/CandidateReviewPanel';
 import { useIntlLocale } from '@/lib/plan-i18n';
 
 /** Chaves, não textos: constante de módulo é avaliada antes de existir idioma. */
@@ -190,6 +192,12 @@ export default function CandidateDetailPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Revisão: mesmo bloco da gaveta do kanban, porque quem usa a visão de lista
+              chega ao candidato por aqui e precisa do mesmo caminho de correção. */}
+          {candidate.needs_review && (
+            <CandidateReviewPanel candidate={candidate} onUpdated={setCandidate} />
+          )}
+
           {/* Candidate Info Card */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-start justify-between mb-4">
@@ -200,9 +208,12 @@ export default function CandidateDetailPage() {
                   </p>
                 )}
               </div>
-              <Badge variant={getStatusBadgeVariant(candidate.status)} className="text-sm">
-                {t(STATUS_DISPLAY_KEYS[candidate.status] ?? '') || candidate.status}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <CandidateSourceBadge source={candidate.source} />
+                <Badge variant={getStatusBadgeVariant(candidate.status)} className="text-sm">
+                  {t(STATUS_DISPLAY_KEYS[candidate.status] ?? '') || candidate.status}
+                </Badge>
+              </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">

@@ -39,11 +39,22 @@ const statusOptions = [
   { value: 'hired', labelKey: 'candidatos.filtros.contratados' },
 ];
 
+const sourceOptions = [
+  { value: '', labelKey: 'importacao.filtroOrigem.todos' },
+  { value: 'import', labelKey: 'importacao.filtroOrigem.import' },
+  { value: 'form', labelKey: 'importacao.filtroOrigem.form' },
+];
+
+/** De quanto em quanto tempo a tela confere a fila de pontuação. */
+const INTERVALO_POLLING_MS = 5_000;
+
 interface CandidatesSectionProps {
   jobId: string;
+  /** Muda quando uma importação termina, para recarregar a lista. */
+  refreshToken?: number;
 }
 
-export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
+export default function CandidatesSection({ jobId, refreshToken = 0 }: CandidatesSectionProps) {
   const t = useTranslations();
   /** Rótulo resolvido na renderização: a lista guarda a chave. */
   const opcoes = (lista: { value: string; labelKey: string }[]) =>
@@ -52,13 +63,22 @@ export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [view, setView] = useState<CandidatesView>('list');
   const [statusFilter, setStatusFilter] = useState('');
+  const [sourceFilter, setSourceFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
   const initializedRef = useRef(false);
 
+  const filteredBySource = useMemo(() => {
+    if (!sourceFilter) return candidates;
+    // "Só candidatados" quer dizer quem veio pelo formulário público; importado e
+    // recebido por e-mail são as outras origens.
+    if (sourceFilter === 'form') return candidates.filter((c) => c.source === 'form');
+    return candidates.filter((c) => c.source !== 'form');
+  }, [candidates, sourceFilter]);
+
   const filteredBySearch = useMemo(
-    () => filterCandidatesBySearch(candidates, searchQuery),
-    [candidates, searchQuery],
+    () => filterCandidatesBySearch(filteredBySource, searchQuery),
+    [filteredBySource, searchQuery],
   );
 
   const displayCandidates = useMemo(() => {
@@ -88,22 +108,38 @@ export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
     setView(resolveInitialView());
   }, []);
 
-  const fetchCandidates = useCallback(async () => {
+  const fetchCandidates = useCallback(async (silencioso = false) => {
     try {
-      setIsLoading(true);
+      if (!silencioso) setIsLoading(true);
       const data = await apiClient.getJobCandidates(jobId);
       setCandidates(data.candidates);
     } catch (error) {
-      toast.error(t('secaoCand.erroCarregar'));
-      console.error(error);
+      if (!silencioso) {
+        toast.error(t('secaoCand.erroCarregar'));
+        console.error(error);
+      }
     } finally {
-      setIsLoading(false);
+      if (!silencioso) setIsLoading(false);
     }
   }, [jobId]);
 
   useEffect(() => {
     fetchCandidates();
-  }, [fetchCandidates]);
+  }, [fetchCandidates, refreshToken]);
+
+  const pontuando = useMemo(
+    () => candidates.filter((c) => c.needs_scoring).length,
+    [candidates],
+  );
+
+  // Enquanto houver fila, a tela se atualiza sozinha. Recarga silenciosa: um erro de
+  // rede no meio do polling não deve encher a tela de toast enquanto o recrutador lê os
+  // candidatos que já chegaram.
+  useEffect(() => {
+    if (pontuando === 0) return;
+    const timer = setInterval(() => fetchCandidates(true), INTERVALO_POLLING_MS);
+    return () => clearInterval(timer);
+  }, [pontuando, fetchCandidates]);
 
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = {
@@ -153,6 +189,12 @@ export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
               className="w-[200px] shrink-0"
             />
           )}
+          <Select
+            options={opcoes(sourceOptions)}
+            value={sourceFilter}
+            onChange={(e) => setSourceFilter(e.target.value)}
+            className="w-[180px] shrink-0"
+          />
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <div className="relative flex items-center w-[380px]">
@@ -179,6 +221,15 @@ export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
               </button>
             )}
           </div>
+          {pontuando > 0 && (
+            <span className="flex items-center gap-1.5 text-sm text-blue-600 whitespace-nowrap">
+              <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" aria-hidden />
+              {t('importacao.pontuando', {
+                feitos: candidates.length - pontuando,
+                total: candidates.length,
+              })}
+            </span>
+          )}
           <span className="text-sm text-gray-500 whitespace-nowrap">
             {t('secaoCand.contagem', { n: displayCandidates.length })}
           </span>
