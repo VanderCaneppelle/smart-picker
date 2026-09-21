@@ -9,6 +9,14 @@ import { prisma } from './lib/db.js';
 import { logCandidateEvent } from './lib/candidateHistory.js';
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
+
+/**
+ * Domínio dos e-mails provisórios da importação, que não existe de propósito. A trava
+ * fica aqui também, e não só na API: este processo é o único que chega no Resend, e um
+ * endereço desses só produz hard bounce, que em volume derruba a reputação do domínio
+ * e atinge os e-mails de quem realmente se candidatou.
+ */
+const PLACEHOLDER_EMAIL_DOMAIN = '@import.rankea.ai';
 const WORKER_SECRET = process.env.WORKER_SECRET;
 
 function parseBody(req: http.IncomingMessage): Promise<Record<string, unknown>> {
@@ -168,6 +176,15 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
+      if (candidate.email.endsWith(PLACEHOLDER_EMAIL_DOMAIN)) {
+        console.warn(
+          `[email] candidato ${candidate.id} ainda está com e-mail provisório: convite não enviado.`
+        );
+        res.writeHead(200);
+        res.end(JSON.stringify({ ok: true, skipped: 'placeholder_email' }));
+        return;
+      }
+
       const personalization = candidate.job.recruiter?.emailPersonalization ?? null;
       await sendScheduleInterviewEmail(
         { id: candidate.id, name: candidate.name, email: candidate.email },
@@ -241,6 +258,15 @@ const server = http.createServer(async (req, res) => {
       if (!candidate) {
         res.writeHead(404);
         res.end(JSON.stringify({ error: 'Candidate not found' }));
+        return;
+      }
+
+      if (candidate.email.endsWith(PLACEHOLDER_EMAIL_DOMAIN)) {
+        console.warn(
+          `[email] candidato ${candidate.id} ainda está com e-mail provisório: recusa não enviada.`
+        );
+        res.writeHead(200);
+        res.end(JSON.stringify({ ok: true, skipped: 'placeholder_email' }));
         return;
       }
 

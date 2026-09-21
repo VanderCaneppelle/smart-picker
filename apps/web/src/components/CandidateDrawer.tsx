@@ -7,6 +7,7 @@ import { X, ExternalLink, FileText, Brain, MessageSquare, AlertCircle, Clock3 } 
 import { Button, Badge } from '@/components/ui';
 import CandidateSourceBadge from './CandidateSourceBadge';
 import CandidateReviewPanel from './CandidateReviewPanel';
+import { isPlaceholderEmail } from '@/lib/placeholder-email';
 import type { Candidate, CandidateStatus, ApplicationQuestion } from '@hunter/core';
 import { apiClient, type CandidateHistoryEvent } from '@/lib/api-client';
 import { useTranslations } from 'next-intl';
@@ -315,9 +316,25 @@ export default function CandidateDrawer({
                 {t(QUICK_ACTIONS.find((a) => a.status === pendingAction)?.labelKey ?? '') || pendingAction}
               </span>.
             </p>
-            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-5">
-              {t(STATUS_EMAIL_MESSAGE_KEYS[pendingAction] ?? '')}
-            </p>
+            {/* Convidar ou recusar um importado é permitido, porque é ato consciente
+                do recrutador, mas ele merece saber que a pessoa nunca ouviu falar da
+                vaga. E se o e-mail ainda é o provisório, nada é enviado. */}
+            <div className="mb-5 space-y-2">
+              {isPlaceholderEmail(candidate.email) ? (
+                <p className="text-sm text-gray-700 bg-gray-100 border border-gray-200 rounded-lg p-3">
+                  {t('importacao.emailProvisorio')}
+                </p>
+              ) : (
+                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  {t(STATUS_EMAIL_MESSAGE_KEYS[pendingAction] ?? '')}
+                </p>
+              )}
+              {candidate.source !== 'form' && !isPlaceholderEmail(candidate.email) && (
+                <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  {t('importacao.emailImportado')}
+                </p>
+              )}
+            </div>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setPendingAction(null)}

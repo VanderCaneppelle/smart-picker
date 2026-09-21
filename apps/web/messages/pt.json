@@ -1082,6 +1082,9 @@
     "dados": "decisões baseadas em dados"
   },
   "importacao": {
+    "emailImportado": "Esta pessoa não se candidatou: o currículo foi importado por você e ela nunca teve contato com esta vaga.",
+    "emailProvisorio": "Nenhum e-mail será enviado: o endereço ainda é o provisório da importação. Corrija o e-mail no aviso de revisão antes, se quiser avisar a pessoa.",
+    "emailNaoEnviado": "Status alterado. O e-mail não foi enviado porque o endereço ainda é provisório.",
     "botao": "Importar currículos",
     "titulo": "Importar currículos",
     "arraste": "Arraste os currículos aqui ou clique para escolher",

@@ -1082,6 +1082,9 @@
     "dados": "data-backed decisions"
   },
   "importacao": {
+    "emailImportado": "This person did not apply: you imported the resume and they have never heard about this job.",
+    "emailProvisorio": "No email will be sent: the address is still the import placeholder. Fix the email in the review notice first if you want to reach this person.",
+    "emailNaoEnviado": "Status changed. The email was not sent because the address is still a placeholder.",
     "botao": "Import resumes",
     "titulo": "Import resumes",
     "arraste": "Drag resumes here, or click to choose",

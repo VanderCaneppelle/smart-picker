@@ -5,6 +5,7 @@ import { UpdateCandidateSchema } from '@hunter/core';
 import { triggerScheduleInterviewEmail, triggerRejectionEmail } from '@/lib/worker';
 import { migrateLegacyCandidateStatusesForRecruiter } from '@/lib/candidate-status';
 import { logCandidateEvent } from '@/lib/candidate-history';
+import { isPlaceholderEmail } from '@/lib/placeholder-email';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -137,16 +138,26 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       });
     }
 
-    // When status changes to interview, send email with Calendly link
-    if (data.status === 'interview') {
+    // Convidar e recusar continuam sendo e-mails deliberados, e valem para candidato
+    // importado também: ali é ato consciente do recrutador, não automação.
+    //
+    // O que não pode sair é envio para o endereço provisório da importação, que não
+    // existe: viraria hard bounce e, em volume, derruba a reputação do domínio, atingindo
+    // justamente os e-mails de quem se candidatou de verdade. A mudança de status
+    // acontece de qualquer jeito; só o envio fica de fora, e a tela avisa.
+    const emailProvisorio = isPlaceholderEmail(candidate.email);
+
+    if (!emailProvisorio && data.status === 'interview') {
       await triggerScheduleInterviewEmail(candidate.id);
     }
-    // When status changes to rejected, send rejection email to candidate
-    if (data.status === 'rejected') {
+    if (!emailProvisorio && data.status === 'rejected') {
       await triggerRejectionEmail(candidate.id);
     }
 
-    return Response.json(candidate);
+    const emailPulado =
+      emailProvisorio && (data.status === 'interview' || data.status === 'rejected');
+
+    return Response.json({ ...candidate, email_skipped_placeholder: emailPulado });
   } catch (error) {
     console.error('Error updating candidate:', error);
     return Response.json(

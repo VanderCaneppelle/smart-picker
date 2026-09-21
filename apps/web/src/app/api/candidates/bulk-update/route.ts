@@ -4,6 +4,7 @@ import { requireAccount } from '@/lib/auth';
 import { CandidateStatusSchema } from '@hunter/core';
 import { z } from 'zod';
 import { triggerRejectionEmail } from '@/lib/worker';
+import { isPlaceholderEmail } from '@/lib/placeholder-email';
 import { migrateLegacyCandidateStatusesForRecruiter } from '@/lib/candidate-status';
 import { logCandidateEvent } from '@/lib/candidate-history';
 
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
           deleted_at: null,
         },
       },
-      select: { id: true, status: true, job_id: true },
+      select: { id: true, status: true, job_id: true, email: true },
     });
 
     if (candidates.length === 0) {
@@ -77,16 +78,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Trigger rejection emails sequentially to avoid overwhelming the worker
+    // Trigger rejection emails sequentially to avoid overwhelming the worker.
+    // Quem ainda está com o e-mail provisório da importação fica de fora: o endereço
+    // não existe, então o envio só produziria bounce.
+    let semEmailValido = 0;
     if (status === 'rejected') {
-      for (const id of validIds) {
-        await triggerRejectionEmail(id);
+      for (const candidate of candidates) {
+        if (isPlaceholderEmail(candidate.email)) {
+          semEmailValido += 1;
+          continue;
+        }
+        await triggerRejectionEmail(candidate.id);
       }
     }
 
     return Response.json({
       message: `${validIds.length} candidato(s) atualizado(s)`,
       updated_count: validIds.length,
+      /** Quantos tiveram o e-mail pulado por ainda estarem com endereço provisório. */
+      skipped_placeholder_email: semEmailValido,
     });
   } catch (error) {
     console.error('Error bulk updating candidates:', error);

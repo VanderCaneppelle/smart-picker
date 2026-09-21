@@ -20,6 +20,7 @@ import type { Candidate, CandidateStatus } from '@hunter/core';
 import CandidatesKanbanColumn from './CandidatesKanbanColumn';
 import CandidateKanbanCard from './CandidateKanbanCard';
 import CandidateDrawer from './CandidateDrawer';
+import { isPlaceholderEmail } from '@/lib/placeholder-email';
 import { useTranslations } from 'next-intl';
 
 const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['interview', 'rejected'];
@@ -261,9 +262,30 @@ export default function CandidatesKanbanBoard({
                 {t(STATUS_LABEL_KEYS[pendingDragChange.newStatus] ?? '') || pendingDragChange.newStatus}
               </span>.
             </p>
-            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-5">
-              {t(STATUS_EMAIL_KEYS[pendingDragChange.newStatus] ?? '')}
-            </p>
+            {/* Mesmo aviso da gaveta: quem foi importado nunca ouviu falar da vaga, e
+                e-mail provisório não é enviado para não gerar bounce. */}
+            {(() => {
+              const alvo = candidates.find((c) => c.id === pendingDragChange.candidateId);
+              const provisorio = isPlaceholderEmail(alvo?.email);
+              return (
+                <div className="mb-5 space-y-2">
+                  {provisorio ? (
+                    <p className="text-sm text-gray-700 bg-gray-100 border border-gray-200 rounded-lg p-3">
+                      {t('importacao.emailProvisorio')}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                      {t(STATUS_EMAIL_KEYS[pendingDragChange.newStatus] ?? '')}
+                    </p>
+                  )}
+                  {alvo && alvo.source !== 'form' && !provisorio && (
+                    <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                      {t('importacao.emailImportado')}
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setPendingDragChange(null)}
