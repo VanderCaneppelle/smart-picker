@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { registrarEvento } from '@/lib/analytics';
+import TurnstileWidget from '@/components/TurnstileWidget';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button, Input } from '@/components/ui';
 import { AuthLayoutSide } from '@/components/AuthLayoutSide';
@@ -32,6 +33,9 @@ function SignUpContent() {
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  /** Token do captcha. Fica null quando o Turnstile não está configurado. */
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const captchaAtivo = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const [paidPlan, setPaidPlan] = useState<string | null>(null);
 
   useEffect(() => {
@@ -67,6 +71,7 @@ function SignUpContent() {
           company: company || undefined,
           phone_number: phoneNumber || undefined,
           session_id: sessionId || undefined,
+          turnstile_token: turnstileToken || undefined,
         }
       );
 
@@ -171,11 +176,16 @@ function SignUpContent() {
                 placeholder={t('auth.repitaSenha')}
               />
 
+              <TurnstileWidget onToken={setTurnstileToken} className="flex justify-center" />
+
               <Button
                 type="submit"
                 className="w-full bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500"
                 size="lg"
                 isLoading={isLoading}
+                // Só bloqueia quando o captcha existe e ainda não resolveu. Sem
+                // Turnstile configurado, o botão se comporta como sempre.
+                disabled={captchaAtivo && !turnstileToken}
               >{t('auth.criarConta')}</Button>
             </form>
 

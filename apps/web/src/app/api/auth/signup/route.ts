@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { prisma } from '@/lib/db';
 import { SignUpSchema } from '@hunter/core';
 import { ensureTrialSubscription, reconcileFromCheckoutSession } from '@/lib/subscription-service';
+import { verificarTurnstile } from '@/lib/turnstile';
 
 // POST /api/auth/signup - Create new user (recruiter) and Recruiter profile
 export async function POST(request: NextRequest) {
@@ -30,6 +31,24 @@ export async function POST(request: NextRequest) {
 
     const { email, password, name, company, phone_number } = validation.data;
     const sessionId = typeof body.session_id === 'string' ? body.session_id : null;
+
+    // Captcha antes de criar qualquer coisa. Enquanto TURNSTILE_SECRET_KEY não
+    // existir, verificarTurnstile devolve ok e o cadastro segue como sempre foi.
+    const captcha = await verificarTurnstile(
+      typeof body.turnstile_token === 'string' ? body.turnstile_token : null,
+      request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for')
+    );
+
+    if (!captcha.ok) {
+      console.warn('[signup] recusado pelo captcha:', captcha.motivo, email);
+      return Response.json(
+        {
+          error: 'Bad Request',
+          message: 'Não foi possível confirmar que você não é um robô. Recarregue a página e tente de novo.',
+        },
+        { status: 400 }
+      );
+    }
 
     const { data, error } = await supabaseAdmin.auth.signUp({
       email,

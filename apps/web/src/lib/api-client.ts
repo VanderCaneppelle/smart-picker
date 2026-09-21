@@ -575,7 +575,14 @@ class ApiClient {
     email: string,
     password: string,
     password_confirmation: string,
-    recruiterData: { name: string; company?: string; phone_number?: string; session_id?: string }
+    recruiterData: {
+      name: string;
+      company?: string;
+      phone_number?: string;
+      session_id?: string;
+      /** Token do Turnstile. Ausente quando o captcha não está configurado. */
+      turnstile_token?: string;
+    }
   ): Promise<{
     user: { id: string; email: string };
     access_token?: string;
@@ -594,6 +601,7 @@ class ApiClient {
         company: recruiterData.company || '',
         phone_number: recruiterData.phone_number || '',
         session_id: recruiterData.session_id || undefined,
+        turnstile_token: recruiterData.turnstile_token || undefined,
       }),
     });
   }

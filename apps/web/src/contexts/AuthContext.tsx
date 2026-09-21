@@ -35,7 +35,13 @@ interface AuthContextType {
     email: string,
     password: string,
     password_confirmation: string,
-    recruiterData: { name: string; company?: string; phone_number?: string; session_id?: string }
+    recruiterData: {
+      name: string;
+      company?: string;
+      phone_number?: string;
+      session_id?: string;
+      turnstile_token?: string;
+    }
   ) => Promise<{ requires_confirmation: boolean }>;
   logout: () => void;
 }
@@ -122,7 +128,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: string,
       password: string,
       password_confirmation: string,
-      recruiterData: { name: string; company?: string; phone_number?: string; session_id?: string }
+      recruiterData: {
+        name: string;
+        company?: string;
+        phone_number?: string;
+        session_id?: string;
+        turnstile_token?: string;
+      }
     ) => {
       const data = await apiClient.signup(
         email,
