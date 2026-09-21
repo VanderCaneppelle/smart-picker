@@ -12,15 +12,13 @@ export default function PoliticaPrivacidadePage() {
         <p className="text-sm text-gray-500 mb-8">Última atualização: setembro de 2026</p>
 
         <div className="prose prose-gray max-w-none space-y-6 text-gray-700">
-          <section className="rounded-xl bg-gray-100 border border-gray-200 p-5">
-            <h2 className="text-xl font-semibold text-gray-900 mt-0 mb-3">1. Quem Somos</h2>
-            <p className="mb-0">
-              A plataforma <strong>Rankea</strong> é operada por{' '}
-              <strong>T &amp; V Consultoria em Tecnologia da Informação LTDA</strong> (nome fantasia{' '}
-              <strong>TC IT Consultancy</strong>), CNPJ nº <strong>45.679.027/0001-90</strong>, com sede na Av.
-              Prefeito Osmar Cunha, 416, Sala 1108, Edifício Empresarial Koerich Rio Branco, Centro,
-              Florianópolis/SC, CEP 88.015-100. Estamos comprometidos com a proteção dos seus dados pessoais e
-              com o cumprimento da Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).
+          <section>
+            <h2 className="text-xl font-semibold text-gray-900 mt-0 mb-3">1. Introdução</h2>
+            <p>
+              Estamos comprometidos com a proteção dos seus dados pessoais e com o cumprimento da Lei Geral de
+              Proteção de Dados (LGPD - Lei nº 13.709/2018). Esta política descreve como coletamos, usamos,
+              armazenamos e protegemos as informações dos candidatos e dos recrutadores que utilizam a plataforma
+              Rankea.
             </p>
           </section>
 
@@ -186,7 +184,14 @@ export default function PoliticaPrivacidadePage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">12. Contato e Encarregado (DPO)</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">12. Identificação, Contato e Encarregado (DPO)</h2>
+            <p>
+              A plataforma <strong>Rankea</strong> é operada por{' '}
+              <strong>T &amp; V Consultoria em Tecnologia da Informação LTDA</strong> (nome fantasia{' '}
+              <strong>TC IT Consultancy</strong>), CNPJ nº <strong>45.679.027/0001-90</strong>, com sede na Av.
+              Prefeito Osmar Cunha, 416, Sala 1108, Edifício Empresarial Koerich Rio Branco, Centro,
+              Florianópolis/SC, CEP 88.015-100.
+            </p>
             <p>
               Para dúvidas, solicitação de exclusão ou exercício de outros direitos sobre seus dados, escreva
               para{' '}
