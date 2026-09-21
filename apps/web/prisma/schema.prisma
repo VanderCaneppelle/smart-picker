@@ -241,6 +241,17 @@ model Candidate {
   consent_given_at                 DateTime?  // LGPD: registro do momento do consentimento
   consent_version                  String?    // LGPD: versão dos termos/privacidade aceitos
   recruiter_notes                  String?   @db.Text // Notas e transcrições de entrevista
+  /// Porta de entrada do candidato: form (candidatou-se pelo link público), import
+  /// (o recrutador subiu o currículo), email (encaminhou para o endereço da vaga).
+  /// Quem entra por import ou email NUNCA recebe e-mail automático e fica com
+  /// consent_given_at nulo: não houve candidatura nem consentimento.
+  source                           String    @default("form")
+  /// Hash do arquivo do currículo. Base da dedup por vaga e da idempotência quando a
+  /// entrada é um webhook que pode ser reentregue. Nulo para quem veio pelo formulário.
+  resume_sha256                    String?
+  /// Marca o balde "precisam de atenção": dado extraído do currículo veio incompleto,
+  /// o arquivo não é um currículo, ou não houve evidência suficiente para dar nota.
+  needs_review                     Boolean   @default(false)
   created_at                      DateTime  @default(now())
   updated_at              DateTime  @updatedAt
   deleted_at              DateTime?
@@ -254,6 +265,11 @@ model Candidate {
   @@index([fit_score])
   @@index([needs_scoring])
   @@index([deleted_at])
+  @@index([source, created_at])
+  // O índice único de (job_id, resume_sha256) existe só no SQL da migração
+  // add_candidate_import.sql, porque é parcial (WHERE deleted_at IS NULL) e o Prisma
+  // não sabe declarar índice parcial. Consequência prática: não existe findUnique por
+  // essa chave; a dedup consulta com findFirst e trata P2002 como corrida perdida.
 }
 
 model CandidateEvent {

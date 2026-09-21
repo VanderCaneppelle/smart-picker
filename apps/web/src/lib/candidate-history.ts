@@ -5,7 +5,9 @@ export type CandidateEventType =
   | 'status_changed'
   | 'email_sent_interview'
   | 'email_sent_rejection'
-  | 'score_recalculated';
+  | 'score_recalculated'
+  /** Currículo subido pelo recrutador ou encaminhado por e-mail: não houve candidatura. */
+  | 'candidate_imported';
 
 interface LogCandidateEventParams {
   candidateId: string;
