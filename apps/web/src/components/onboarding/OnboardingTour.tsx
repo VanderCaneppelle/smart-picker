@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { X, ChevronLeft, ChevronRight, Share2, ClipboardCopy, Users } from 'lucide-react';
 import { useOnboarding, ONBOARDING_STEPS } from '@/contexts/OnboardingContext';
+import { useTranslations } from 'next-intl';
 
 interface Rect { top: number; left: number; width: number; height: number }
 interface Pos { top: number; left: number }
@@ -18,40 +19,40 @@ function clamp(v: number, min: number, max: number) {
 
 // Mini mockup shown when share-job target isn't visible
 function SharePreview() {
+  const t = useTranslations();
   return (
     <div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50 p-3">
       <div className="flex items-center gap-2 mb-2">
         <Share2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-        <span className="text-xs font-semibold text-emerald-700">Link da vaga (exemplo)</span>
+        <span className="text-xs font-semibold text-emerald-700">{t('onboarding.linkExemplo')}</span>
       </div>
       <div className="flex items-center gap-2 bg-white rounded-lg border border-emerald-200 px-3 py-2">
-        <span className="text-xs text-gray-500 flex-1 truncate">rankea.ai/jobs/sua-vaga/apply</span>
+        <span className="text-xs text-gray-500 flex-1 truncate">rankea.ai/jobs/.../apply</span>
         <div className="flex items-center gap-1 shrink-0 bg-emerald-100 rounded px-2 py-0.5">
           <ClipboardCopy className="h-3 w-3 text-emerald-600" />
-          <span className="text-[10px] font-medium text-emerald-700">Copiar</span>
+          <span className="text-[10px] font-medium text-emerald-700">{t('publica.copiarLink')}</span>
         </div>
       </div>
-      <p className="mt-2 text-[11px] text-emerald-600">
-        Aparecerá em cada vaga criada, direto na listagem e na página da vaga.
-      </p>
+      <p className="mt-2 text-[11px] text-emerald-600">{t('onboarding.linkExemploTexto')}</p>
     </div>
   );
 }
 
 // Mini kanban preview shown when review-candidates target isn't visible
 function KanbanPreview() {
+  const t = useTranslations();
   const cols = [
-    { label: 'Novos', dot: 'bg-blue-400', bar: 'bg-blue-200', count: 2 },
-    { label: 'Em Análise', dot: 'bg-violet-400', bar: 'bg-violet-200', count: 2 },
-    { label: 'Entrevista', dot: 'bg-amber-400', bar: 'bg-amber-200', count: 1 },
-    { label: 'Contratados', dot: 'bg-emerald-400', bar: 'bg-emerald-200', count: 1 },
-    { label: 'Encerrados', dot: 'bg-gray-400', bar: 'bg-gray-200', count: 1 },
+    { label: t('kanban.novos'), dot: 'bg-blue-400', bar: 'bg-blue-200', count: 2 },
+    { label: t('kanban.emAnalise'), dot: 'bg-violet-400', bar: 'bg-violet-200', count: 2 },
+    { label: t('kanban.entrevista'), dot: 'bg-amber-400', bar: 'bg-amber-200', count: 1 },
+    { label: t('kanban.contratados'), dot: 'bg-emerald-400', bar: 'bg-emerald-200', count: 1 },
+    { label: t('kanban.encerrados'), dot: 'bg-gray-400', bar: 'bg-gray-200', count: 1 },
   ];
   return (
     <div className="mt-3 rounded-xl border border-gray-100 bg-gray-50 p-3">
       <div className="flex items-center gap-1.5 mb-2.5">
         <Users className="h-3.5 w-3.5 text-gray-500" />
-        <span className="text-xs font-semibold text-gray-600">Kanban de candidatos (exemplo)</span>
+        <span className="text-xs font-semibold text-gray-600">{t('onboarding.kanbanExemplo')}</span>
       </div>
       <div className="space-y-1.5">
         {cols.map((col) => (
@@ -69,14 +70,13 @@ function KanbanPreview() {
           </div>
         ))}
       </div>
-      <p className="mt-2.5 text-[11px] text-gray-500">
-        Aparece assim que os candidatos começarem a se inscrever.
-      </p>
+      <p className="mt-2.5 text-[11px] text-gray-500">{t('onboarding.kanbanExemploTexto')}</p>
     </div>
   );
 }
 
 export function OnboardingTour() {
+  const t = useTranslations();
   const { state, activeTourStepData, nextTourStep, prevTourStep, skipTour } = useOnboarding();
   const router = useRouter();
   const pathname = usePathname();
@@ -236,7 +236,7 @@ export function OnboardingTour() {
             <p className="text-[11px] font-semibold uppercase tracking-widest text-emerald-100">
               Primeiros passos · {stepIndex + 1}/{total}
             </p>
-            <h3 className="text-white font-bold text-base mt-0.5 leading-snug">{step.title}</h3>
+            <h3 className="text-white font-bold text-base mt-0.5 leading-snug">{t(step.titleKey)}</h3>
           </div>
           <button type="button" onClick={skipTour} aria-label="Fechar tutorial"
             className="text-emerald-100 hover:text-white p-1 rounded-lg hover:bg-white/15 transition-colors shrink-0 mt-0.5">
@@ -246,7 +246,7 @@ export function OnboardingTour() {
 
         {/* Body */}
         <div className="px-5 pt-4 pb-3">
-          <p className="text-gray-600 text-sm leading-relaxed">{step.description}</p>
+          <p className="text-gray-600 text-sm leading-relaxed">{t(step.descriptionKey)}</p>
 
           {/* Preview card for steps without visible target */}
           {previewCard}
@@ -270,12 +270,11 @@ export function OnboardingTour() {
             {stepIndex > 0 && (
               <button type="button" onClick={prevTourStep}
                 className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                <ChevronLeft className="h-3.5 w-3.5" />Voltar
-              </button>
+                <ChevronLeft className="h-3.5 w-3.5" />{t('comum.voltar')}</button>
             )}
             <button type="button" onClick={nextTourStep}
               className="flex items-center gap-1 px-4 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium">
-              {isLast ? 'Concluir' : step.actionLabel}
+              {isLast ? t('onboarding.concluir') : t(step.actionLabelKey)}
               {!isLast && <ChevronRight className="h-3.5 w-3.5" />}
             </button>
           </div>

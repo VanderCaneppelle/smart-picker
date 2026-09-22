@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Input } from '@/components/ui';
 import { apiClient } from '@/lib/api-client';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 const COLOR_PRESETS = [
   { label: 'Esmeralda', value: '#059669' },
@@ -40,6 +41,7 @@ export default function BrandingFields({
   linkedinUrl,
   onLinkedinUrlChange,
 }: BrandingFieldsProps) {
+  const t = useTranslations();
   const [isUploading, setIsUploading] = useState(false);
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,12 +49,12 @@ export default function BrandingFields({
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      toast.error('Envie um arquivo de imagem');
+      toast.error(t('config.envieImagem'));
       return;
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      toast.error('Imagem deve ter no máximo 2MB');
+      toast.error(t('config.imagemMax'));
       return;
     }
 
@@ -60,9 +62,9 @@ export default function BrandingFields({
     try {
       const result = await apiClient.uploadFile(file, 'logos');
       onLogoUrlChange(result.url);
-      toast.success('Logo enviado!');
+      toast.success(t('config.logoEnviado'));
     } catch {
-      toast.error('Falha ao enviar logo');
+      toast.error(t('config.erroLogo'));
     } finally {
       setIsUploading(false);
     }
@@ -70,41 +72,39 @@ export default function BrandingFields({
 
   return (
     <div className="space-y-5">
-      <h3 className="text-lg font-semibold text-gray-900">Branding</h3>
+      <h3 className="text-lg font-semibold text-gray-900">{t('config.branding')}</h3>
 
       <Input
-        label="Nome de exibição"
+        label={t('config.nomeExibicao')}
         value={displayName}
         onChange={(e) => onDisplayNameChange(e.target.value)}
-        placeholder="Ex: Consultoria Prime RH"
-        helperText="Nome que aparece na página pública. Se vazio, usa seu nome ou empresa."
+        placeholder={t('config.exConsultoria')}
+        helperText={t('config.nomeExibicaoAjuda')}
       />
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Headline
-        </label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">{t('config.headline')}</label>
         <input
           type="text"
           value={headline}
           onChange={(e) => onHeadlineChange(e.target.value.slice(0, 120))}
-          placeholder="Uma frase curta sobre você ou sua empresa"
+          placeholder={t('config.fraseCurta')}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
         />
         <p className="mt-1 text-xs text-gray-400">{headline.length}/120 caracteres</p>
       </div>
 
       <Input
-        label="LinkedIn"
+        label={t('candidatura.linkedin')}
         type="url"
         value={linkedinUrl}
         onChange={(e) => onLinkedinUrlChange(e.target.value)}
-        placeholder="https://linkedin.com/company/sua-empresa"
-        helperText="Link do perfil ou da empresa. Aparece na página pública para visitantes."
+        placeholder={t('config.linkedinEmpresa')}
+        helperText={t('perfil.linkedinAjuda')}
       />
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Logo</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">{t('config.logo')}</label>
         {logoUrl ? (
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-xl border border-gray-200 overflow-hidden bg-gray-50 flex items-center justify-center">
@@ -115,9 +115,7 @@ export default function BrandingFields({
               onClick={() => onLogoUrlChange('')}
               className="flex items-center gap-1 text-sm text-red-600 hover:text-red-700"
             >
-              <X className="h-4 w-4" />
-              Remover
-            </button>
+              <X className="h-4 w-4" />{t('config.remover')}</button>
           </div>
         ) : (
           <label className="flex items-center gap-3 p-4 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-emerald-300 hover:bg-emerald-50/50 transition-colors">
@@ -132,7 +130,7 @@ export default function BrandingFields({
               <span className="text-sm font-medium text-gray-700">
                 {isUploading ? 'Enviando...' : 'Enviar logo'}
               </span>
-              <p className="text-xs text-gray-400">PNG, JPG ou SVG, máx. 2MB</p>
+              <p className="text-xs text-gray-400">{t('config.formatoLogo')}</p>
             </div>
             <input
               type="file"
@@ -146,9 +144,7 @@ export default function BrandingFields({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Cor da marca
-        </label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">{t('config.corMarca')}</label>
         <div className="flex flex-wrap gap-2">
           {COLOR_PRESETS.map(({ label, value }) => (
             <button
@@ -170,7 +166,7 @@ export default function BrandingFields({
           ))}
         </div>
         <div className="mt-2 flex items-center gap-2">
-          <label className="text-xs text-gray-500">Ou HEX:</label>
+          <label className="text-xs text-gray-500">{t('config.ouHex')}</label>
           <input
             type="text"
             value={brandColor}

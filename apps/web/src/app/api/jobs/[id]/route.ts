@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyAuth, unauthorizedResponse, jobBelongsToUser } from '@/lib/auth';
+import { getAuthContext, requireAccount, jobBelongsToAccount } from '@/lib/auth';
 import { UpdateJobSchema } from '@hunter/core';
 import { getActiveJobsLimit } from '@/lib/subscription-service';
 
@@ -14,7 +14,9 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
-    const user = await verifyAuth(request);
+    // Auth opcional de propósito: sem sessão esta rota serve a página pública de
+    // candidatura, então usa getAuthContext em vez de requireAccount.
+    const ctx = await getAuthContext(request);
 
     const job = await prisma.job.findFirst({
       where: { id, deleted_at: null },
@@ -32,9 +34,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    if (user) {
-      // Recrutador autenticado: só retorna se for dono
-      if (!jobBelongsToUser(job, user)) {
+    if (ctx) {
+      // Autenticado: só retorna se a vaga for da conta dele (dono ou membro)
+      if (!jobBelongsToAccount(job, ctx)) {
         return Response.json(
           { error: 'Not Found', message: 'Job not found' },
           { status: 404 }
@@ -63,10 +65,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // PATCH /api/jobs/:id - Update job (protected)
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return unauthorizedResponse();
-    }
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
 
     const { id } = await params;
     const body = await request.json();
@@ -83,12 +83,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Check if job exists and user owns it
+    // Check if job exists and belongs to the account
     const existingJob = await prisma.job.findFirst({
       where: { id, deleted_at: null },
     });
 
-    if (!existingJob || !jobBelongsToUser(existingJob, user)) {
+    if (!existingJob || !jobBelongsToAccount(existingJob, auth.ctx)) {
       return Response.json(
         { error: 'Not Found', message: 'Job not found' },
         { status: 404 }
@@ -99,7 +99,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       validation.data.status === 'active' &&
       existingJob.status !== 'active'
     ) {
-      const info = await getActiveJobsLimit(user.id);
+      const info = await getActiveJobsLimit(auth.ctx.accountId);
       if (!info.canCreate) {
         return Response.json(
           {
@@ -157,19 +157,17 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 // DELETE /api/jobs/:id - Soft delete job (protected)
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return unauthorizedResponse();
-    }
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
 
     const { id } = await params;
 
-    // Check if job exists and user owns it
+    // Check if job exists and belongs to the account
     const existingJob = await prisma.job.findFirst({
       where: { id, deleted_at: null },
     });
 
-    if (!existingJob || !jobBelongsToUser(existingJob, user)) {
+    if (!existingJob || !jobBelongsToAccount(existingJob, auth.ctx)) {
       return Response.json(
         { error: 'Not Found', message: 'Job not found' },
         { status: 404 }

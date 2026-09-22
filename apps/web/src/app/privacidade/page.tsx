@@ -33,6 +33,12 @@ export default function PoliticaPrivacidadePage() {
               tratamento específico é realizado (ver seção 5). Para os dados de{' '}
               <strong>recrutadores e clientes</strong> (cadastro, faturamento), o Rankea atua como controlador.
             </p>
+            <p className="mb-0 mt-4">
+              Quando o recrutador envia à Plataforma currículos que já estavam em poder dele, obtidos fora do
+              formulário público da vaga, ele é o <strong>controlador</strong> desses dados e o Rankea atua
+              exclusivamente como <strong>operador</strong>: não houve candidatura nem consentimento coletado por
+              nós, e cabe ao recrutador garantir a base legal daquele tratamento.
+            </p>
           </section>
 
           <section>
@@ -44,6 +50,12 @@ export default function PoliticaPrivacidadePage() {
               de pagamento (ex.: número de cartão) são coletados e processados diretamente pelo Stripe, nosso
               processador de pagamentos — não temos acesso nem armazenamos esses dados. A base legal é a execução
               do contrato de prestação de serviço.</p>
+            <p><strong>Currículos enviados pelo recrutador:</strong> além das candidaturas feitas pelo formulário
+              da vaga, o recrutador pode enviar currículos que já possuía. Nesses casos o registro de
+              consentimento fica vazio, porque não houve candidatura nesta Plataforma, e a base legal é definida
+              pelo recrutador na condição de controlador. Esses currículos passam pelo mesmo tratamento técnico
+              dos demais, inclusive a avaliação por IA descrita na seção 5, e não recebem nenhuma comunicação
+              automática nossa. O pedido de exclusão segue o mesmo canal da seção 9.</p>
             <p><strong>Dados de navegação:</strong> coletamos dados de uso e comportamento na Plataforma (páginas
               acessadas, cliques, gravações de sessão) por meio da ferramenta Microsoft Clarity, com base no
               nosso legítimo interesse em entender e melhorar a experiência de uso. Veja a seção 6 para mais

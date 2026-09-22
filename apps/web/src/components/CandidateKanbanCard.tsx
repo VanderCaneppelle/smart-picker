@@ -4,6 +4,8 @@ import React, { memo, useRef, useEffect } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { AlertTriangle } from 'lucide-react';
 import type { Candidate } from '@hunter/core';
+import { useTranslations } from 'next-intl';
+import CandidateSourceBadge from './CandidateSourceBadge';
 
 interface CandidateKanbanCardProps {
   candidate: Candidate;
@@ -21,6 +23,7 @@ function fitScoreColor(score: number) {
 }
 
 function CardContent({ candidate }: { candidate: Candidate }) {
+  const t = useTranslations();
   return (
     <>
       {/* Row 1: Name + Fit Score */}
@@ -35,12 +38,20 @@ function CardContent({ candidate }: { candidate: Candidate }) {
         )}
       </div>
 
-      {/* Row 2: Experience level */}
-      {candidate.experience_level && (
-        <span className="inline-block mt-1.5 text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-          {candidate.experience_level}
-        </span>
-      )}
+      {/* Row 2: Origem, revisão e nível de experiência */}
+      <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+        <CandidateSourceBadge source={candidate.source} />
+        {candidate.needs_review && (
+          <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800">
+            {t('importacao.revisao.selo')}
+          </span>
+        )}
+        {candidate.experience_level && (
+          <span className="inline-block text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+            {candidate.experience_level}
+          </span>
+        )}
+      </div>
 
       {/* Row 3: Compact metrics */}
       {(candidate.resume_rating != null || candidate.answer_quality_rating != null) && (
@@ -52,7 +63,7 @@ function CardContent({ candidate }: { candidate: Candidate }) {
             <span className="text-gray-300">|</span>
           )}
           {candidate.answer_quality_rating != null && (
-            <span>Resp: <span className="font-medium text-gray-600">{candidate.answer_quality_rating}/5</span></span>
+            <span>{t('kanban.resp')}<span className="font-medium text-gray-600">{candidate.answer_quality_rating}/5</span></span>
           )}
         </div>
       )}

@@ -1,16 +1,15 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { requireAccount } from '@/lib/auth';
 import { migrateLegacyCandidateStatusesForRecruiter } from '@/lib/candidate-status';
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return unauthorizedResponse();
-    }
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
 
-    const userId = user.id;
+    // Os números do dashboard são da CONTA: membro e dono veem o mesmo painel.
+    const userId = auth.ctx.accountId;
     const now = new Date();
 
     await migrateLegacyCandidateStatusesForRecruiter(userId);

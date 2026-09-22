@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
-import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { requireAccount } from '@/lib/auth';
+import { tradutorDeErros } from '@/lib/erros';
 
 const MAX_INPUT_CHARS = 12000;
 const MODEL = process.env.OPENAI_POLISH_MODEL || 'gpt-4o-mini';
@@ -71,15 +72,16 @@ Responda apenas com JSON válido, sem cerca de código:
 }
 
 export async function POST(request: NextRequest) {
-  const user = await verifyAuth(request);
-  if (!user) return unauthorizedResponse();
+  const t = await tradutorDeErros();
+  const auth = await requireAccount(request);
+  if (auth.response) return auth.response;
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     return Response.json(
       {
         error: 'Service Unavailable',
-        message: 'A melhoria por IA não está configurada. Falta OPENAI_API_KEY.',
+        message: t('erros.iaSemChave'),
       },
       { status: 503 }
     );
@@ -111,7 +113,7 @@ export async function POST(request: NextRequest) {
     return Response.json(
       {
         error: 'Payload Too Large',
-        message: 'A descrição está longa demais para ser melhorada de uma vez.',
+        message: t('erros.descricaoLonga'),
       },
       { status: 413 }
     );
@@ -140,7 +142,7 @@ export async function POST(request: NextRequest) {
       const detail = await response.text();
       console.error('[polish-description] OpenAI error:', response.status, detail.slice(0, 500));
       return Response.json(
-        { error: 'Bad Gateway', message: 'Não consegui melhorar a descrição agora. Tente de novo.' },
+        { error: 'Bad Gateway', message: t('erros.iaFalhou') },
         { status: 502 }
       );
     }
@@ -179,7 +181,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('[polish-description] erro inesperado:', error);
     return Response.json(
-      { error: 'Internal Server Error', message: 'Erro ao melhorar a descrição.' },
+      { error: 'Internal Server Error', message: t('erros.iaErro') },
       { status: 500 }
     );
   }

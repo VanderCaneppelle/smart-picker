@@ -81,6 +81,15 @@ export default function TermosDeUsoPage() {
                 responsabilidade.
               </li>
             </ul>
+            <p className="mt-4">
+              <strong>Envio de currículos pelo próprio recrutador.</strong> A Plataforma permite que o recrutador
+              envie currículos que já estavam em poder dele, obtidos fora do formulário público da vaga. Nesse
+              caso não há candidatura nem consentimento coletado por nós, e o recrutador declara que possui base
+              legal para tratar aqueles dados e para submetê-los à avaliação por IA, respondendo integralmente
+              por essa decisão. Currículos enviados dessa forma não recebem nenhuma comunicação automática da
+              Plataforma: e-mails ao candidato só saem por ato deliberado do recrutador, como convidar para
+              entrevista ou encerrar a participação.
+            </p>
           </section>
 
           <section className="rounded-xl bg-amber-50 border border-amber-200 p-5">

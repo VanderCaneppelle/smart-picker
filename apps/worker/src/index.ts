@@ -1,12 +1,22 @@
 import 'dotenv/config';
 import http from 'node:http';
 import { processCandidate } from './jobs/processQueue.js';
+import { agendarDrenagem } from './jobs/processJobQueue.js';
 import { sendScheduleInterviewEmail, sendRejectionEmail } from './jobs/sendEmails.js';
 import { varrerTrials } from './jobs/trialLifecycle.js';
+import { sendTeamInviteEmail } from './lib/teamEmails.js';
 import { prisma } from './lib/db.js';
 import { logCandidateEvent } from './lib/candidateHistory.js';
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
+
+/**
+ * Domínio dos e-mails provisórios da importação, que não existe de propósito. A trava
+ * fica aqui também, e não só na API: este processo é o único que chega no Resend, e um
+ * endereço desses só produz hard bounce, que em volume derruba a reputação do domínio
+ * e atinge os e-mails de quem realmente se candidatou.
+ */
+const PLACEHOLDER_EMAIL_DOMAIN = '@import.rankea.ai';
 const WORKER_SECRET = process.env.WORKER_SECRET;
 
 function parseBody(req: http.IncomingMessage): Promise<Record<string, unknown>> {
@@ -79,6 +89,50 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // Drena a fila de pontuação de uma vaga inteira (importação em lote).
+  //
+  // Responde na hora e processa depois, de propósito: drenar 50 currículos leva minutos,
+  // e quem chama é uma função serverless que desiste em 12 segundos. Se este endpoint
+  // esperasse o fim, o gatilho estouraria por timeout e a mesma fila seria drenada de
+  // novo a cada retentativa, pagando IA em dobro.
+  if (req.method === 'POST' && req.url === '/process-job-queue') {
+    if (!WORKER_SECRET) {
+      res.writeHead(500);
+      res.end(JSON.stringify({ error: 'WORKER_SECRET not configured' }));
+      return;
+    }
+
+    const auth = req.headers.authorization;
+    const token = auth?.startsWith('Bearer ') ? auth.slice(7) : null;
+    if (token !== WORKER_SECRET) {
+      res.writeHead(401);
+      res.end(JSON.stringify({ error: 'Unauthorized' }));
+      return;
+    }
+
+    try {
+      const body = await parseBody(req);
+      const jobId = typeof body.jobId === 'string' ? body.jobId : null;
+
+      if (!jobId) {
+        res.writeHead(400);
+        res.end(JSON.stringify({ error: 'jobId is required' }));
+        return;
+      }
+
+      const { agendada } = agendarDrenagem(jobId);
+
+      res.writeHead(202);
+      res.end(JSON.stringify({ ok: true, agendada }));
+    } catch (err) {
+      res.writeHead(500);
+      res.end(JSON.stringify({
+        error: err instanceof Error ? err.message : 'Internal server error',
+      }));
+    }
+    return;
+  }
+
   // Send "schedule interview" email to candidate (Calendly link from job)
   if (req.method === 'POST' && req.url === '/send-schedule-interview') {
     if (!WORKER_SECRET) {
@@ -119,6 +173,15 @@ const server = http.createServer(async (req, res) => {
       if (!candidate) {
         res.writeHead(404);
         res.end(JSON.stringify({ error: 'Candidate not found' }));
+        return;
+      }
+
+      if (candidate.email.endsWith(PLACEHOLDER_EMAIL_DOMAIN)) {
+        console.warn(
+          `[email] candidato ${candidate.id} ainda está com e-mail provisório: convite não enviado.`
+        );
+        res.writeHead(200);
+        res.end(JSON.stringify({ ok: true, skipped: 'placeholder_email' }));
         return;
       }
 
@@ -198,6 +261,15 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
+      if (candidate.email.endsWith(PLACEHOLDER_EMAIL_DOMAIN)) {
+        console.warn(
+          `[email] candidato ${candidate.id} ainda está com e-mail provisório: recusa não enviada.`
+        );
+        res.writeHead(200);
+        res.end(JSON.stringify({ ok: true, skipped: 'placeholder_email' }));
+        return;
+      }
+
       const personalization = candidate.job.recruiter?.emailPersonalization ?? null;
       await sendRejectionEmail(
         { id: candidate.id, name: candidate.name, email: candidate.email },
@@ -218,6 +290,81 @@ const server = http.createServer(async (req, res) => {
       res.end(JSON.stringify({ ok: true }));
     } catch (err) {
       console.error('Error sending rejection email:', err);
+      res.writeHead(500);
+      res.end(JSON.stringify({
+        error: err instanceof Error ? err.message : 'Internal server error',
+      }));
+    }
+    return;
+  }
+
+  // Convite de equipe: manda a senha provisória para o novo usuário.
+  //
+  // Diferente dos outros endpoints, este responde SÍNCRONO e com erro de verdade.
+  // A senha só existe nesta requisição, então falha silenciosa aqui deixaria um
+  // usuário criado que ninguém consegue acessar. Quem chama (a API web) depende
+  // desta resposta para decidir se marca o convite como entregue.
+  if (req.method === 'POST' && req.url === '/send-team-invite') {
+    if (!WORKER_SECRET) {
+      res.writeHead(500);
+      res.end(JSON.stringify({ error: 'WORKER_SECRET not configured' }));
+      return;
+    }
+
+    const auth = req.headers.authorization;
+    const token = auth?.startsWith('Bearer ') ? auth.slice(7) : null;
+    if (token !== WORKER_SECRET) {
+      res.writeHead(401);
+      res.end(JSON.stringify({ error: 'Unauthorized' }));
+      return;
+    }
+
+    try {
+      const body = await parseBody(req);
+      const memberId = typeof body.memberId === 'string' ? body.memberId : null;
+      const password = typeof body.password === 'string' ? body.password : null;
+
+      if (!memberId || !password) {
+        res.writeHead(400);
+        res.end(JSON.stringify({ error: 'memberId and password are required' }));
+        return;
+      }
+
+      const member = await prisma.recruiter.findUnique({
+        where: { id: memberId },
+        select: {
+          email: true,
+          name: true,
+          locale: true,
+          account_owner_id: true,
+        },
+      });
+
+      if (!member || !member.account_owner_id) {
+        res.writeHead(404);
+        res.end(JSON.stringify({ error: 'Member not found' }));
+        return;
+      }
+
+      const owner = await prisma.recruiter.findUnique({
+        where: { id: member.account_owner_id },
+        select: { name: true, company: true },
+      });
+
+      await sendTeamInviteEmail({
+        memberName: member.name,
+        memberEmail: member.email,
+        ownerName: owner?.name ?? 'Rankea',
+        companyName: owner?.company ?? null,
+        password,
+        appUrl: process.env.APP_URL || 'https://www.rankea.ai',
+        locale: member.locale === 'en' ? 'en' : 'pt',
+      });
+
+      res.writeHead(200);
+      res.end(JSON.stringify({ ok: true }));
+    } catch (err) {
+      console.error('Error sending team invite email:', err);
       res.writeHead(500);
       res.end(JSON.stringify({
         error: err instanceof Error ? err.message : 'Internal server error',

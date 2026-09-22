@@ -20,30 +20,34 @@ import type { Candidate, CandidateStatus } from '@hunter/core';
 import CandidatesKanbanColumn from './CandidatesKanbanColumn';
 import CandidateKanbanCard from './CandidateKanbanCard';
 import CandidateDrawer from './CandidateDrawer';
+import { isPlaceholderEmail } from '@/lib/placeholder-email';
+import { useTranslations } from 'next-intl';
 
 const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['interview', 'rejected'];
 
-const STATUS_EMAIL_MESSAGES: Record<string, string> = {
-  interview: 'Um e-mail de agendamento de entrevista será enviado ao candidato.',
-  rejected: 'Um e-mail de rejeição será enviado ao candidato.',
+/** Chaves, não textos: constante de módulo é avaliada antes de existir idioma. */
+const STATUS_EMAIL_KEYS: Record<string, string> = {
+  interview: 'candidatos.emailEntrevista',
+  rejected: 'candidatos.emailRejeicao',
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  new: 'Novos',
-  reviewing: 'Em Análise',
-  interview: 'Entrevista',
-  in_validation: 'Em Validação',
-  hired: 'Contratados',
-  rejected: 'Encerrados',
+/** Chaves, não textos: constante de módulo é avaliada antes de existir idioma. */
+const STATUS_LABEL_KEYS: Record<string, string> = {
+  new: 'kanban.novos',
+  reviewing: 'kanban.emAnalise',
+  interview: 'kanban.entrevista',
+  in_validation: 'kanban.emValidacao',
+  hired: 'kanban.contratados',
+  rejected: 'kanban.encerrados',
 };
 
-const COLUMNS: { status: CandidateStatus; title: string; headerColor: string }[] = [
-  { status: 'new', title: 'Novos', headerColor: 'bg-gray-50' },
-  { status: 'reviewing', title: 'Em Análise', headerColor: 'bg-blue-50' },
-  { status: 'interview', title: 'Entrevista', headerColor: 'bg-orange-50' },
-  { status: 'in_validation', title: 'Em Validação', headerColor: 'bg-purple-50' },
-  { status: 'hired', title: 'Contratados', headerColor: 'bg-green-50' },
-  { status: 'rejected', title: 'Encerrados', headerColor: 'bg-neutral-100' },
+const COLUMNS: { status: CandidateStatus; titleKey: string; headerColor: string }[] = [
+  { status: 'new', titleKey: 'kanban.novos', headerColor: 'bg-gray-50' },
+  { status: 'reviewing', titleKey: 'kanban.emAnalise', headerColor: 'bg-blue-50' },
+  { status: 'interview', titleKey: 'kanban.entrevista', headerColor: 'bg-orange-50' },
+  { status: 'in_validation', titleKey: 'kanban.emValidacao', headerColor: 'bg-purple-50' },
+  { status: 'hired', titleKey: 'kanban.contratados', headerColor: 'bg-green-50' },
+  { status: 'rejected', titleKey: 'kanban.encerrados', headerColor: 'bg-neutral-100' },
 ];
 
 const ALL_STATUSES = COLUMNS.map((c) => c.status);
@@ -60,6 +64,7 @@ export default function CandidatesKanbanBoard({
   setCandidates,
   searchQuery = '',
 }: CandidatesKanbanBoardProps) {
+  const t = useTranslations();
   const [activeDragCandidate, setActiveDragCandidate] = useState<Candidate | null>(null);
   const [drawerCandidateId, setDrawerCandidateId] = useState<string | null>(null);
   const [pendingDragChange, setPendingDragChange] = useState<{ candidateId: string; newStatus: CandidateStatus } | null>(null);
@@ -113,7 +118,7 @@ export default function CandidatesKanbanBoard({
   );
 
   const handleStatusChange = useCallback(
-    async (candidateId: string, newStatus: CandidateStatus) => {
+    async (candidateId: string, newStatus: CandidateStatus, skipEmail = false) => {
       const candidate = candidates.find((c) => c.id === candidateId);
       if (!candidate || candidate.status === newStatus) return;
 
@@ -124,13 +129,18 @@ export default function CandidatesKanbanBoard({
       );
 
       try {
-        await apiClient.updateCandidate(candidateId, { status: newStatus });
-        toast.success('Status atualizado');
+        await apiClient.updateCandidate(candidateId, {
+          status: newStatus,
+          ...(skipEmail ? { skip_email: true } : {}),
+        });
+        toast.success(
+          skipEmail ? t('candidatos.movidoSemEmail') : t('candidatos.statusAtualizado')
+        );
       } catch {
         setCandidates((prev) =>
           prev.map((c) => (c.id === candidateId ? { ...c, status: oldStatus } : c)),
         );
-        toast.error('Falha ao atualizar status');
+        toast.error(t('candidatos.erroStatus'));
       }
     },
     [candidates, setCandidates],
@@ -185,7 +195,7 @@ export default function CandidatesKanbanBoard({
               type="button"
               onClick={() => scroll('left')}
               className="absolute left-0 top-0 z-10 h-full w-10 flex-shrink-0 bg-gradient-to-r from-gray-100 to-transparent flex items-center justify-center text-gray-600 hover:from-gray-200 hover:text-gray-900 transition-opacity"
-              aria-label="Rolar colunas para a esquerda"
+              aria-label={t('kanban.rolarEsq')}
             >
               <ChevronLeft className="h-6 w-6" />
             </button>
@@ -199,7 +209,7 @@ export default function CandidatesKanbanBoard({
               <CandidatesKanbanColumn
                 key={col.status}
                 status={col.status}
-                title={col.title}
+                title={t(col.titleKey)}
                 candidates={grouped[col.status]}
                 headerColorClass={col.headerColor}
                 onCardClick={handleCardClick}
@@ -212,7 +222,7 @@ export default function CandidatesKanbanBoard({
               type="button"
               onClick={() => scroll('right')}
               className="absolute right-0 top-0 z-10 h-full w-10 flex-shrink-0 bg-gradient-to-l from-gray-100 to-transparent flex items-center justify-center text-gray-600 hover:from-gray-200 hover:text-gray-900 transition-opacity"
-              aria-label="Rolar colunas para a direita"
+              aria-label={t('kanban.rolarDir')}
             >
               <ChevronRight className="h-6 w-6" />
             </button>
@@ -232,6 +242,11 @@ export default function CandidatesKanbanBoard({
           candidate={drawerCandidate}
           onClose={() => setDrawerCandidateId(null)}
           onStatusChange={handleStatusChange}
+          onCandidateUpdated={(atualizado) =>
+            setCandidates((anteriores) =>
+              anteriores.map((c) => (c.id === atualizado.id ? { ...c, ...atualizado } : c))
+            )
+          }
         />
       )}
 
@@ -244,30 +259,58 @@ export default function CandidatesKanbanBoard({
               <div className="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
                 <AlertCircle className="h-5 w-5 text-amber-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">Confirmar alteração</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t('candidatos.confirmarAlteracao')}</h3>
             </div>
             <p className="text-sm text-gray-600 mb-1">
-              Você está movendo o candidato para{' '}
+              {t('candidatos.movendoPara')}{' '}
               <span className="font-medium text-gray-900">
-                {STATUS_LABELS[pendingDragChange.newStatus] || pendingDragChange.newStatus}
+                {t(STATUS_LABEL_KEYS[pendingDragChange.newStatus] ?? '') || pendingDragChange.newStatus}
               </span>.
             </p>
-            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-5">
-              {STATUS_EMAIL_MESSAGES[pendingDragChange.newStatus]}
-            </p>
-            <div className="flex justify-end gap-3">
+            {/* Mesmo aviso da gaveta: quem foi importado nunca ouviu falar da vaga, e
+                e-mail provisório não é enviado para não gerar bounce. */}
+            {(() => {
+              const alvo = candidates.find((c) => c.id === pendingDragChange.candidateId);
+              const provisorio = isPlaceholderEmail(alvo?.email);
+              return (
+                <div className="mb-5 space-y-2">
+                  {provisorio ? (
+                    <p className="text-sm text-gray-700 bg-gray-100 border border-gray-200 rounded-lg p-3">
+                      {t('importacao.emailProvisorio')}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                      {t(STATUS_EMAIL_KEYS[pendingDragChange.newStatus] ?? '')}
+                    </p>
+                  )}
+                  {alvo && alvo.source !== 'form' && !provisorio && (
+                    <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                      {t('importacao.emailImportado')}
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
               <button
                 onClick={() => setPendingDragChange(null)}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-              >
-                Cancelar
-              </button>
+              >{t('candidatos.cancelar')}</button>
+              <button
+                onClick={() => {
+                  handleStatusChange(
+                    pendingDragChange.candidateId,
+                    pendingDragChange.newStatus,
+                    true
+                  );
+                  setPendingDragChange(null);
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
+              >{t('candidatos.moverSemEmail')}</button>
               <button
                 onClick={confirmDragChange}
                 className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors"
-              >
-                Confirmar
-              </button>
+              >{t('candidatos.confirmar')}</button>
             </div>
           </div>
         </div>,

@@ -12,15 +12,18 @@ export async function GET(request: NextRequest) {
   const search = (searchParams.get('search') || '').trim();
   const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
 
+  // A lista é de CONTAS. Usuários de equipe aparecem como contagem na linha da conta,
+  // não como linha própria: eles não têm assinatura nem vaga em nome deles.
   const where = search
     ? {
+        account_owner_id: null,
         OR: [
           { email: { contains: search, mode: 'insensitive' as const } },
           { name: { contains: search, mode: 'insensitive' as const } },
           { company: { contains: search, mode: 'insensitive' as const } },
         ],
       }
-    : {};
+    : { account_owner_id: null };
 
   // Sequencial: o pool do banco é pequeno, ver comentário em admin/overview.
   const total = await prisma.recruiter.count({ where });
@@ -38,7 +41,7 @@ export async function GET(request: NextRequest) {
         subscription: {
           select: { status: true, plan: true, trial_ends_at: true, current_period_end: true },
         },
-        _count: { select: { jobs: true } },
+        _count: { select: { jobs: true, members: true } },
       },
   });
 
@@ -75,6 +78,8 @@ export async function GET(request: NextRequest) {
       company: r.company,
       created_at: r.created_at,
       jobs: r._count.jobs,
+      // Usuários da conta = dono + convidados.
+      users: 1 + r._count.members,
       candidates: candidatesByRecruiter.get(r.id) || 0,
       subscription: r.subscription
         ? {

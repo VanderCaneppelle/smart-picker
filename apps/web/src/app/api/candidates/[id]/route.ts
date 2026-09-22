@@ -1,10 +1,11 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyAuth, unauthorizedResponse, jobBelongsToUser } from '@/lib/auth';
+import { requireAccount, jobBelongsToAccount } from '@/lib/auth';
 import { UpdateCandidateSchema } from '@hunter/core';
 import { triggerScheduleInterviewEmail, triggerRejectionEmail } from '@/lib/worker';
 import { migrateLegacyCandidateStatusesForRecruiter } from '@/lib/candidate-status';
 import { logCandidateEvent } from '@/lib/candidate-history';
+import { isPlaceholderEmail } from '@/lib/placeholder-email';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -13,12 +14,10 @@ interface RouteParams {
 // GET /api/candidates/:id - Get candidate details (protected)
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return unauthorizedResponse();
-    }
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
 
-    await migrateLegacyCandidateStatusesForRecruiter(user.id);
+    await migrateLegacyCandidateStatusesForRecruiter(auth.ctx.accountId);
 
     const { id } = await params;
 
@@ -38,7 +37,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       },
     });
 
-    if (!candidate || !jobBelongsToUser(candidate.job, user)) {
+    if (!candidate || !jobBelongsToAccount(candidate.job, auth.ctx)) {
       return Response.json(
         { error: 'Not Found', message: 'Candidate not found' },
         { status: 404 }
@@ -60,12 +59,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // PATCH /api/candidates/:id - Update candidate (protected)
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return unauthorizedResponse();
-    }
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
 
-    await migrateLegacyCandidateStatusesForRecruiter(user.id);
+    await migrateLegacyCandidateStatusesForRecruiter(auth.ctx.accountId);
 
     const { id } = await params;
     const body = await request.json();
@@ -82,13 +79,13 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Check if candidate exists and belongs to user's job
+    // Check if candidate exists and belongs to a job of the account
     const existingCandidate = await prisma.candidate.findFirst({
       where: { id, deleted_at: null },
       include: { job: { select: { user_id: true } } },
     });
 
-    if (!existingCandidate || !jobBelongsToUser(existingCandidate.job, user)) {
+    if (!existingCandidate || !jobBelongsToAccount(existingCandidate.job, auth.ctx)) {
       return Response.json(
         { error: 'Not Found', message: 'Candidate not found' },
         { status: 404 }
@@ -100,6 +97,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const data = validation.data;
 
     if (data.status !== undefined) updateData.status = data.status;
+    // Nome e e-mail entram aqui por causa do currículo importado, que nasce com nome de
+    // arquivo e e-mail provisório. Corrigir isso à mão é o que tira o candidato do balde
+    // de revisão, então a correção também limpa needs_review quando a tela pede.
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.email !== undefined) updateData.email = data.email;
+    if (data.needs_review !== undefined) updateData.needs_review = data.needs_review;
     if (data.fit_score !== undefined) updateData.fit_score = data.fit_score;
     if (data.resume_rating !== undefined) updateData.resume_rating = data.resume_rating;
     if (data.answer_quality_rating !== undefined) updateData.answer_quality_rating = data.answer_quality_rating;
@@ -122,6 +125,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       },
     });
 
+    const emailProvisorioNoEvento =
+      isPlaceholderEmail(existingCandidate.email) &&
+      (data.status === 'interview' || data.status === 'rejected');
+
     if (data.status && data.status !== existingCandidate.status) {
       await logCandidateEvent({
         candidateId: candidate.id,
@@ -130,21 +137,40 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         fromStatus: existingCandidate.status,
         toStatus: data.status,
         message: `Status alterado de ${existingCandidate.status} para ${data.status}`,
-        metadata: { source: 'candidate_patch' },
-        createdBy: user.id,
+        metadata: {
+          source: 'candidate_patch',
+          // Fica no histórico do candidato: seis meses depois ninguém lembra se o
+          // convite não chegou por falha ou porque foi essa a decisão.
+          ...(data.skip_email === true ? { email_skipped: 'recruiter_choice' } : {}),
+          ...(emailProvisorioNoEvento ? { email_skipped: 'placeholder_email' } : {}),
+        },
+        createdBy: auth.ctx.id,
       });
     }
 
-    // When status changes to interview, send email with Calendly link
-    if (data.status === 'interview') {
+    // Convidar e recusar continuam sendo e-mails deliberados, e valem para candidato
+    // importado também: ali é ato consciente do recrutador, não automação.
+    //
+    // O que não pode sair é envio para o endereço provisório da importação, que não
+    // existe: viraria hard bounce e, em volume, derruba a reputação do domínio, atingindo
+    // justamente os e-mails de quem se candidatou de verdade. A mudança de status
+    // acontece de qualquer jeito; só o envio fica de fora, e a tela avisa.
+    const emailProvisorio = isPlaceholderEmail(candidate.email);
+    // O recrutador pode pedir a mudança sem o e-mail, quando já falou com a pessoa por
+    // outro canal. Não é o padrão: precisa ser escolhido no momento da mudança.
+    const enviarEmail = !emailProvisorio && data.skip_email !== true;
+
+    if (enviarEmail && data.status === 'interview') {
       await triggerScheduleInterviewEmail(candidate.id);
     }
-    // When status changes to rejected, send rejection email to candidate
-    if (data.status === 'rejected') {
+    if (enviarEmail && data.status === 'rejected') {
       await triggerRejectionEmail(candidate.id);
     }
 
-    return Response.json(candidate);
+    const emailPulado =
+      emailProvisorio && (data.status === 'interview' || data.status === 'rejected');
+
+    return Response.json({ ...candidate, email_skipped_placeholder: emailPulado });
   } catch (error) {
     console.error('Error updating candidate:', error);
     return Response.json(
@@ -157,22 +183,20 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 // DELETE /api/candidates/:id - Soft delete candidate (protected)
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return unauthorizedResponse();
-    }
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
 
-    await migrateLegacyCandidateStatusesForRecruiter(user.id);
+    await migrateLegacyCandidateStatusesForRecruiter(auth.ctx.accountId);
 
     const { id } = await params;
 
-    // Check if candidate exists and belongs to user's job
+    // Check if candidate exists and belongs to a job of the account
     const existingCandidate = await prisma.candidate.findFirst({
       where: { id, deleted_at: null },
       include: { job: { select: { user_id: true } } },
     });
 
-    if (!existingCandidate || !jobBelongsToUser(existingCandidate.job, user)) {
+    if (!existingCandidate || !jobBelongsToAccount(existingCandidate.job, auth.ctx)) {
       return Response.json(
         { error: 'Not Found', message: 'Candidate not found' },
         { status: 404 }

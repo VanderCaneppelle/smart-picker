@@ -5,9 +5,13 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { X, ExternalLink, FileText, Brain, MessageSquare, AlertCircle, Clock3 } from 'lucide-react';
 import { Button, Badge } from '@/components/ui';
+import CandidateSourceBadge from './CandidateSourceBadge';
+import CandidateReviewPanel from './CandidateReviewPanel';
+import { isPlaceholderEmail } from '@/lib/placeholder-email';
 import type { Candidate, CandidateStatus, ApplicationQuestion } from '@hunter/core';
 import { apiClient, type CandidateHistoryEvent } from '@/lib/api-client';
 import { useTranslations } from 'next-intl';
+import { useIntlLocale } from '@/lib/plan-i18n';
 
 const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['interview', 'rejected'];
 
@@ -20,7 +24,13 @@ const STATUS_EMAIL_MESSAGE_KEYS: Record<string, string> = {
 interface CandidateDrawerProps {
   candidate: Candidate;
   onClose: () => void;
-  onStatusChange: (candidateId: string, newStatus: CandidateStatus) => Promise<void>;
+  onStatusChange: (
+    candidateId: string,
+    newStatus: CandidateStatus,
+    skipEmail?: boolean
+  ) => Promise<void>;
+  /** Avisa a lista quando o recrutador corrige nome ou e-mail aqui dentro. */
+  onCandidateUpdated?: (candidate: Candidate) => void;
 }
 
 const STATUS_LABEL_KEYS: Record<string, string> = {
@@ -61,6 +71,7 @@ export default function CandidateDrawer({
   candidate,
   onClose,
   onStatusChange,
+  onCandidateUpdated,
 }: CandidateDrawerProps) {
   const t = useTranslations();
   const router = useRouter();
@@ -118,10 +129,10 @@ export default function CandidateDrawer({
   );
 
   const executeQuickAction = useCallback(
-    async (newStatus: CandidateStatus) => {
+    async (newStatus: CandidateStatus, skipEmail = false) => {
       setLoadingAction(newStatus);
       try {
-        await onStatusChange(candidate.id, newStatus);
+        await onStatusChange(candidate.id, newStatus, skipEmail);
         await fetchEvents();
       } finally {
         setLoadingAction(null);
@@ -133,6 +144,14 @@ export default function CandidateDrawer({
   const confirmQuickAction = useCallback(() => {
     if (pendingAction) {
       executeQuickAction(pendingAction);
+      setPendingAction(null);
+    }
+  }, [pendingAction, executeQuickAction]);
+
+  /** Move o candidato segurando o e-mail que aquele status dispararia. */
+  const confirmQuickActionSemEmail = useCallback(() => {
+    if (pendingAction) {
+      executeQuickAction(pendingAction, true);
       setPendingAction(null);
     }
   }, [pendingAction, executeQuickAction]);
@@ -197,10 +216,11 @@ export default function CandidateDrawer({
               <h2 className="text-lg font-semibold text-gray-900 truncate">
                 {candidate.name}
               </h2>
-              <div className="flex items-center gap-2.5 mt-1.5">
+              <div className="flex flex-wrap items-center gap-2.5 mt-1.5">
                 <Badge variant={STATUS_BADGE_VARIANT[candidate.status] ?? 'default'}>
-                  {STATUS_LABEL_KEYS[candidate.status] ?? candidate.status}
+                  {STATUS_LABEL_KEYS[candidate.status] ? t(STATUS_LABEL_KEYS[candidate.status]) : candidate.status}
                 </Badge>
+                <CandidateSourceBadge source={candidate.source} />
                 {candidate.fit_score != null && (
                   <span className={`text-xl font-bold ${scoreColor(candidate.fit_score)}`}>
                     {candidate.fit_score}%
@@ -262,6 +282,13 @@ export default function CandidateDrawer({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
+          {candidate.needs_review && (
+            <CandidateReviewPanel
+              candidate={candidate}
+              onUpdated={onCandidateUpdated}
+              className="mb-6"
+            />
+          )}
           {activeTab === 'summary' && <SummaryTab candidate={candidate} />}
           {activeTab === 'answers' && <AnswersTab candidate={candidate} />}
           {activeTab === 'resume' && <ResumeTab candidate={candidate} />}
@@ -301,14 +328,36 @@ export default function CandidateDrawer({
                 {t(QUICK_ACTIONS.find((a) => a.status === pendingAction)?.labelKey ?? '') || pendingAction}
               </span>.
             </p>
-            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-5">
-              {t(STATUS_EMAIL_MESSAGE_KEYS[pendingAction] ?? '')}
-            </p>
-            <div className="flex justify-end gap-3">
+            {/* Convidar ou recusar um importado é permitido, porque é ato consciente
+                do recrutador, mas ele merece saber que a pessoa nunca ouviu falar da
+                vaga. E se o e-mail ainda é o provisório, nada é enviado. */}
+            <div className="mb-5 space-y-2">
+              {isPlaceholderEmail(candidate.email) ? (
+                <p className="text-sm text-gray-700 bg-gray-100 border border-gray-200 rounded-lg p-3">
+                  {t('importacao.emailProvisorio')}
+                </p>
+              ) : (
+                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  {t(STATUS_EMAIL_MESSAGE_KEYS[pendingAction] ?? '')}
+                </p>
+              )}
+              {candidate.source !== 'form' && !isPlaceholderEmail(candidate.email) && (
+                <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  {t('importacao.emailImportado')}
+                </p>
+              )}
+            </div>
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
               <button
                 onClick={() => setPendingAction(null)}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
               >{t('candidatos.cancelar')}</button>
+              {!isPlaceholderEmail(candidate.email) && (
+                <button
+                  onClick={confirmQuickActionSemEmail}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
+                >{t('candidatos.moverSemEmail')}</button>
+              )}
               <button
                 onClick={confirmQuickAction}
                 className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors"
@@ -468,6 +517,7 @@ function HistoryTab({
   statusLabels: Record<string, string>;
 }) {
   const t = useTranslations();
+  const localeIntl = useIntlLocale();
   if (eventsLoading) {
     return <p className="text-sm text-gray-400 italic">{t('gaveta.carregandoHistorico')}</p>;
   }
@@ -479,7 +529,7 @@ function HistoryTab({
   return (
     <div className="space-y-4">
       {events.map((event) => {
-        const dateText = new Date(event.created_at).toLocaleString('pt-BR', {
+        const dateText = new Date(event.created_at).toLocaleString(localeIntl, {
           day: '2-digit',
           month: '2-digit',
           year: 'numeric',

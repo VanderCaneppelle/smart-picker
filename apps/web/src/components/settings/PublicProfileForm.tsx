@@ -19,8 +19,10 @@ import BrandingFields from './BrandingFields';
 import EmailPersonalizationFields from './EmailPersonalizationFields';
 import EmailTemplatesSection from './EmailTemplatesSection';
 import { useOnboarding } from '@/contexts/OnboardingContext';
+import { useTranslations } from 'next-intl';
 
 export default function PublicProfileForm() {
+  const t = useTranslations();
   const { resetOnboarding, completeStep } = useOnboarding();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -101,7 +103,7 @@ export default function PublicProfileForm() {
           rejectionBodyHtml: data.rejection_body_html?.trim() || DEFAULT_REJECTION_BODY_HTML,
         };
       })
-      .catch(() => toast.error('Erro ao carregar configurações'))
+      .catch(() => toast.error(t('perfil.erroCarregar')))
       .finally(() => setIsLoading(false));
   }, []);
 
@@ -115,7 +117,7 @@ export default function PublicProfileForm() {
     const validation = validateSlug(value);
     if (!validation.valid) {
       setSlugAvailability('invalid');
-      setSlugError(validation.error!);
+      setSlugError(t(validation.errorKey!));
       return;
     }
 
@@ -127,7 +129,7 @@ export default function PublicProfileForm() {
         setSlugError('');
       } else {
         setSlugAvailability('taken');
-        setSlugError(result.reason || 'Este slug já está em uso');
+        setSlugError(result.reason || t('perfil.slugEmUso'));
       }
     } catch {
       setSlugAvailability('idle');
@@ -157,7 +159,7 @@ export default function PublicProfileForm() {
 
   const handleTogglePublicPage = async (enabled: boolean) => {
     if (enabled && !slug) {
-      toast.error('Defina um slug antes de ativar a página pública');
+      toast.error(t('config.definaSlug'));
       return;
     }
     const previousValue = publicPageEnabled;
@@ -167,7 +169,7 @@ export default function PublicProfileForm() {
       const effectiveSlug = slug || originalSlug.current;
       if (enabled && !effectiveSlug) {
         setPublicPageEnabled(previousValue);
-        toast.error('Defina um slug antes de ativar a página pública');
+        toast.error(t('config.definaSlug'));
         return;
       }
       const payload: Record<string, unknown> = {
@@ -184,10 +186,10 @@ export default function PublicProfileForm() {
         setSlugAvailability('current');
         initialValues.current.slug = updated.public_slug;
       }
-      toast.success(enabled ? 'Página pública ativada!' : 'Página pública desativada.');
+      toast.success(enabled ? t('perfil.publicaAtivada') : t('perfil.publicaDesativada'));
     } catch (error) {
       setPublicPageEnabled(previousValue);
-      toast.error(error instanceof Error ? error.message : 'Erro ao atualizar');
+      toast.error(error instanceof Error ? error.message : t('perfil.erroAtualizar'));
     }
   };
 
@@ -198,7 +200,7 @@ export default function PublicProfileForm() {
 
       if (slug && slug !== originalSlug.current) {
         if (slugAvailability !== 'available') {
-          toast.error('Verifique a disponibilidade do slug');
+          toast.error(t('config.verifiqueSlug'));
           setIsSaving(false);
           return;
         }
@@ -244,9 +246,9 @@ export default function PublicProfileForm() {
         rejectionBodyHtml: updated.rejection_body_html?.trim() || DEFAULT_REJECTION_BODY_HTML,
       };
       completeStep('settings');
-      toast.success('Configurações salvas!');
+      toast.success(t('config.salvas'));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Erro ao salvar');
+      toast.error(error instanceof Error ? error.message : t('perfil.erroSalvar'));
     } finally {
       setIsSaving(false);
     }
@@ -332,8 +334,8 @@ export default function PublicProfileForm() {
     pendingNavigation.current = null;
   }, []);
 
-  if (isLoading) return <Loading text="Carregando configurações..." />;
-  if (!settings) return <div className="text-center py-12 text-gray-500">Erro ao carregar configurações.</div>;
+  if (isLoading) return <Loading text={t('perfil.carregando')} />;
+  if (!settings) return <div className="text-center py-12 text-gray-500">{t('config.erroCarregar')}</div>;
 
   const slugOk = slugAvailability === 'available' || slugAvailability === 'current';
 
@@ -342,18 +344,14 @@ export default function PublicProfileForm() {
       {/* Header com botão Salvar no topo */}
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Perfil público</h1>
-          <p className="text-gray-600 mt-1">
-            Configure sua página pública, branding e personalização de e-mails
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('config.perfilPublico')}</h1>
+          <p className="text-gray-600 mt-1">{t('config.perfilPublicoSub')}</p>
         </div>
         <Button
           onClick={handleSave}
           isLoading={isSaving}
           className="bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500 shrink-0"
-        >
-          Salvar configurações
-        </Button>
+        >{t('config.salvar')}</Button>
       </div>
 
       <div className="space-y-8 w-full">
@@ -364,8 +362,8 @@ export default function PublicProfileForm() {
             <Globe className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Página pública</h2>
-            <p className="text-sm text-gray-500">Configure seu perfil público de recrutador</p>
+            <h2 className="text-lg font-semibold text-gray-900">{t('config.paginaPublica')}</h2>
+            <p className="text-sm text-gray-500">{t('config.paginaPublicaSub')}</p>
           </div>
         </div>
 
@@ -373,8 +371,8 @@ export default function PublicProfileForm() {
           {/* Toggle */}
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
             <div>
-              <p className="text-sm font-medium text-gray-900">Ativar página pública</p>
-              <p className="text-xs text-gray-500 mt-0.5">Candidatos poderão ver suas vagas abertas</p>
+              <p className="text-sm font-medium text-gray-900">{t('config.ativar')}</p>
+              <p className="text-xs text-gray-500 mt-0.5">{t('config.ativarSub')}</p>
             </div>
             <button
               type="button"
@@ -395,9 +393,7 @@ export default function PublicProfileForm() {
 
           {/* Slug */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              URL da página pública
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('config.urlPagina')}</label>
             <div className="flex items-center gap-0">
               <span className="inline-flex items-center px-3 py-2 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm whitespace-nowrap">
                 rankea.ai/r/
@@ -406,7 +402,7 @@ export default function PublicProfileForm() {
                 type="text"
                 value={slug}
                 onChange={(e) => setSlug(e.target.value.toLowerCase())}
-                placeholder="seu-slug"
+                placeholder={t('config.seuSlug')}
                 className={`flex-1 px-3 py-2 border rounded-r-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent ${
                   slugAvailability === 'available' || slugAvailability === 'current'
                     ? 'border-emerald-500 focus:ring-emerald-500'
@@ -420,19 +416,19 @@ export default function PublicProfileForm() {
               {slugAvailability === 'checking' && (
                 <>
                   <Loader2 className="h-3.5 w-3.5 animate-spin text-gray-400" />
-                  <span className="text-gray-500">Verificando...</span>
+                  <span className="text-gray-500">{t('config.verificando')}</span>
                 </>
               )}
               {slugAvailability === 'available' && (
                 <>
                   <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
-                  <span className="text-emerald-600">Disponível!</span>
+                  <span className="text-emerald-600">{t('config.disponivel')}</span>
                 </>
               )}
               {slugAvailability === 'current' && (
                 <>
                   <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
-                  <span className="text-emerald-600">Seu slug atual</span>
+                  <span className="text-emerald-600">{t('config.slugAtual')}</span>
                 </>
               )}
               {(slugAvailability === 'taken' || slugAvailability === 'invalid') && (
@@ -456,8 +452,7 @@ export default function PublicProfileForm() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-sm text-emerald-600 hover:text-emerald-700 font-medium"
-                >
-                  Abrir <ExternalLink className="h-3.5 w-3.5" />
+                >{t('config.abrir')}<ExternalLink className="h-3.5 w-3.5" />
                 </a>
               )}
             </div>
@@ -517,18 +512,14 @@ export default function PublicProfileForm() {
           onClick={handleSave}
           isLoading={isSaving}
           className="bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500"
-        >
-          Salvar configurações
-        </Button>
+        >{t('config.salvar')}</Button>
       </div>
       </div>
 
       {/* Onboarding reset */}
       <div className="bg-white rounded-lg border border-gray-200 p-6 mt-8">
-        <h2 className="text-lg font-semibold text-gray-900 mb-1">Tutorial guiado</h2>
-        <p className="text-sm text-gray-500 mb-4">
-          Reinicie o tutorial de primeiros passos para rever o guia interativo desde o início.
-        </p>
+        <h2 className="text-lg font-semibold text-gray-900 mb-1">{t('config.tutorial')}</h2>
+        <p className="text-sm text-gray-500 mb-4">{t('perfil.reiniciarTutorialTexto')}</p>
         <Button
           type="button"
           variant="ghost"
@@ -537,34 +528,26 @@ export default function PublicProfileForm() {
             router.push('/perfil');
           }}
           className="border border-gray-200 text-gray-700 hover:bg-gray-50"
-        >
-          Reiniciar tutorial de boas-vindas
-        </Button>
+        >{t('config.reiniciarTutorial')}</Button>
       </div>
 
       <Modal
         isOpen={showLeaveModal}
         onClose={handleCancelLeave}
-        title="Alterações não salvas"
+        title={t('config.alteracoesNaoSalvas')}
         size="sm"
         footer={
           <>
-            <Button variant="ghost" onClick={handleCancelLeave}>
-              Cancelar
-            </Button>
+            <Button variant="ghost" onClick={handleCancelLeave}>{t('comum.cancelar')}</Button>
             <Button
               variant="secondary"
               onClick={handleConfirmLeave}
               className="border border-amber-500 text-amber-700 hover:bg-amber-50"
-            >
-              Sair mesmo assim
-            </Button>
+            >{t('config.sairMesmo')}</Button>
           </>
         }
       >
-        <p className="text-gray-600">
-          Você tem alterações não salvas. Deseja sair desta página mesmo assim?
-        </p>
+        <p className="text-gray-600">{t('config.alteracoesNaoSalvasTexto')}</p>
       </Modal>
     </div>
   );

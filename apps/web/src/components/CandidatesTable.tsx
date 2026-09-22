@@ -23,6 +23,9 @@ import { apiClient } from '@/lib/api-client';
 import { Badge, Select, SortIcon } from '@/components/ui';
 import type { Candidate, CandidateStatus, DisqualificationFlag } from '@hunter/core';
 import { useTranslations } from 'next-intl';
+import CandidateSourceBadge from './CandidateSourceBadge';
+import { isPlaceholderEmail } from '@/lib/placeholder-email';
+import { useIntlLocale } from '@/lib/plan-i18n';
 
 const EMAIL_TRIGGER_STATUSES: CandidateStatus[] = ['interview', 'rejected'];
 
@@ -293,6 +296,7 @@ export default function CandidatesTable({
   onStatusFilterChange,
 }: CandidatesTableProps) {
   const t = useTranslations();
+  const localeIntl = useIntlLocale();
   /** Rótulo resolvido na renderização: a lista guarda a chave. */
   const opcoes = (lista: { value: string; labelKey: string }[]) =>
     lista.map((o) => ({ value: o.value, label: t(o.labelKey) }));
@@ -364,13 +368,22 @@ export default function CandidatesTable({
     }
   };
 
-  const executeStatusChange = async (candidateId: string, newStatus: CandidateStatus) => {
+  const executeStatusChange = async (
+    candidateId: string,
+    newStatus: CandidateStatus,
+    skipEmail = false
+  ) => {
     try {
-      await apiClient.updateCandidate(candidateId, { status: newStatus });
+      await apiClient.updateCandidate(candidateId, {
+        status: newStatus,
+        ...(skipEmail ? { skip_email: true } : {}),
+      });
       setCandidates((prev) =>
         prev.map((c) => (c.id === candidateId ? { ...c, status: newStatus } : c))
       );
-      toast.success(t('candidatos.statusAtualizado'));
+      toast.success(
+        skipEmail ? t('candidatos.movidoSemEmail') : t('candidatos.statusAtualizado')
+      );
       if (newStatus === 'interview') {
         setTimeout(onRefetch, 3000);
       }
@@ -380,9 +393,13 @@ export default function CandidatesTable({
     }
   };
 
-  const confirmStatusChange = () => {
+  const confirmStatusChange = (skipEmail = false) => {
     if (pendingStatusChange) {
-      executeStatusChange(pendingStatusChange.candidateId, pendingStatusChange.newStatus);
+      executeStatusChange(
+        pendingStatusChange.candidateId,
+        pendingStatusChange.newStatus,
+        skipEmail
+      );
       setPendingStatusChange(null);
     }
   };
@@ -782,11 +799,19 @@ export default function CandidatesTable({
                     />
                   </td>
 
-                  {/* Candidato: nome + email */}
+                  {/* Candidato: nome + email + origem */}
                   <td className="px-4 py-3">
                     <div className="min-w-0">
                       <p className="font-medium text-gray-900 truncate">{candidate.name}</p>
                       <p className="text-xs text-gray-400 truncate">{candidate.email}</p>
+                      <div className="mt-1 flex flex-wrap items-center gap-1">
+                        <CandidateSourceBadge source={candidate.source} />
+                        {candidate.needs_review && (
+                          <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800">
+                            {t('importacao.revisao.selo')}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </td>
 
@@ -794,7 +819,7 @@ export default function CandidatesTable({
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div className="flex items-center gap-1.5 text-sm text-gray-600">
                       <Calendar className="h-3.5 w-3.5 text-gray-400 shrink-0" />
-                      {new Date(candidate.created_at).toLocaleDateString('pt-BR', {
+                      {new Date(candidate.created_at).toLocaleDateString(localeIntl, {
                         day: '2-digit',
                         month: '2-digit',
                         year: '2-digit',
@@ -907,11 +932,11 @@ export default function CandidatesTable({
                     {candidate.schedule_interview_email_sent_at ? (
                       <span
                         className="inline-flex items-center gap-1 text-green-600 text-xs"
-                        title={`Enviado em ${new Date(candidate.schedule_interview_email_sent_at).toLocaleString('pt-BR')}`}
+                        title={`Enviado em ${new Date(candidate.schedule_interview_email_sent_at).toLocaleString(localeIntl)}`}
                       >
                         <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
                         {new Date(candidate.schedule_interview_email_sent_at).toLocaleDateString(
-                          'pt-BR',
+                          localeIntl,
                           { day: '2-digit', month: '2-digit', year: '2-digit' }
                         )}
                       </span>
@@ -968,16 +993,41 @@ export default function CandidatesTable({
                 {t(statusUpdateOptions.find((o) => o.value === pendingStatusChange.newStatus)?.labelKey ?? '')}
               </span>.
             </p>
-            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-5">
-              {t(STATUS_EMAIL_MESSAGE_KEYS[pendingStatusChange.newStatus] ?? '')}
-            </p>
-            <div className="flex justify-end gap-3">
+            {(() => {
+              const alvo = candidates.find((c) => c.id === pendingStatusChange.candidateId);
+              const provisorio = isPlaceholderEmail(alvo?.email);
+              return (
+                <div className="mb-5 space-y-2">
+                  {provisorio ? (
+                    <p className="text-sm text-gray-700 bg-gray-100 border border-gray-200 rounded-lg p-3">
+                      {t('importacao.emailProvisorio')}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                      {t(STATUS_EMAIL_MESSAGE_KEYS[pendingStatusChange.newStatus] ?? '')}
+                    </p>
+                  )}
+                  {alvo && alvo.source !== 'form' && !provisorio && (
+                    <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                      {t('importacao.emailImportado')}
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
               <button
                 onClick={cancelStatusChange}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
               >{t('candidatos.cancelar')}</button>
+              {!isPlaceholderEmail(candidates.find((c) => c.id === pendingStatusChange.candidateId)?.email) && (
+                <button
+                  onClick={() => confirmStatusChange(true)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
+                >{t('candidatos.moverSemEmail')}</button>
+              )}
               <button
-                onClick={confirmStatusChange}
+                onClick={() => confirmStatusChange()}
                 className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors"
               >{t('candidatos.confirmar')}</button>
             </div>

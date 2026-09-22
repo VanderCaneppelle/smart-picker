@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -73,6 +74,7 @@ const RichTextEditor = ({
   aiPolish = false,
   aiContext,
 }: RichTextEditorProps) => {
+  const t = useTranslations();
   const [polishing, setPolishing] = useState(false);
   const [suggestion, setSuggestion] = useState<{ html: string; missing: string[] } | null>(null);
 
@@ -84,7 +86,7 @@ const RichTextEditor = ({
       const result = await apiClient.polishJobDescription(editor.getHTML(), aiContext);
       setSuggestion(result);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Não consegui melhorar a descrição.');
+      toast.error(err instanceof Error ? err.message : t('editor.erroIA'));
     } finally {
       setPolishing(false);
     }
@@ -96,7 +98,7 @@ const RichTextEditor = ({
     editor.commands.setContent(suggestion.html);
     onChange(editor.getHTML());
     setSuggestion(null);
-    toast.success('Descrição atualizada. Use Desfazer se quiser voltar.');
+    toast.success(t('editor.iaOk'));
   };
   const editor = useEditor({
     extensions: [
@@ -167,14 +169,14 @@ const RichTextEditor = ({
           <MenuButton
             onClick={() => editor.chain().focus().toggleBold().run()}
             isActive={editor.isActive('bold')}
-            title="Bold"
+            title={t('editor.negrito')}
           >
             <Bold className="h-4 w-4" />
           </MenuButton>
           <MenuButton
             onClick={() => editor.chain().focus().toggleItalic().run()}
             isActive={editor.isActive('italic')}
-            title="Italic"
+            title={t('editor.italico')}
           >
             <Italic className="h-4 w-4" />
           </MenuButton>
@@ -186,7 +188,7 @@ const RichTextEditor = ({
               editor.chain().focus().toggleHeading({ level: 1 }).run()
             }
             isActive={editor.isActive('heading', { level: 1 })}
-            title="Heading 1"
+            title={t('editor.titulo1')}
           >
             <Heading1 className="h-4 w-4" />
           </MenuButton>
@@ -195,7 +197,7 @@ const RichTextEditor = ({
               editor.chain().focus().toggleHeading({ level: 2 }).run()
             }
             isActive={editor.isActive('heading', { level: 2 })}
-            title="Heading 2"
+            title={t('editor.titulo2')}
           >
             <Heading2 className="h-4 w-4" />
           </MenuButton>
@@ -204,7 +206,7 @@ const RichTextEditor = ({
               editor.chain().focus().toggleHeading({ level: 3 }).run()
             }
             isActive={editor.isActive('heading', { level: 3 })}
-            title="Heading 3"
+            title={t('editor.titulo3')}
           >
             <Heading3 className="h-4 w-4" />
           </MenuButton>
@@ -214,21 +216,21 @@ const RichTextEditor = ({
           <MenuButton
             onClick={() => editor.chain().focus().toggleBulletList().run()}
             isActive={editor.isActive('bulletList')}
-            title="Bullet List"
+            title={t('editor.lista')}
           >
             <List className="h-4 w-4" />
           </MenuButton>
           <MenuButton
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
             isActive={editor.isActive('orderedList')}
-            title="Numbered List"
+            title={t('editor.listaNumerada')}
           >
             <ListOrdered className="h-4 w-4" />
           </MenuButton>
           <MenuButton
             onClick={() => editor.chain().focus().toggleBlockquote().run()}
             isActive={editor.isActive('blockquote')}
-            title="Citação"
+            title={t('editor.citacao')}
           >
             <Quote className="h-4 w-4" />
           </MenuButton>
@@ -237,7 +239,7 @@ const RichTextEditor = ({
 
           <MenuButton
             onClick={() => editor.chain().focus().setHorizontalRule().run()}
-            title="Linha horizontal"
+            title={t('editor.linha')}
           >
             <Minus className="h-4 w-4" />
           </MenuButton>
@@ -247,14 +249,14 @@ const RichTextEditor = ({
           <MenuButton
             onClick={() => editor.chain().focus().undo().run()}
             disabled={!editor.can().undo()}
-            title="Desfazer"
+            title={t('editor.desfazer')}
           >
             <Undo className="h-4 w-4" />
           </MenuButton>
           <MenuButton
             onClick={() => editor.chain().focus().redo().run()}
             disabled={!editor.can().redo()}
-            title="Refazer"
+            title={t('editor.refazer')}
           >
             <Redo className="h-4 w-4" />
           </MenuButton>
@@ -264,7 +266,7 @@ const RichTextEditor = ({
               type="button"
               onClick={handlePolish}
               disabled={polishing}
-              title="Corrige o texto e organiza em seções, sem inventar informação"
+              title={t('editor.iaAjuda')}
               className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-[13px] font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {polishing ? (
@@ -272,7 +274,7 @@ const RichTextEditor = ({
               ) : (
                 <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
               )}
-              {polishing ? 'Melhorando...' : 'Melhorar com IA'}
+              {polishing ? 'Melhorando...' : t('editor.melhorarIA')}
             </button>
           )}
         </div>
@@ -283,26 +285,20 @@ const RichTextEditor = ({
         {suggestion && (
           <div className="border-t border-gray-200 bg-gray-50 p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-400">
-                Sugestão da IA
-              </span>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-400">{t('editor.sugestaoIA')}</span>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setSuggestion(null)}
                   className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-[13px] font-medium text-gray-700 transition-colors hover:bg-gray-100"
                 >
-                  <X className="h-3.5 w-3.5" />
-                  Descartar
-                </button>
+                  <X className="h-3.5 w-3.5" />{t('editor.descartar')}</button>
                 <button
                   type="button"
                   onClick={applySuggestion}
                   className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-1.5 text-[13px] font-medium text-white transition-colors hover:bg-emerald-700"
                 >
-                  <Check className="h-3.5 w-3.5" />
-                  Aplicar
-                </button>
+                  <Check className="h-3.5 w-3.5" />{t('editor.aplicar')}</button>
               </div>
             </div>
 
@@ -313,9 +309,7 @@ const RichTextEditor = ({
 
             {suggestion.missing.length > 0 && (
               <div className="mt-3">
-                <p className="mb-1.5 text-[13px] font-medium text-gray-700">
-                  A IA não escreveu isto porque você não informou:
-                </p>
+                <p className="mb-1.5 text-[13px] font-medium text-gray-700">{t('editor.naoEscreveu')}</p>
                 <ul className="list-disc space-y-0.5 pl-5 text-[13px] text-gray-500">
                   {suggestion.missing.map((item, i) => (
                     <li key={i}>{item}</li>

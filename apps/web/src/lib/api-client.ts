@@ -9,6 +9,8 @@ import type {
   CandidatesListResponse,
   JobFilters,
   CandidateFilters,
+  IngestFile,
+  IngestResult,
 } from '@hunter/core';
 
 import type { SubscriptionInfo } from '@/lib/subscription';
@@ -48,6 +50,36 @@ export interface RecruiterSettings {
   schedule_interview_body_html: string | null;
   rejection_subject: string | null;
   rejection_body_html: string | null;
+}
+
+export interface TeamMember {
+  id: string;
+  email: string;
+  name: string;
+  role: 'owner' | 'member';
+  must_change_password: boolean;
+  invite_email_sent_at: string | null;
+  created_at: string;
+  /** Existe na conta, mas está fora dos assentos do plano e não consegue entrar. */
+  seat_blocked: boolean;
+}
+
+export interface TeamResponse {
+  owner: TeamMember;
+  members: TeamMember[];
+  seats: {
+    used: number;
+    limit: number;
+    canInvite: boolean;
+    plan: string | null;
+    status: string;
+  };
+}
+
+export interface TeamMutationResponse {
+  member: TeamMember;
+  invite_email_sent: boolean;
+  invite_error?: string;
 }
 
 export interface DashboardStatsResponse {
@@ -198,6 +230,21 @@ class ApiClient {
       const error = await response.json().catch(() => ({
         message: 'An error occurred',
       }));
+
+      // Assento revogado no meio da sessão (o dono baixou de plano ou removeu a
+      // pessoa). O token do Supabase continua válido, então ninguém devolve 401 e o
+      // app ficaria preso numa tela que falha em toda chamada. Derruba a sessão.
+      //
+      // Só seat_blocked: owner_only é um membro esbarrando em tela de dono, e
+      // password_change_required precisa da sessão viva para trocar a senha.
+      if (
+        response.status === 403 &&
+        error.code === 'seat_blocked' &&
+        typeof window !== 'undefined'
+      ) {
+        window.dispatchEvent(new CustomEvent(AUTH_LOGOUT_EVENT));
+      }
+
       throw new ApiError(
         error.message || `HTTP ${response.status}`,
         response.status,
@@ -388,6 +435,37 @@ class ApiClient {
     return this.request('/jobs/limits');
   }
 
+  // Equipe (todas as rotas são exclusivas do dono, menos a troca de senha)
+
+  async getTeam(): Promise<TeamResponse> {
+    return this.request<TeamResponse>('/team');
+  }
+
+  async createTeamMember(data: { name: string; email: string }): Promise<TeamMutationResponse> {
+    return this.request<TeamMutationResponse>('/team', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async removeTeamMember(id: string): Promise<{ ok: boolean }> {
+    return this.request<{ ok: boolean }>(`/team/${id}`, { method: 'DELETE' });
+  }
+
+  async resendTeamInvite(id: string): Promise<TeamMutationResponse> {
+    return this.request<TeamMutationResponse>(`/team/${id}`, { method: 'POST' });
+  }
+
+  async changePassword(data: {
+    new_password: string;
+    current_password?: string;
+  }): Promise<{ ok: boolean }> {
+    return this.request<{ ok: boolean }>('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
   // Subscription
   async getSubscription(): Promise<SubscriptionInfo> {
     return this.request<SubscriptionInfo>('/subscription');
@@ -476,7 +554,13 @@ class ApiClient {
 
   // Auth
   async login(email: string, password: string): Promise<{
-    user: { id: string; email: string };
+    user: {
+      id: string;
+      email: string;
+      role?: 'owner' | 'member';
+      account_id?: string;
+      must_change_password?: boolean;
+    };
     access_token: string;
     refresh_token: string;
     expires_at: number;
@@ -491,7 +575,14 @@ class ApiClient {
     email: string,
     password: string,
     password_confirmation: string,
-    recruiterData: { name: string; company?: string; phone_number?: string; session_id?: string }
+    recruiterData: {
+      name: string;
+      company?: string;
+      phone_number?: string;
+      session_id?: string;
+      /** Token do Turnstile. Ausente quando o captcha não está configurado. */
+      turnstile_token?: string;
+    }
   ): Promise<{
     user: { id: string; email: string };
     access_token?: string;
@@ -510,6 +601,7 @@ class ApiClient {
         company: recruiterData.company || '',
         phone_number: recruiterData.phone_number || '',
         session_id: recruiterData.session_id || undefined,
+        turnstile_token: recruiterData.turnstile_token || undefined,
       }),
     });
   }
@@ -525,14 +617,44 @@ class ApiClient {
     });
   }
 
-  async getCurrentUser(): Promise<{ user: { id: string; email: string } }> {
+  async getCurrentUser(): Promise<{
+    user: {
+      id: string;
+      email: string;
+      role?: 'owner' | 'member';
+      account_id?: string;
+      must_change_password?: boolean;
+    };
+  }> {
     return this.request('/auth/me');
   }
 
+  /**
+   * Cria um candidato por currículo já enviado ao Storage. Uma chamada por lote: quem
+   * dispara a pontuação é o servidor, uma vez só para a vaga inteira.
+   */
+  async importCandidates(jobId: string, files: IngestFile[]): Promise<IngestResult> {
+    return this.request<IngestResult>('/candidates/import', {
+      method: 'POST',
+      body: JSON.stringify({ job_id: jobId, files }),
+    });
+  }
+
   // Upload
-  async uploadFile(file: File, bucket = 'resumes', isRetry = false): Promise<{
+  async uploadFile(
+    file: File,
+    bucket = 'resumes',
+    isRetry = false,
+    /**
+     * 'import' manda o arquivo para o diretório da conta e exige sessão. O formulário
+     * público de candidatura não passa nada aqui e segue anônimo.
+     */
+    purpose?: 'import'
+  ): Promise<{
     url: string;
     fileName: string;
+    storage_path: string;
+    sha256: string | null;
     originalName: string;
     size: number;
     type: string;
@@ -540,6 +662,7 @@ class ApiClient {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('bucket', bucket);
+    if (purpose) formData.append('purpose', purpose);
 
     const headers: HeadersInit = {};
     if (this.token) {
@@ -555,7 +678,7 @@ class ApiClient {
     if (response.status === 401 && !isRetry) {
       const refreshed = await this.tryRefreshToken();
       if (refreshed) {
-        return this.uploadFile(file, bucket, true);
+        return this.uploadFile(file, bucket, true, purpose);
       }
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent(AUTH_LOGOUT_EVENT));
@@ -577,7 +700,7 @@ export const apiClient = new ApiClient();
 export default apiClient;
 
 export interface AdminOverview {
-  recruiters: { total: number; last7d: number; last30d: number };
+  recruiters: { total: number; last7d: number; last30d: number; teamMembers?: number };
   jobs: { total: number; active: number };
   candidates: { total: number; last7d: number; last30d: number };
   subscriptions: {
@@ -596,6 +719,8 @@ export interface AdminRecruiterRow {
   company: string | null;
   created_at: string;
   jobs: number;
+  /** Usuários da conta, contando o dono. */
+  users?: number;
   candidates: number;
   subscription: {
     status: string;

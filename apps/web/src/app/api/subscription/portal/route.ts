@@ -1,13 +1,13 @@
 import { NextRequest } from 'next/server';
-import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { requireAccount } from '@/lib/auth';
 import { stripe } from '@/lib/stripe';
 import { getSubscriptionByRecruiterId } from '@/lib/subscription-service';
 
 export async function POST(request: NextRequest) {
-  const user = await verifyAuth(request);
-  if (!user) return unauthorizedResponse();
+  const auth = await requireAccount(request, { ownerOnly: true });
+  if (auth.response) return auth.response;
 
-  const subscription = await getSubscriptionByRecruiterId(user.id);
+  const subscription = await getSubscriptionByRecruiterId(auth.ctx.accountId);
 
   if (!subscription?.stripe_customer_id) {
     return Response.json(

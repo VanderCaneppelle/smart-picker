@@ -23,6 +23,8 @@ export const CandidateStatusSchema = z.enum([
   'hired',
 ]);
 
+export const CandidateSourceSchema = z.enum(['form', 'import', 'email']);
+
 export const CurrencySchema = z.enum([
   'USD',
   'EUR',
@@ -135,8 +137,48 @@ export const CreateCandidateSchema = z.object({
   consent_version: z.string().optional(),
 });
 
+/**
+ * Teto absoluto de arquivos num POST de importação, igual ao limite do maior plano.
+ * É a trava do contrato da API, não a regra de negócio: o limite real por conta
+ * (trial x pago, e o teto mensal) é aplicado pelo núcleo de ingestão, que conhece a
+ * assinatura. Aqui só impede que um corpo absurdo chegue a ser processado.
+ */
+export const MAX_IMPORT_BATCH_FILES = 200;
+
+/** Tipos aceitos na importação: os mesmos que o formulário público já aceita. */
+export const IMPORT_ALLOWED_MIME_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+] as const;
+
+export const MAX_IMPORT_FILE_BYTES = 10 * 1024 * 1024;
+
+export const ImportResumeFileSchema = z.object({
+  storage_path: z.string().min(1).max(500),
+  original_name: z.string().min(1).max(500),
+  /** Sempre hex minúsculo de 64 caracteres: é o sha256 calculado pelo servidor no upload. */
+  sha256: z.string().regex(/^[a-f0-9]{64}$/, 'Invalid sha256'),
+  mime_type: z.string().min(1).max(200),
+  size_bytes: z.number().int().positive(),
+});
+
+export const ImportCandidatesSchema = z.object({
+  job_id: z.string().uuid(),
+  files: z.array(ImportResumeFileSchema).min(1).max(MAX_IMPORT_BATCH_FILES),
+});
+
 export const UpdateCandidateSchema = z.object({
   status: CandidateStatusSchema.optional(),
+  /**
+   * Nome e e-mail só são editáveis por causa da importação: quem entra por currículo
+   * começa com nome de arquivo e e-mail provisório, e o recrutador corrige na tela
+   * quando a IA não conseguiu extrair. Editar candidato que se candidatou sozinho
+   * continua sendo possível, e é o mesmo caminho.
+   */
+  name: z.string().min(1).max(200).optional(),
+  email: z.string().email('Invalid email').optional(),
+  needs_review: z.boolean().optional(),
   fit_score: z.number().min(0).max(100).nullable().optional(),
   resume_rating: z.number().min(0).max(5).nullable().optional(),
   answer_quality_rating: z.number().min(0).max(5).nullable().optional(),
@@ -145,6 +187,8 @@ export const UpdateCandidateSchema = z.object({
   needs_scoring: z.boolean().optional(),
   flagged_reason: z.string().nullable().optional(),
   recruiter_notes: z.string().max(50000).nullable().optional(),
+  /** Instrução da chamada, nunca gravada: segura o e-mail que o status dispararia. */
+  skip_email: z.boolean().optional(),
 });
 
 // ============================================
@@ -186,6 +230,7 @@ export const CandidateFiltersSchema = z.object({
   min_fit_score: z.coerce.number().min(0).max(100).optional(),
   max_fit_score: z.coerce.number().min(0).max(100).optional(),
   search: z.string().optional(),
+  source: CandidateSourceSchema.optional(),
 });
 
 // ============================================
@@ -196,6 +241,8 @@ export type CreateJobSchemaType = z.infer<typeof CreateJobSchema>;
 export type UpdateJobSchemaType = z.infer<typeof UpdateJobSchema>;
 export type CreateCandidateSchemaType = z.infer<typeof CreateCandidateSchema>;
 export type UpdateCandidateSchemaType = z.infer<typeof UpdateCandidateSchema>;
+export type ImportCandidatesSchemaType = z.infer<typeof ImportCandidatesSchema>;
+export type ImportResumeFileSchemaType = z.infer<typeof ImportResumeFileSchema>;
 export type LoginSchemaType = z.infer<typeof LoginSchema>;
 export type SignUpSchemaType = z.infer<typeof SignUpSchema>;
 export type JobFiltersSchemaType = z.infer<typeof JobFiltersSchema>;

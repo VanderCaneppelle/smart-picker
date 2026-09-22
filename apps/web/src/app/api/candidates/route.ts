@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { requireAccount } from '@/lib/auth';
 import { triggerWorkerProcess } from '@/lib/worker';
 import { CreateCandidateSchema, CandidateFiltersSchema } from '@hunter/core';
 import type { ApplicationQuestion, ApplicationAnswer } from '@hunter/core';
@@ -15,16 +15,15 @@ import {
   type PlanId,
 } from '@/lib/subscription';
 import { logCandidateEvent } from '@/lib/candidate-history';
+import { tradutorDeErros } from '@/lib/erros';
 
 // GET /api/candidates - List all candidates (protected)
 export async function GET(request: NextRequest) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return unauthorizedResponse();
-    }
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
 
-    await migrateLegacyCandidateStatusesForRecruiter(user.id);
+    await migrateLegacyCandidateStatusesForRecruiter(auth.ctx.accountId);
 
     const { searchParams } = new URL(request.url);
     
@@ -46,7 +45,8 @@ export async function GET(request: NextRequest) {
     const where: Prisma.CandidateWhereInput = {
       deleted_at: null,
       job: {
-        user_id: user.id, // Multi-tenant: apenas candidatos das vagas do recrutador
+        // Multi-tenant pela CONTA: candidatos de todas as vagas da conta.
+        user_id: auth.ctx.accountId,
         deleted_at: null,
       },
     };
@@ -108,6 +108,7 @@ export async function GET(request: NextRequest) {
 
 // POST /api/candidates - Create a new candidate (public - for job applications)
 export async function POST(request: NextRequest) {
+  const t = await tradutorDeErros();
   try {
     const body = await request.json();
     const validation = CreateCandidateSchema.safeParse(body);
@@ -156,7 +157,7 @@ export async function POST(request: NextRequest) {
       return Response.json(
         {
           error: 'Gone',
-          message: 'Esta vaga não está mais recebendo candidaturas.',
+          message: t('erros.vagaFechada'),
         },
         { status: 410 }
       );

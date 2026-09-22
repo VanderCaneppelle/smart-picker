@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { toast } from 'sonner';
 import { Search, X } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
+import { registrarEvento } from '@/lib/analytics';
 import { Loading, EmptyState, Select } from '@/components/ui';
 import CandidatesViewToggle, {
   resolveInitialView,
@@ -12,6 +13,7 @@ import CandidatesViewToggle, {
 import CandidatesTable from './CandidatesTable';
 import CandidatesKanbanBoard from './CandidatesKanbanBoard';
 import type { Candidate } from '@hunter/core';
+import { useTranslations } from 'next-intl';
 
 /** Busca global: nome, e-mail, resumo do CV, nível de experiência, score numérico */
 function filterCandidatesBySearch(candidates: Candidate[], query: string): Candidate[] {
@@ -28,32 +30,56 @@ function filterCandidatesBySearch(candidates: Candidate[], query: string): Candi
 }
 
 const statusOptions = [
-  { value: '', label: 'Todos' },
-  { value: 'active', label: 'Todos (excl. encerrados)' },
-  { value: 'new', label: 'Novos' },
-  { value: 'reviewing', label: 'Em análise' },
-  { value: 'interview', label: 'Entrevista' },
-  { value: 'in_validation', label: 'Em validação' },
-  { value: 'rejected', label: 'Encerrados' },
-  { value: 'hired', label: 'Contratados' },
+  { value: '', labelKey: 'candidatos.filtros.todos' },
+  { value: 'active', labelKey: 'candidatos.filtros.todosExcl' },
+  { value: 'new', labelKey: 'candidatos.filtros.novos' },
+  { value: 'reviewing', labelKey: 'candidatos.filtros.emAnalise' },
+  { value: 'interview', labelKey: 'candidatos.filtros.entrevista' },
+  { value: 'in_validation', labelKey: 'candidatos.filtros.emValidacao' },
+  { value: 'rejected', labelKey: 'candidatos.filtros.encerrados' },
+  { value: 'hired', labelKey: 'candidatos.filtros.contratados' },
 ];
+
+const sourceOptions = [
+  { value: '', labelKey: 'importacao.filtroOrigem.todos' },
+  { value: 'import', labelKey: 'importacao.filtroOrigem.import' },
+  { value: 'form', labelKey: 'importacao.filtroOrigem.form' },
+];
+
+/** De quanto em quanto tempo a tela confere a fila de pontuação. */
+const INTERVALO_POLLING_MS = 5_000;
 
 interface CandidatesSectionProps {
   jobId: string;
+  /** Muda quando uma importação termina, para recarregar a lista. */
+  refreshToken?: number;
 }
 
-export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
+export default function CandidatesSection({ jobId, refreshToken = 0 }: CandidatesSectionProps) {
+  const t = useTranslations();
+  /** Rótulo resolvido na renderização: a lista guarda a chave. */
+  const opcoes = (lista: { value: string; labelKey: string }[]) =>
+    lista.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [view, setView] = useState<CandidatesView>('list');
   const [statusFilter, setStatusFilter] = useState('');
+  const [sourceFilter, setSourceFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
   const initializedRef = useRef(false);
 
+  const filteredBySource = useMemo(() => {
+    if (!sourceFilter) return candidates;
+    // "Só candidatados" quer dizer quem veio pelo formulário público; importado e
+    // recebido por e-mail são as outras origens.
+    if (sourceFilter === 'form') return candidates.filter((c) => c.source === 'form');
+    return candidates.filter((c) => c.source !== 'form');
+  }, [candidates, sourceFilter]);
+
   const filteredBySearch = useMemo(
-    () => filterCandidatesBySearch(candidates, searchQuery),
-    [candidates, searchQuery],
+    () => filterCandidatesBySearch(filteredBySource, searchQuery),
+    [filteredBySource, searchQuery],
   );
 
   const displayCandidates = useMemo(() => {
@@ -83,22 +109,55 @@ export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
     setView(resolveInitialView());
   }, []);
 
-  const fetchCandidates = useCallback(async () => {
+  const fetchCandidates = useCallback(async (silencioso = false) => {
     try {
-      setIsLoading(true);
+      if (!silencioso) setIsLoading(true);
       const data = await apiClient.getJobCandidates(jobId);
       setCandidates(data.candidates);
     } catch (error) {
-      toast.error('Falha ao carregar candidatos');
-      console.error(error);
+      if (!silencioso) {
+        toast.error(t('secaoCand.erroCarregar'));
+        console.error(error);
+      }
     } finally {
-      setIsLoading(false);
+      if (!silencioso) setIsLoading(false);
     }
   }, [jobId]);
 
   useEffect(() => {
     fetchCandidates();
-  }, [fetchCandidates]);
+  }, [fetchCandidates, refreshToken]);
+
+  // Uma vez por vaga aberta na tela: é o momento em que o recrutador olha o ranking,
+  // que é a promessa do produto. Sem isso não dá para saber se quem publica vaga
+  // chega a ver o resultado ou desiste antes.
+  const rankingRegistradoRef = useRef(false);
+  useEffect(() => {
+    rankingRegistradoRef.current = false;
+  }, [jobId]);
+  useEffect(() => {
+    if (rankingRegistradoRef.current || isLoading || candidates.length === 0) return;
+    rankingRegistradoRef.current = true;
+    registrarEvento('ranking_visto', {
+      candidatos: candidates.length,
+      com_nota: candidates.filter((c) => c.fit_score != null).length,
+      importados: candidates.filter((c) => c.source !== 'form').length,
+    });
+  }, [candidates, isLoading, jobId]);
+
+  const pontuando = useMemo(
+    () => candidates.filter((c) => c.needs_scoring).length,
+    [candidates],
+  );
+
+  // Enquanto houver fila, a tela se atualiza sozinha. Recarga silenciosa: um erro de
+  // rede no meio do polling não deve encher a tela de toast enquanto o recrutador lê os
+  // candidatos que já chegaram.
+  useEffect(() => {
+    if (pontuando === 0) return;
+    const timer = setInterval(() => fetchCandidates(true), INTERVALO_POLLING_MS);
+    return () => clearInterval(timer);
+  }, [pontuando, fetchCandidates]);
 
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = {
@@ -117,14 +176,14 @@ export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
   }, [filteredBySearch]);
 
   if (isLoading) {
-    return <Loading text="Carregando candidatos..." />;
+    return <Loading text={t('secaoCand.carregando')} />;
   }
 
   if (candidates.length === 0) {
     return (
       <EmptyState
-        title="Nenhum candidato ainda"
-        description="Compartilhe a vaga para começar a receber candidaturas"
+        title={t('secaoCand.nenhumAinda')}
+        description={t('secaoCand.vazioDica')}
       />
     );
   }
@@ -142,22 +201,28 @@ export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
           <CandidatesViewToggle view={view} onViewChange={setView} />
           {view === 'list' && (
             <Select
-              options={statusOptions}
+              options={opcoes(statusOptions)}
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="w-[200px] shrink-0"
             />
           )}
+          <Select
+            options={opcoes(sourceOptions)}
+            value={sourceFilter}
+            onChange={(e) => setSourceFilter(e.target.value)}
+            className="w-[180px] shrink-0"
+          />
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <div className="relative flex items-center w-[380px]">
             <Search className="absolute left-3 h-4 w-4 text-gray-400 pointer-events-none" aria-hidden />
             <input
               type="text"
-              placeholder="Buscar por nome, email ou palavra-chave"
+              placeholder={t('secaoCand.buscar')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              aria-label="Buscar por nome, email ou palavra-chave"
+              aria-label={t('secaoCand.buscar')}
               className="w-full min-w-0 pl-9 pr-9 py-2 text-sm border border-gray-300 rounded-lg
                 placeholder-gray-400 text-gray-900
                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
@@ -168,22 +233,29 @@ export default function CandidatesSection({ jobId }: CandidatesSectionProps) {
                 type="button"
                 onClick={() => setSearchQuery('')}
                 className="absolute right-2.5 p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                aria-label="Limpar busca"
+                aria-label={t('secaoCand.limparBusca')}
               >
                 <X className="h-4 w-4" />
               </button>
             )}
           </div>
+          {pontuando > 0 && (
+            <span className="flex items-center gap-1.5 text-sm text-blue-600 whitespace-nowrap">
+              <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" aria-hidden />
+              {t('importacao.pontuando', {
+                feitos: candidates.length - pontuando,
+                total: candidates.length,
+              })}
+            </span>
+          )}
           <span className="text-sm text-gray-500 whitespace-nowrap">
-            {displayCandidates.length} candidato{displayCandidates.length !== 1 ? 's' : ''}
+            {t('secaoCand.contagem', { n: displayCandidates.length })}
           </span>
         </div>
       </div>
 
       {showEmptySearchMessage && (
-        <p className="text-sm text-gray-500 text-center py-4 mb-2 rounded-lg bg-gray-50 border border-gray-100">
-          Nenhum candidato encontrado
-        </p>
+        <p className="text-sm text-gray-500 text-center py-4 mb-2 rounded-lg bg-gray-50 border border-gray-100">{t('secaoCand.nenhumEncontrado')}</p>
       )}
 
       {view === 'list' ? (

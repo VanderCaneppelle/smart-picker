@@ -19,20 +19,27 @@ export function normalizeSlug(input: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
-export function validateSlug(slug: string): { valid: boolean; error?: string } {
-  if (!slug) return { valid: false, error: 'Slug é obrigatório' };
-  if (slug.length < 3) return { valid: false, error: 'Mínimo de 3 caracteres' };
-  if (slug.length > 40) return { valid: false, error: 'Máximo de 40 caracteres' };
-  if (SLUG_NO_CONSECUTIVE_HYPHENS.test(slug)) return { valid: false, error: 'Não pode conter hífens consecutivos' };
-  if (!SLUG_REGEX.test(slug)) return { valid: false, error: 'Use apenas letras minúsculas, números e hífens' };
-  if (RESERVED_SLUGS.has(slug)) return { valid: false, error: 'Este slug é reservado' };
+/**
+ * Devolve CHAVE de tradução, não texto.
+ *
+ * Esta função roda nos dois lados: no formulário de perfil, no passo de
+ * onboarding e na rota que checa disponibilidade. Texto fixo aqui saía em
+ * português para todo mundo. Quem chama resolve com t().
+ */
+export function validateSlug(slug: string): { valid: boolean; errorKey?: string } {
+  if (!slug) return { valid: false, errorKey: 'slug.obrigatorio' };
+  if (slug.length < 3) return { valid: false, errorKey: 'slug.minimo' };
+  if (slug.length > 40) return { valid: false, errorKey: 'slug.maximo' };
+  if (SLUG_NO_CONSECUTIVE_HYPHENS.test(slug)) return { valid: false, errorKey: 'slug.hifens' };
+  if (!SLUG_REGEX.test(slug)) return { valid: false, errorKey: 'slug.formato' };
+  if (RESERVED_SLUGS.has(slug)) return { valid: false, errorKey: 'slug.reservado' };
   return { valid: true };
 }
 
 export const slugSchema = z
   .string()
-  .min(3, 'Mínimo de 3 caracteres')
-  .max(40, 'Máximo de 40 caracteres')
-  .regex(SLUG_REGEX, 'Use apenas letras minúsculas, números e hífens (sem iniciar/terminar com hífen)')
-  .refine((s) => !SLUG_NO_CONSECUTIVE_HYPHENS.test(s), 'Não pode conter hífens consecutivos')
-  .refine((s) => !RESERVED_SLUGS.has(s), 'Este slug é reservado');
+  .min(3, 'slug.minimo')
+  .max(40, 'slug.maximo')
+  .regex(SLUG_REGEX, 'slug.formatoLongo')
+  .refine((s) => !SLUG_NO_CONSECUTIVE_HYPHENS.test(s), 'slug.hifens')
+  .refine((s) => !RESERVED_SLUGS.has(s), 'slug.reservado');

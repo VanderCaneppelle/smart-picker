@@ -1,9 +1,10 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { requireAccount } from '@/lib/auth';
 import { CandidateStatusSchema } from '@hunter/core';
 import { z } from 'zod';
 import { triggerRejectionEmail } from '@/lib/worker';
+import { isPlaceholderEmail } from '@/lib/placeholder-email';
 import { migrateLegacyCandidateStatusesForRecruiter } from '@/lib/candidate-status';
 import { logCandidateEvent } from '@/lib/candidate-history';
 
@@ -15,12 +16,10 @@ const BulkUpdateSchema = z.object({
 // POST /api/candidates/bulk-update - Bulk update candidate statuses
 export async function POST(request: NextRequest) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return unauthorizedResponse();
-    }
+    const auth = await requireAccount(request);
+    if (auth.response) return auth.response;
 
-    await migrateLegacyCandidateStatusesForRecruiter(user.id);
+    await migrateLegacyCandidateStatusesForRecruiter(auth.ctx.accountId);
 
     const body = await request.json();
     const validation = BulkUpdateSchema.safeParse(body);
@@ -43,11 +42,11 @@ export async function POST(request: NextRequest) {
         id: { in: candidate_ids },
         deleted_at: null,
         job: {
-          user_id: user.id,
+          user_id: auth.ctx.accountId,
           deleted_at: null,
         },
       },
-      select: { id: true, status: true, job_id: true },
+      select: { id: true, status: true, job_id: true, email: true },
     });
 
     if (candidates.length === 0) {
@@ -74,21 +73,30 @@ export async function POST(request: NextRequest) {
           toStatus: status,
           message: `Status alterado de ${candidate.status} para ${status} (ação em massa)`,
           metadata: { source: 'bulk_update' },
-          createdBy: user.id,
+          createdBy: auth.ctx.id,
         });
       }
     }
 
-    // Trigger rejection emails sequentially to avoid overwhelming the worker
+    // Trigger rejection emails sequentially to avoid overwhelming the worker.
+    // Quem ainda está com o e-mail provisório da importação fica de fora: o endereço
+    // não existe, então o envio só produziria bounce.
+    let semEmailValido = 0;
     if (status === 'rejected') {
-      for (const id of validIds) {
-        await triggerRejectionEmail(id);
+      for (const candidate of candidates) {
+        if (isPlaceholderEmail(candidate.email)) {
+          semEmailValido += 1;
+          continue;
+        }
+        await triggerRejectionEmail(candidate.id);
       }
     }
 
     return Response.json({
       message: `${validIds.length} candidato(s) atualizado(s)`,
       updated_count: validIds.length,
+      /** Quantos tiveram o e-mail pulado por ainda estarem com endereço provisório. */
+      skipped_placeholder_email: semEmailValido,
     });
   } catch (error) {
     console.error('Error bulk updating candidates:', error);

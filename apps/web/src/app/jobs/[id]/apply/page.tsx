@@ -1,645 +1,164 @@
-'use client';
-
-import { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import { toast } from 'sonner';
-import {
-  Briefcase,
-  MapPin,
-  DollarSign,
-  Upload,
-  CheckCircle,
-  AlertCircle,
-  TrendingUp,
-} from 'lucide-react';
-import { apiClient } from '@/lib/api-client';
-import { Button, Input, Textarea, Badge, Loading } from '@/components/ui';
-import type { Job, ApplicationQuestion, ApplicationAnswer } from '@hunter/core';
-import { CONSENT_VERSION } from '@hunter/core';
-import ptMsgs from '../../../../../messages/pt.json';
-import enMsgs from '../../../../../messages/en.json';
-
-const DICIONARIOS: Record<string, unknown> = { pt: ptMsgs, en: enMsgs };
+import type { Metadata } from 'next';
+import { prisma } from '@/lib/db';
+import { SITE_URL } from '@/lib/site';
+import ApplyForm from './ApplyForm';
 
 /**
- * Tradutor local em vez do hook do next-intl.
+ * Casca de servidor da página pública de candidatura.
  *
- * O idioma desta página não vem da URL nem da preferência de quem está olhando: vem
- * da VAGA, que só é conhecida depois do fetch. Empresa brasileira contratando no
- * Brasil precisa mostrar o formulário em português mesmo para um candidato com o
- * navegador em inglês. Trocar o provider no meio da árvore depois do carregamento
- * daria um remonte desnecessário num formulário que a pessoa pode já estar
- * preenchendo, então resolvemos com uma função simples.
+ * O formulário continua sendo client component, intocado: ele é o caminho de
+ * conversão do candidato e não vale o risco de reescrever. O que esta casca
+ * acrescenta é o que só o servidor consegue entregar, e que faltava por inteiro:
+ *
+ * 1. `generateMetadata`, para o link da vaga compartilhado no WhatsApp ou no LinkedIn
+ *    mostrar o título da vaga em vez do nome genérico do produto;
+ * 2. JSON-LD `JobPosting`, que é o que faz a vaga poder aparecer no Google for Jobs.
+ *    Sem ele, a página é só mais uma página, e a busca por emprego é justamente onde
+ *    existe gente procurando de graça.
+ *
+ * A consulta é feita aqui no servidor e o formulário segue buscando a dele pela API.
+ * São duas leituras da mesma vaga, o que é pouco elegante e muito seguro: mexer no
+ * estado do formulário para economizar uma consulta arriscaria a conversão.
  */
-function criarTradutor(locale: string) {
-  const dict = DICIONARIOS[locale] ?? DICIONARIOS.pt;
-  return (chave: string): string => {
-    const valor = chave.split('.').reduce<unknown>(
-      (obj, parte) => (obj && typeof obj === 'object' ? (obj as Record<string, unknown>)[parte] : undefined),
-      dict
-    );
-    return typeof valor === 'string' ? valor : chave;
+
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
+async function buscarVaga(id: string) {
+  // Um uuid inválido faz o Postgres devolver erro em vez de vazio, e aí a página
+  // pública quebraria por causa de um link torto.
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
+
+  return prisma.job.findFirst({
+    where: { id, deleted_at: null },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      location: true,
+      employment_type: true,
+      status: true,
+      created_at: true,
+      updated_at: true,
+      locale: true,
+      recruiter: {
+        select: { company: true, public_display_name: true, public_slug: true },
+      },
+    },
+  });
+}
+
+/** Tira o HTML do editor e corta no tamanho que os previews realmente mostram. */
+function resumoDaDescricao(html: string, limite = 200): string {
+  const texto = html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return texto.length > limite ? `${texto.slice(0, limite - 1)}…` : texto;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const vaga = await buscarVaga(id);
+
+  if (!vaga) {
+    return { title: 'Vaga não encontrada', robots: { index: false, follow: false } };
+  }
+
+  const empresa =
+    vaga.recruiter?.public_display_name || vaga.recruiter?.company || 'Rankea';
+  const titulo = `${vaga.title} | ${empresa}`;
+  const descricao = resumoDaDescricao(vaga.description);
+  const url = `${SITE_URL}/jobs/${vaga.id}/apply`;
+
+  return {
+    title: titulo,
+    description: descricao,
+    alternates: { canonical: url },
+    // Vaga fechada ou em rascunho sai do índice: candidato que chega pelo Google numa
+    // vaga que não aceita mais inscrição é pior do que não chegar.
+    robots:
+      vaga.status === 'active'
+        ? { index: true, follow: true }
+        : { index: false, follow: true },
+    openGraph: {
+      type: 'website',
+      url,
+      title: titulo,
+      description: descricao,
+      siteName: 'Rankea',
+      locale: vaga.locale === 'en' ? 'en_US' : 'pt_BR',
+    },
+    twitter: { card: 'summary_large_image', title: titulo, description: descricao },
   };
 }
 
-const getStatusBadgeVariant = (status: string) => {
-  switch (status) {
-    case 'active':
-      return 'success';
-    case 'draft':
-      return 'default';
-    case 'closed':
-      return 'danger';
-    case 'on_hold':
-      return 'warning';
-    default:
-      return 'default';
-  }
+/**
+ * Tipos de contrato do schema.org. O Google só entende esta lista; mandar o valor
+ * interno faria o dado ser descartado em silêncio.
+ */
+const TIPO_SCHEMA: Record<string, string> = {
+  full_time: 'FULL_TIME',
+  part_time: 'PART_TIME',
+  contract: 'CONTRACTOR',
+  internship: 'INTERN',
+  freelance: 'CONTRACTOR',
 };
 
-const formatEmploymentType = (type: string) => {
-  return type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
-};
+function montarJsonLd(vaga: NonNullable<Awaited<ReturnType<typeof buscarVaga>>>) {
+  const empresa =
+    vaga.recruiter?.public_display_name || vaga.recruiter?.company || 'Rankea';
+  const remota = /remot|home ?office|anywhere/i.test(vaga.location);
 
-export default function ApplyPage() {
-  const params = useParams();
-  const jobId = params.id as string;
-
-  const [job, setJob] = useState<Job | null>(null);
-  // O idioma segue a vaga. Antes do fetch cai no padrão, que só afeta a tela de
-  // carregamento.
-  const t = criarTradutor(job?.locale ?? 'pt');
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-
-  // Form state
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [linkedin, setLinkedin] = useState('');
-  const [resumeUrl, setResumeUrl] = useState('');
-  const [resumeFileName, setResumeFileName] = useState('');
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [consentAgreed, setConsentAgreed] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const fetchJob = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const data = await apiClient.getJob(jobId);
-      setJob(data);
-
-      // Initialize answers
-      const initialAnswers: Record<string, string> = {};
-      (data.application_questions as ApplicationQuestion[]).forEach((q) => {
-        initialAnswers[q.id] = '';
-      });
-      setAnswers(initialAnswers);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [jobId]);
-
-  useEffect(() => {
-    fetchJob();
-  }, [fetchJob]);
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    const allowedTypes = [
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    ];
-    if (!allowedTypes.includes(file.type)) {
-      toast.error(t('candidatura.erros.arquivoTipo'));
-      return;
-    }
-
-    // Validate file size (10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error(t('candidatura.erros.arquivoTamanho'));
-      return;
-    }
-
-    setIsUploading(true);
-    try {
-      const result = await apiClient.uploadFile(file);
-      setResumeUrl(result.url);
-      setResumeFileName(result.originalName);
-      toast.success(t('candidatura.sucessoUpload'));
-    } catch (error) {
-      toast.error(t('candidatura.erros.falhaUpload'));
-      console.error(error);
-    } finally {
-      setIsUploading(false);
-    }
+  return {
+    '@context': 'https://schema.org/',
+    '@type': 'JobPosting',
+    title: vaga.title,
+    description: vaga.description,
+    datePosted: vaga.created_at.toISOString(),
+    employmentType: TIPO_SCHEMA[vaga.employment_type] ?? 'OTHER',
+    directApply: true,
+    hiringOrganization: {
+      '@type': 'Organization',
+      name: empresa,
+      ...(vaga.recruiter?.public_slug
+        ? { sameAs: `${SITE_URL}/r/${vaga.recruiter.public_slug}` }
+        : {}),
+    },
+    // Trabalho remoto tem marcação própria: declarar um endereço inventado para uma
+    // vaga remota é o erro que faz o Google rejeitar o anúncio.
+    ...(remota
+      ? {
+          jobLocationType: 'TELECOMMUTE',
+          applicantLocationRequirements: { '@type': 'Country', name: 'BR' },
+        }
+      : {
+          jobLocation: {
+            '@type': 'Place',
+            address: { '@type': 'PostalAddress', addressLocality: vaga.location, addressCountry: 'BR' },
+          },
+        }),
   };
+}
 
-  const validate = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!name.trim()) newErrors.name = t('candidatura.erros.nome');
-    if (!email.trim()) newErrors.email = t('candidatura.erros.email');
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = t('candidatura.erros.emailInvalido');
-    }
-    if (!resumeUrl) newErrors.resume = t('candidatura.erros.curriculo');
-
-    if (linkedin && !linkedin.startsWith('http')) {
-      newErrors.linkedin = t('candidatura.erros.urlInvalida');
-    }
-
-    // Validate required questions
-    const questions = (job?.application_questions || []) as ApplicationQuestion[];
-    questions.forEach((q) => {
-      if (q.required && !answers[q.id]?.trim()) {
-        newErrors[`question_${q.id}`] = t('candidatura.erros.perguntaObrigatoria');
-      }
-    });
-
-    if (!consentAgreed) {
-      newErrors.consent = t('candidatura.erros.consentimento');
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validate()) {
-      toast.error(t('candidatura.erros.revise'));
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const applicationAnswers: ApplicationAnswer[] = Object.entries(answers)
-        .filter(([, answer]) => answer.trim())
-        .map(([questionId, answer]) => ({
-          question_id: questionId,
-          answer: answer.trim(),
-        }));
-
-      await apiClient.createCandidate({
-        job_id: jobId,
-        name: name.trim(),
-        email: email.trim(),
-        phone_number: phone.trim() || null,
-        linkedin_url: linkedin.trim() || null,
-        resume_url: resumeUrl,
-        application_answers: applicationAnswers,
-        consent_agreed: true,
-        consent_version: CONSENT_VERSION,
-      });
-
-      setIsSubmitted(true);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('candidatura.erros.falhaEnvio'));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Header component
-  const Header = () => (
-    <header className="bg-white border-b border-gray-100">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
-              <TrendingUp className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-gray-900">Rankea</span>
-          </Link>
-        </div>
-      </div>
-    </header>
-  );
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="flex items-center justify-center py-32">
-          <Loading text={t('candidatura.carregando')} />
-        </div>
-      </div>
-    );
-  }
-
-  if (!job) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="flex items-center justify-center py-32">
-          <div className="text-center px-4">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="h-8 w-8 text-red-500" />
-            </div>
-            <h1 className="text-xl font-semibold text-gray-900 mb-2">Vaga não encontrada</h1>
-            <p className="text-gray-600">Esta vaga pode ter sido removida ou não está mais disponível.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (job.status !== 'active') {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="flex items-center justify-center py-32">
-          <div className="text-center px-4">
-            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="h-8 w-8 text-yellow-500" />
-            </div>
-            <h1 className="text-xl font-semibold text-gray-900 mb-2">Candidaturas encerradas</h1>
-            <p className="text-gray-600">Esta vaga não está mais aceitando candidaturas.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (isSubmitted) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="flex items-center justify-center py-32">
-          <div className="text-center max-w-md px-4">
-            <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="h-10 w-10 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-3">Candidatura enviada!</h1>
-            <p className="text-gray-600 mb-4">
-              {t('candidatura.obrigado')} <strong>{job.title}</strong>.
-              Analisaremos sua candidatura e entraremos em contato em breve.
-            </p>
-            <p className="text-sm text-gray-500 bg-gray-100 rounded-lg px-4 py-3">
-              Um e-mail de confirmação foi enviado para <strong>{email}</strong>
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const questions = (job.application_questions || []) as ApplicationQuestion[];
+export default async function ApplyPage({ params }: PageProps) {
+  const { id } = await params;
+  const vaga = await buscarVaga(id);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      
-      <main className="py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-2xl mx-auto">
-          {/* Job Header */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 mb-6 shadow-sm">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">{job.title}</h1>
-                <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
-                  <span className="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-full">
-                    <MapPin className="h-4 w-4 text-gray-500" />
-                    {job.location}
-                  </span>
-                  <span className="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-full">
-                    <Briefcase className="h-4 w-4 text-gray-500" />
-                    {formatEmploymentType(job.employment_type)}
-                  </span>
-                  {job.show_salary_to_candidates && job.salary_range && (
-                    <span className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full">
-                      <DollarSign className="h-4 w-4" />
-                      {job.salary_range} {job.currency_code}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Job Description */}
-            <div className="border-t border-gray-100 pt-6 mt-6">
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">{t('candidatura.sobreVaga')}</h2>
-              <div
-                className="prose prose-sm max-w-none text-gray-700 rich-content"
-                dangerouslySetInnerHTML={{ __html: job.description }}
-              />
-            </div>
-          </div>
-
-          {/* Application Form */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
-                <Briefcase className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">{t('candidatura.candidateSe')}</h2>
-                <p className="text-sm text-gray-500">{t('candidatura.preenchaDados')}</p>
-              </div>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Personal Info */}
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Input
-                  label={t('candidatura.nome')}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  error={errors.name}
-                  required
-                  placeholder={t('candidatura.nomePlaceholder')}
-                />
-                <Input
-                  label={t('candidatura.email')}
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  error={errors.email}
-                  required
-                  placeholder={t('candidatura.emailPlaceholder')}
-                />
-                <Input
-                  label={t('candidatura.telefone')}
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder={t('candidatura.telefonePlaceholder')}
-                />
-                <Input
-                  label="LinkedIn"
-                  type="url"
-                  value={linkedin}
-                  onChange={(e) => setLinkedin(e.target.value)}
-                  error={errors.linkedin}
-                  placeholder="https://linkedin.com/in/seu-perfil"
-                />
-              </div>
-
-              {/* Resume Upload */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('candidatura.curriculo')} <span className="text-red-500">*</span>
-                </label>
-                <div
-                  className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
-                    errors.resume 
-                      ? 'border-red-300 bg-red-50' 
-                      : resumeUrl 
-                        ? 'border-emerald-300 bg-emerald-50' 
-                        : 'border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/50'
-                  }`}
-                >
-                  {resumeUrl ? (
-                    <div className="flex items-center justify-center gap-3">
-                      <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                        <CheckCircle className="h-5 w-5 text-emerald-600" />
-                      </div>
-                      <div className="text-left">
-                        <p className="text-gray-900 font-medium">{resumeFileName}</p>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setResumeUrl('');
-                            setResumeFileName('');
-                          }}
-                          className="text-red-500 hover:text-red-700 text-sm"
-                        >
-                          Remover arquivo
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <label className="cursor-pointer block">
-                      <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                        <Upload className="h-6 w-6 text-gray-400" />
-                      </div>
-                      <span className="text-gray-700 font-medium">
-                        {isUploading ? t('candidatura.enviando') : t('candidatura.enviarCurriculo')}
-                      </span>
-                      <p className="text-xs text-gray-500 mt-1">{t('candidatura.formatoArquivo')}</p>
-                      <input
-                        type="file"
-                        accept=".pdf,.doc,.docx"
-                        onChange={handleFileUpload}
-                        disabled={isUploading}
-                        className="hidden"
-                      />
-                    </label>
-                  )}
-                </div>
-                {errors.resume && (
-                  <p className="mt-2 text-sm text-red-500">{errors.resume}</p>
-                )}
-              </div>
-
-              {/* Application Questions */}
-              {questions.length > 0 && (
-                <div className="space-y-4 pt-4 border-t border-gray-100">
-                  <h3 className="font-semibold text-gray-900">{t('candidatura.perguntasAdicionais')}</h3>
-                  {questions.map((question) => (
-                    <div key={question.id}>
-                      {/* Texto longo */}
-                      {question.type === 'textarea' && (
-                        <Textarea
-                          label={question.question}
-                          value={answers[question.id] || ''}
-                          onChange={(e) =>
-                            setAnswers({ ...answers, [question.id]: e.target.value })
-                          }
-                          error={errors[`question_${question.id}`]}
-                          required={question.required}
-                          rows={4}
-                        />
-                      )}
-
-                      {/* Texto curto */}
-                      {question.type === 'text' && (
-                        <Input
-                          label={question.question}
-                          value={answers[question.id] || ''}
-                          onChange={(e) =>
-                            setAnswers({ ...answers, [question.id]: e.target.value })
-                          }
-                          error={errors[`question_${question.id}`]}
-                          required={question.required}
-                        />
-                      )}
-
-                      {/* Número */}
-                      {question.type === 'number' && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            {question.question}
-                            {question.required && <span className="text-red-500 ml-1">*</span>}
-                          </label>
-                          <input
-                            type="number"
-                            value={answers[question.id] || ''}
-                            onChange={(e) =>
-                              setAnswers({ ...answers, [question.id]: e.target.value })
-                            }
-                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                            required={question.required}
-                            placeholder={t('candidatura.numeroPlaceholder')}
-                          />
-                          {errors[`question_${question.id}`] && (
-                            <p className="mt-1 text-sm text-red-500">{errors[`question_${question.id}`]}</p>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Sim/Não ou Escolha única */}
-                      {(question.type === 'yes_no' || question.type === 'select') && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {question.question}
-                            {question.required && <span className="text-red-500 ml-1">*</span>}
-                          </label>
-                          <div className="space-y-2">
-                            {(question.options || (question.type === 'yes_no' ? ['Sim', 'Não'] : [])).map((option, optIndex) => (
-                              <label
-                                key={optIndex}
-                                className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
-                                  answers[question.id] === option
-                                    ? 'border-emerald-500 bg-emerald-50'
-                                    : 'border-gray-200 hover:border-gray-300'
-                                }`}
-                              >
-                                <input
-                                  type="radio"
-                                  name={`question_${question.id}`}
-                                  value={option}
-                                  checked={answers[question.id] === option}
-                                  onChange={(e) =>
-                                    setAnswers({ ...answers, [question.id]: e.target.value })
-                                  }
-                                  className="text-emerald-600 focus:ring-emerald-500"
-                                />
-                                <span className="text-gray-900">{option}</span>
-                              </label>
-                            ))}
-                          </div>
-                          {errors[`question_${question.id}`] && (
-                            <p className="mt-1 text-sm text-red-500">{errors[`question_${question.id}`]}</p>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Múltipla escolha */}
-                      {question.type === 'multiselect' && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {question.question}
-                            {question.required && <span className="text-red-500 ml-1">*</span>}
-                          </label>
-                          <p className="text-xs text-gray-500 mb-2">Selecione uma ou mais opções</p>
-                          <div className="space-y-2">
-                            {(question.options || []).map((option, optIndex) => {
-                              const selectedOptions = answers[question.id] ? answers[question.id].split('|||') : [];
-                              const isChecked = selectedOptions.includes(option);
-                              return (
-                                <label
-                                  key={optIndex}
-                                  className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
-                                    isChecked
-                                      ? 'border-emerald-500 bg-emerald-50'
-                                      : 'border-gray-200 hover:border-gray-300'
-                                  }`}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    value={option}
-                                    checked={isChecked}
-                                    onChange={(e) => {
-                                      let newSelected: string[];
-                                      if (e.target.checked) {
-                                        newSelected = [...selectedOptions, option];
-                                      } else {
-                                        newSelected = selectedOptions.filter((o) => o !== option);
-                                      }
-                                      setAnswers({ ...answers, [question.id]: newSelected.join('|||') });
-                                    }}
-                                    className="rounded text-emerald-600 focus:ring-emerald-500"
-                                  />
-                                  <span className="text-gray-900">{option}</span>
-                                </label>
-                              );
-                            })}
-                          </div>
-                          {errors[`question_${question.id}`] && (
-                            <p className="mt-1 text-sm text-red-500">{errors[`question_${question.id}`]}</p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Consentimento LGPD - obrigatório */}
-              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-3">
-                <label
-                  className={`flex items-start gap-3 cursor-pointer ${errors.consent ? 'text-red-700' : 'text-gray-800'}`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={consentAgreed}
-                    onChange={(e) => setConsentAgreed(e.target.checked)}
-                    className="mt-1 h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                    aria-describedby="consent-description"
-                  />
-                  <span id="consent-description" className="text-sm">
-                    {t('candidatura.consentimentoPrefixo')}{' '}
-                    <Link href="/termos" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-700 font-medium underline">
-                      {t('candidatura.termos')}
-                    </Link>
-                    {' '}{t('candidatura.consentimentoMeio')}{' '}
-                    <Link href="/privacidade" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-700 font-medium underline">
-                      {t('candidatura.privacidade')}
-                    </Link>
-                    .
-                  </span>
-                </label>
-                {errors.consent && (
-                  <p className="text-sm text-red-500 ml-7">{errors.consent}</p>
-                )}
-              </div>
-
-              {/* Submit */}
-              <Button
-                type="submit"
-                className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 focus:ring-emerald-500"
-                size="lg"
-                isLoading={isSubmitting}
-              >
-                {t('candidatura.enviar')}
-              </Button>
-            </form>
-          </div>
-
-          {/* Footer */}
-          <div className="mt-8 text-center">
-            <p className="text-sm text-gray-400">
-              Powered by{' '}
-              <Link href="/" className="text-emerald-600 hover:text-emerald-700 font-medium">
-                Rankea
-              </Link>
-            </p>
-          </div>
-        </div>
-      </main>
-    </div>
+    <>
+      {/* Só vaga aberta vira dado estruturado: anunciar no Google uma vaga que não
+          aceita inscrição gera reclamação de candidato e penalidade de rich result. */}
+      {vaga?.status === 'active' && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(montarJsonLd(vaga)) }}
+        />
+      )}
+      <ApplyForm />
+    </>
   );
 }

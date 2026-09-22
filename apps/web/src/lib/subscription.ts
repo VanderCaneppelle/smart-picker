@@ -9,12 +9,28 @@ export type PlanId = 'starter' | 'professional' | 'enterprise' | 'test';
 
 export interface Plan {
   id: PlanId;
+  /** Fallback em português: usado fora da UI (admin, logs, Stripe). */
   name: string;
+  /** Chave de tradução do nome. Constante de módulo não pode guardar texto traduzido. */
+  nameKey: string;
+  /** Valor em reais. Espelha o unit_amount do preço no Stripe. */
   price: number;
   priceLabel: string;
-  description: string;
-  features: string[];
+  /**
+   * Valor em dólar. Espelha currency_options.usd do MESMO preço no Stripe
+   * (lookup key em PRICE_LOOKUP_KEYS). Mexeu num, mexe no outro: com
+   * currency_options definido, o Adaptive Pricing não converte, cobra isto.
+   */
+  priceUsd: number;
+  priceLabelUsd: string;
+  descriptionKey: string;
+  featureKeys: string[];
   maxActiveJobs: number;
+  /**
+   * Assentos da conta, contando o dono. starter 1 = só o dono, professional 3 =
+   * dono + 2, enterprise 10 = dono + 9. Ver getMaxUsers.
+   */
+  maxUsers: number;
   highlighted?: boolean;
   hidden?: boolean;
 }
@@ -23,70 +39,94 @@ export const PLANS: Plan[] = [
   {
     id: 'starter',
     name: 'Starter',
+    nameKey: 'planos.starter.nome',
     price: 97,
     priceLabel: 'R$ 97',
-    description: 'Para recrutadores autônomos começando.',
+    priceUsd: 29,
+    priceLabelUsd: 'US$ 29',
+    descriptionKey: 'planos.starter.descricao',
     maxActiveJobs: 3,
-    features: [
-      'Até 3 vagas ativas',
-      'Candidatos ilimitados',
-      'Ranking por IA',
-      'E-mails automáticos',
-      'Página pública de vagas',
+    maxUsers: 1,
+    featureKeys: [
+      'planos.recursos.vagas3',
+      'planos.recursos.usuarios1',
+      'planos.recursos.candidatosIlimitados',
+      'planos.recursos.rankingIA',
+      'planos.recursos.emailsAutomaticos',
+      'planos.recursos.paginaPublica',
     ],
   },
   {
     id: 'professional',
     name: 'Profissional',
+    nameKey: 'planos.professional.nome',
     price: 197,
     priceLabel: 'R$ 197',
-    description: 'Para consultorias e recrutadores em crescimento.',
+    priceUsd: 49,
+    priceLabelUsd: 'US$ 49',
+    descriptionKey: 'planos.professional.descricao',
     maxActiveJobs: 10,
+    maxUsers: 3,
     highlighted: true,
-    features: [
-      'Até 10 vagas ativas',
-      'Candidatos ilimitados',
-      'Ranking por IA',
-      'E-mails automáticos',
-      'Página pública personalizada',
-      'Branding customizado',
-      'Suporte prioritário',
-      'Entrevista por IA (em breve)',
+    featureKeys: [
+      'planos.recursos.vagas10',
+      'planos.recursos.usuarios3',
+      'planos.recursos.candidatosIlimitados',
+      'planos.recursos.rankingIA',
+      'planos.recursos.emailsAutomaticos',
+      'planos.recursos.paginaPersonalizada',
+      'planos.recursos.branding',
+      'planos.recursos.suportePrioritario',
+      'planos.recursos.entrevistaIA',
     ],
   },
   {
     id: 'enterprise',
     name: 'Empresarial',
+    nameKey: 'planos.enterprise.nome',
     price: 397,
     priceLabel: 'R$ 397',
-    description: 'Para equipes e operações de alto volume.',
+    priceUsd: 99,
+    priceLabelUsd: 'US$ 99',
+    descriptionKey: 'planos.enterprise.descricao',
     maxActiveJobs: Infinity,
-    features: [
-      'Vagas ilimitadas',
-      'Candidatos ilimitados',
-      'Ranking por IA',
-      'E-mails automáticos',
-      'Página pública personalizada',
-      'Branding customizado',
-      'Suporte dedicado',
-      'Entrevista por IA (em breve)',
-      'API de integração (em breve)',
+    maxUsers: 10,
+    featureKeys: [
+      'planos.recursos.vagasIlimitadas',
+      'planos.recursos.usuarios10',
+      'planos.recursos.candidatosIlimitados',
+      'planos.recursos.rankingIA',
+      'planos.recursos.emailsAutomaticos',
+      'planos.recursos.paginaPersonalizada',
+      'planos.recursos.branding',
+      'planos.recursos.suporteDedicado',
+      'planos.recursos.entrevistaIA',
+      'planos.recursos.api',
     ],
   },
   {
     id: 'test',
     name: 'Teste',
+    nameKey: 'planos.test.nome',
     price: 2,
     priceLabel: 'R$ 2',
-    description: 'Plano para teste interno do fluxo de pagamento.',
+    priceUsd: 1,
+    priceLabelUsd: 'US$ 1',
+    descriptionKey: 'planos.test.descricao',
     maxActiveJobs: 1,
+    maxUsers: 1,
     hidden: true,
-    features: ['Apenas para testes internos'],
+    featureKeys: ['planos.recursos.apenasTeste'],
   },
 ];
 
 export const TRIAL_DURATION_DAYS = 30;
 export const TRIAL_MAX_ACTIVE_JOBS = 10;
+/**
+ * O trial é generoso em vagas (10, mais que o Starter) mas fechado em usuários: quem
+ * está avaliando o produto avalia sozinho. Convidar equipe é motivo para assinar.
+ */
+export const TRIAL_MAX_USERS = 1;
 
 
 export interface SubscriptionInfo {
@@ -128,6 +168,63 @@ export function getMaxActiveJobs(info: SubscriptionInfo): number {
     return TRIAL_MAX_ACTIVE_JOBS;
   }
   return 0;
+}
+
+/**
+ * Fonte única do limite de assentos, incluindo o dono. Mesmo formato de
+ * getMaxActiveJobs: sem assinatura válida o limite é 1, e não 0, porque o dono nunca
+ * perde o acesso à própria conta por causa de assento. Quem perde acesso quando o
+ * plano cai são os membros excedentes, e isso é decidido em resolveSeatBlock.
+ */
+export function getMaxUsers(info: SubscriptionInfo): number {
+  if (info.status === 'active' && info.plan) {
+    const plan = PLANS.find((p) => p.id === info.plan);
+    return plan?.maxUsers ?? 1;
+  }
+  if (info.status === 'trialing' && !isTrialExpired(info.trialEndsAt)) {
+    return TRIAL_MAX_USERS;
+  }
+  return 1;
+}
+
+export interface ImportLimits {
+  /** Arquivos aceitos num único lote. */
+  perBatch: number;
+  /** Currículos importados no mês corrente, somando todas as vagas da conta. */
+  perMonth: number;
+}
+
+/**
+ * Teto do trial. Sem teto, uma conta de teste sobe 5.000 PDFs e o Rankea vira parser
+ * de currículo grátis, pagando IA por arquivo.
+ */
+export const TRIAL_IMPORT_LIMITS: ImportLimits = { perBatch: 50, perMonth: 100 };
+
+/**
+ * PROVISÓRIO: os tetos mensais dos planos pagos ainda não foram decididos. Os números
+ * abaixo são um ponto de partida seguro (custo de IA por currículo importado), não uma
+ * decisão de produto. Revisar antes de anunciar a importação, e lembrar que a página de
+ * planos hoje anuncia "candidatos ilimitados": ou o texto muda, ou estes tetos somem.
+ */
+const PAID_IMPORT_LIMITS: Record<PlanId, ImportLimits> = {
+  starter: { perBatch: 200, perMonth: 300 },
+  professional: { perBatch: 200, perMonth: 1000 },
+  enterprise: { perBatch: 200, perMonth: Infinity },
+  test: { perBatch: 50, perMonth: 100 },
+};
+
+/**
+ * Fonte única dos limites de importação. Mesmo formato de getMaxActiveJobs: sem
+ * assinatura válida o limite é zero, porque importar currículo custa IA por arquivo.
+ */
+export function getImportLimits(info: SubscriptionInfo): ImportLimits {
+  if (info.status === 'active' && info.plan) {
+    return PAID_IMPORT_LIMITS[info.plan] ?? { perBatch: 0, perMonth: 0 };
+  }
+  if (info.status === 'trialing' && !isTrialExpired(info.trialEndsAt)) {
+    return TRIAL_IMPORT_LIMITS;
+  }
+  return { perBatch: 0, perMonth: 0 };
 }
 
 /** Precisa assinar: trial vencido (ou cancelado) e sem plano pago ativo. */

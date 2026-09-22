@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { validateSlug } from '@/lib/slug';
+import { tradutorDeErros } from '@/lib/erros';
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,7 +16,8 @@ export async function GET(request: NextRequest) {
 
     const validation = validateSlug(slug);
     if (!validation.valid) {
-      return Response.json({ available: false, reason: validation.error });
+      const t = await tradutorDeErros();
+      return Response.json({ available: false, reason: t(validation.errorKey!) });
     }
 
     const existing = await prisma.recruiter.findUnique({

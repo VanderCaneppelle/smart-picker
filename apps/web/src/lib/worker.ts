@@ -20,9 +20,10 @@ function wait(ms: number): Promise<void> {
 async function fetchWithRetry(
   url: string,
   options: RequestInit,
-  label: string
+  label: string,
+  maxRetries: number = MAX_RETRIES
 ): Promise<void> {
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), WORKER_TRIGGER_TIMEOUT_MS);
 
@@ -38,13 +39,13 @@ async function fetchWithRetry(
     } catch (err: unknown) {
       clearTimeout(timeoutId);
       const isAbort = err instanceof Error && err.name === 'AbortError';
-      const isLastAttempt = attempt === MAX_RETRIES;
+      const isLastAttempt = attempt === maxRetries;
 
       if (isLastAttempt) {
         if (!isAbort) {
-          console.error(`[Worker] ${label} failed after ${MAX_RETRIES + 1} attempts:`, err);
+          console.error(`[Worker] ${label} failed after ${maxRetries + 1} attempts:`, err);
         } else {
-          console.error(`[Worker] ${label} timed out after ${MAX_RETRIES + 1} attempts.`);
+          console.error(`[Worker] ${label} timed out after ${maxRetries + 1} attempts.`);
         }
         return;
       }
@@ -83,6 +84,38 @@ export function triggerWorkerProcess(candidateId: string, options?: TriggerProce
       body: JSON.stringify({ candidateId, skipEmails: options?.skipEmails === true }),
     },
     `Process trigger (candidate ${candidateId})`
+  );
+}
+
+/**
+ * Manda o worker drenar a fila de pontuação de UMA vaga. Uma chamada por lote, nunca
+ * uma por candidato: 200 gatilhos seriam 200 requisições ao Railway, 200 chamadas
+ * simultâneas à OpenAI e 200 consultas Prisma disputando um pooler com
+ * connection_limit=1, que estoura com P2024.
+ *
+ * Sem retry de propósito (maxRetries 0). O worker responde na hora e drena em
+ * background; se a resposta se perder, retentar só faria a fila ser drenada duas
+ * vezes. Fila parada volta a andar no próximo lote ou no recálculo manual.
+ */
+export function triggerJobQueueProcess(jobId: string): Promise<void> {
+  const config = getWorkerConfig();
+  if (!config) {
+    console.warn('[Worker] WORKER_URL or WORKER_SECRET not configured. Skipping job queue trigger.');
+    return Promise.resolve();
+  }
+
+  return fetchWithRetry(
+    `${config.workerUrl}/process-job-queue`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${config.workerSecret}`,
+      },
+      body: JSON.stringify({ jobId }),
+    },
+    `Job queue trigger (job ${jobId})`,
+    0
   );
 }
 
@@ -134,4 +167,59 @@ export function triggerRejectionEmail(candidateId: string): Promise<void> {
     },
     `Rejection email (candidate ${candidateId})`
   );
+}
+
+export class TeamInviteEmailError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'TeamInviteEmailError';
+  }
+}
+
+/**
+ * Manda a senha provisória para o novo membro.
+ *
+ * Único gatilho do arquivo que NÃO engole falha. Os outros podem pular em silêncio
+ * porque são efeito colateral de algo que já foi gravado; aqui o e-mail é o único
+ * caminho da senha até a pessoa, e a senha não fica salva em lugar nenhum. Se este
+ * envio falhar sem avisar, o dono fica com um usuário criado que ninguém acessa.
+ *
+ * Sem retry: o endpoint do worker é síncrono e retentar corre o risco de mandar o
+ * mesmo convite duas vezes. Falhou, a tela de equipe oferece gerar outra senha.
+ */
+export async function sendTeamInviteEmail(memberId: string, password: string): Promise<void> {
+  const config = getWorkerConfig();
+  if (!config) {
+    throw new TeamInviteEmailError(
+      'WORKER_URL ou WORKER_SECRET não configurados: o convite não pode ser enviado.'
+    );
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), WORKER_TRIGGER_TIMEOUT_MS);
+
+  try {
+    const res = await fetch(`${config.workerUrl}/send-team-invite`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${config.workerSecret}`,
+      },
+      body: JSON.stringify({ memberId, password }),
+      signal: controller.signal,
+    });
+
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      throw new TeamInviteEmailError(`Worker recusou o convite: ${res.status} ${body}`);
+    }
+  } catch (err) {
+    if (err instanceof TeamInviteEmailError) throw err;
+    const isAbort = err instanceof Error && err.name === 'AbortError';
+    throw new TeamInviteEmailError(
+      isAbort ? 'Tempo esgotado ao enviar o convite.' : 'Falha de rede ao enviar o convite.'
+    );
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }

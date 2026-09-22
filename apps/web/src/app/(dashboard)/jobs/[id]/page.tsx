@@ -18,9 +18,11 @@ import {
   Info,
   Pencil,
   X,
+  Upload,
 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { apiClient, isPlanLimitError } from '@/lib/api-client';
+import { registrarEvento } from '@/lib/analytics';
 import {
   Button,
   Badge,
@@ -32,6 +34,7 @@ import {
   Loading,
 } from '@/components/ui';
 import CandidatesSection from '@/components/CandidatesSection';
+import ImportResumesModal from '@/components/ImportResumesModal';
 import type { Job, ApplicationQuestion, QuestionType } from '@hunter/core';
 import { useTranslations } from 'next-intl';
 
@@ -100,6 +103,9 @@ export default function JobDetailPage() {
 
   const searchParams = useSearchParams();
   const [job, setJob] = useState<Job | null>(null);
+  const [showImportModal, setShowImportModal] = useState(false);
+  /** Muda a cada importação concluída, para a lista de candidatos recarregar. */
+  const [importToken, setImportToken] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'candidates' | 'details'>(() =>
@@ -360,6 +366,7 @@ export default function JobDetailPage() {
     const url = `${window.location.origin}/jobs/${jobId}/apply`;
     try {
       await navigator.clipboard.writeText(url);
+      registrarEvento('link_vaga_copiado');
       toast.success(t('vagas.linkCopiado'));
     } catch {
       toast.error(t('vagas.erroCopiar'));
@@ -457,7 +464,7 @@ export default function JobDetailPage() {
     newQuestions[index] = { ...newQuestions[index], ...updates };
     
     if (updates.type === 'yes_no') {
-      newQuestions[index].options = ['Sim', 'Não'];
+      newQuestions[index].options = [t('formVaga.sim'), t('formVaga.nao')];
     }
     if (updates.type === 'text' || updates.type === 'textarea' || updates.type === 'number') {
       newQuestions[index].options = [];
@@ -548,6 +555,11 @@ export default function JobDetailPage() {
           </div>
 
           <div className="flex items-center gap-1">
+            <Button variant="ghost" size="sm" onClick={() => setShowImportModal(true)}
+              className="flex items-center gap-1.5 text-gray-600 hover:text-gray-900">
+              <Upload className="h-4 w-4" />
+              <span className="hidden sm:inline text-sm">{t('importacao.botao')}</span>
+            </Button>
             <Button data-onboarding-id="onb-job-share" variant="ghost" size="sm" onClick={handleShare}
               className="flex items-center gap-1.5 text-gray-600 hover:text-gray-900">
               <Share2 className="h-4 w-4" />
@@ -620,8 +632,35 @@ export default function JobDetailPage() {
       </div>
 
       {/* Tab Content */}
+      <ImportResumesModal
+        jobId={jobId}
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onImported={(resultado) => {
+          registrarEvento('curriculos_importados', {
+            criados: resultado.created.length,
+            recusados: resultado.rejected.length,
+          });
+          setImportToken((n) => n + 1);
+          // O contador da aba vem do _count da vaga, que foi buscado uma vez. Somar os
+          // criados aqui evita refazer fetchJob, que repovoaria o formulário inteiro e
+          // descartaria edição em andamento.
+          setJob((atual) =>
+            atual
+              ? {
+                  ...atual,
+                  _count: {
+                    ...atual._count,
+                    candidates: (atual._count?.candidates ?? 0) + resultado.created.length,
+                  },
+                }
+              : atual
+          );
+        }}
+      />
+
       {activeTab === 'candidates' ? (
-        <CandidatesSection jobId={jobId} />
+        <CandidatesSection jobId={jobId} refreshToken={importToken} />
       ) : (
         <div className="space-y-8">
           {/* Basic Info */}
@@ -766,7 +805,7 @@ export default function JobDetailPage() {
                                   if (isElim && !question.eliminatory_criteria) {
                                     const criteria: EliminatoryCriteria = {};
                                     if (question.type === 'yes_no') {
-                                      criteria.expected_answer = 'Sim';
+                                      criteria.expected_answer = t('formVaga.sim');
                                     }
                                     if (question.type === 'select' || question.type === 'multiselect') {
                                       criteria.accepted_values = [...(question.options || [])];
@@ -834,7 +873,7 @@ export default function JobDetailPage() {
                         {/* Mostrar opções fixas para yes_no */}
                         {question.type === 'yes_no' && (
                           <div className="mt-3 pl-4 border-l-2 border-gray-200">
-                            <p className="text-sm text-gray-500">{t('formVaga.opcoes')}<span className="font-medium">Sim</span> / <span className="font-medium">Não</span>
+                            <p className="text-sm text-gray-500">{t('formVaga.opcoes')}<span className="font-medium">{t('formVaga.sim')}</span> / <span className="font-medium">{t('formVaga.nao')}</span>
                             </p>
                           </div>
                         )}
@@ -850,7 +889,7 @@ export default function JobDetailPage() {
                               <div>
                                 <label className="block text-sm text-gray-700 mb-1">{t('formVaga.respostaEsperada')}</label>
                                 <select
-                                  value={question.eliminatory_criteria?.expected_answer || 'Sim'}
+                                  value={question.eliminatory_criteria?.expected_answer || t('formVaga.sim')}
                                   onChange={(e) =>
                                     updateQuestion(index, {
                                       eliminatory_criteria: {
@@ -862,8 +901,8 @@ export default function JobDetailPage() {
                                   disabled={!isEditing}
                                   className="text-sm border border-amber-300 rounded-md px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 >
-                                  <option value="Sim">Sim</option>
-                                  <option value="Não">Não</option>
+                                  <option value="Sim">{t('formVaga.sim')}</option>
+                                  <option value="Não">{t('formVaga.nao')}</option>
                                 </select>
                               </div>
                             )}
@@ -904,9 +943,7 @@ export default function JobDetailPage() {
 
                             {question.type === 'number' && (
                               <div className="space-y-3">
-                                <p className="text-xs text-gray-600">
-                                  Se a resposta numérica estiver fora do intervalo, o candidato será flagueado ou eliminado.
-                                </p>
+                                <p className="text-xs text-gray-600">{t('vaga.intervaloAjuda')}</p>
                                 <div className="grid grid-cols-3 gap-3">
                                   <div>
                                     <label className="block text-xs font-medium text-gray-600 mb-1">{t('formVaga.minimo')}</label>
@@ -1008,9 +1045,7 @@ export default function JobDetailPage() {
               <Brain className="h-5 w-5 text-emerald-600" />
               <h2 className="text-lg font-semibold text-gray-900">{t('formVaga.secaoIA')}</h2>
             </div>
-            <p className="text-sm text-gray-500 mb-6">
-              Defina como a IA deve ponderar cada aspecto na avaliação dos candidatos.
-            </p>
+            <p className="text-sm text-gray-500 mb-6">{t('vaga.pesosDescricao')}</p>
             
             <div className="space-y-6">
               {/* Resume Weight */}
@@ -1073,7 +1108,7 @@ export default function JobDetailPage() {
                 label={t('formVaga.instrucoesIA')}
                 value={scoringInstructions}
                 onChange={(e) => setScoringInstructions(e.target.value)}
-                placeholder="Ex: Priorize candidatos com experiência em React. Valorize certificações AWS. Candidatos com inglês fluente devem ter pontuação maior..."
+                placeholder={t('vaga.instrucoesExemplo')}
                 rows={3}
                 disabled={!isEditing}
               />
@@ -1108,7 +1143,7 @@ export default function JobDetailPage() {
           {/* Anotações internas */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('formVaga.anotacoes')}</h2>
-            <p className="text-sm text-gray-500 mb-4">Visível apenas para recrutadores. Use para perguntas da entrevista ou observações.</p>
+            <p className="text-sm text-gray-500 mb-4">{t('vaga.notaInternaAjuda')}</p>
             <Textarea
               label={t('formVaga.perguntasEntrevista')}
               value={interviewQuestions}
@@ -1134,7 +1169,7 @@ export default function JobDetailPage() {
           setShowUnsavedModal(false);
           setPendingAction(null);
         }}
-        title="Alterações não salvas"
+        title={t('vaga.naoSalvo')}
         size="md"
         footer={
           <>
@@ -1150,16 +1185,14 @@ export default function JobDetailPage() {
           </>
         }
       >
-        <p className="text-gray-600">
-          Você tem alterações não salvas nos detalhes da vaga. Deseja salvar antes de continuar?
-        </p>
+        <p className="text-gray-600">{t('vaga.confirmarSair')}</p>
       </Modal>
 
       {/* Delete Modal */}
       <Modal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        title="Excluir Vaga"
+        title={t('vaga.excluirVaga')}
         footer={
           <>
             <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>{t('formVaga.cancelar')}</Button>
@@ -1167,10 +1200,7 @@ export default function JobDetailPage() {
           </>
         }
       >
-        <p className="text-gray-600">
-          Tem certeza que deseja excluir esta vaga? Esta ação não pode ser desfeita.
-          Todos os candidatos associados a esta vaga também serão removidos.
-        </p>
+        <p className="text-gray-600">{t('vaga.confirmarExcluir')}</p>
       </Modal>
     </div>
   );
