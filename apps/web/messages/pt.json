@@ -720,7 +720,8 @@
     "iaAjuda": "Corrige o texto e organiza em seções, sem inventar informação",
     "iaOk": "Descrição atualizada. Use Desfazer se quiser voltar.",
     "erroIA": "Não consegui melhorar a descrição.",
-    "melhorarIA": "Melhorar com IA"
+    "melhorarIA": "Melhorar com IA",
+    "melhorando": "Melhorando..."
   },
   "autenticacao": {
     "diasGratis": "30 dias grátis",
@@ -1151,6 +1152,7 @@
     "emailInvalido": "E-mail inválido",
     "informeNome": "Informe o nome",
     "iaSemChave": "A melhoria por IA não está configurada. Falta OPENAI_API_KEY.",
+    "descricaoCurta": "Escreva um pouco mais antes de pedir a melhoria.",
     "descricaoLonga": "A descrição está longa demais para ser melhorada de uma vez.",
     "iaFalhou": "Não consegui melhorar a descrição agora. Tente de novo.",
     "iaErro": "Erro ao melhorar a descrição.",

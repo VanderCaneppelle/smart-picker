@@ -274,7 +274,7 @@ const RichTextEditor = ({
               ) : (
                 <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
               )}
-              {polishing ? 'Melhorando...' : t('editor.melhorarIA')}
+              {polishing ? t('editor.melhorando') : t('editor.melhorarIA')}
             </button>
           )}
         </div>

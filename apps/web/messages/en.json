@@ -720,7 +720,8 @@
     "iaAjuda": "Cleans up the text and organizes it into sections, without inventing anything",
     "iaOk": "Description updated. Use Undo to go back.",
     "erroIA": "Could not improve the description.",
-    "melhorarIA": "Improve with AI"
+    "melhorarIA": "Improve with AI",
+    "melhorando": "Improving..."
   },
   "autenticacao": {
     "diasGratis": "30 days free",
@@ -1151,6 +1152,7 @@
     "emailInvalido": "Invalid email",
     "informeNome": "Enter a name",
     "iaSemChave": "AI polishing is not configured. OPENAI_API_KEY is missing.",
+    "descricaoCurta": "Write a bit more before asking for a polish.",
     "descricaoLonga": "The description is too long to polish in one go.",
     "iaFalhou": "Could not polish the description right now. Try again.",
     "iaErro": "Error polishing the description.",
