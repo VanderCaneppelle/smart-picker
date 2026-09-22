@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { getLocale } from 'next-intl/server';
 import { requireAccount } from '@/lib/auth';
 import { tradutorDeErros } from '@/lib/erros';
 
@@ -40,8 +41,15 @@ function textLength(html: string): number {
   return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim().length;
 }
 
-function buildPrompt(jobTitle: string | null): string {
+function buildPrompt(jobTitle: string | null, locale: string): string {
+  const emIngles = locale === 'en';
+  const instrucaoIdioma = emIngles
+    ? 'IMPORTANT: write "html" and every item in "missing" in English, whatever language the original text is written in.'
+    : 'IMPORTANTE: escreva "html" e cada item de "missing" em português brasileiro, independentemente do idioma do texto original.';
+
   return `Você reescreve descrições de vaga para um sistema de recrutamento brasileiro.
+
+${instrucaoIdioma}
 
 ${jobTitle ? `A vaga se chama "${jobTitle}".` : 'O título da vaga não foi informado.'}
 
@@ -103,7 +111,7 @@ export async function POST(request: NextRequest) {
     return Response.json(
       {
         error: 'Bad Request',
-        message: 'Escreva um pouco mais antes de pedir a melhoria.',
+        message: t('erros.descricaoCurta'),
       },
       { status: 400 }
     );
@@ -120,6 +128,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const locale = await getLocale();
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -132,7 +141,7 @@ export async function POST(request: NextRequest) {
         max_tokens: 2000,
         response_format: { type: 'json_object' },
         messages: [
-          { role: 'system', content: buildPrompt(jobTitle) },
+          { role: 'system', content: buildPrompt(jobTitle, locale) },
           { role: 'user', content: inputHtml },
         ],
       }),

@@ -12,19 +12,8 @@ export default function TermosDeUsoPage() {
         <p className="text-sm text-gray-500 mb-8">Última atualização: setembro de 2026</p>
 
         <div className="prose prose-gray max-w-none space-y-6 text-gray-700">
-          <section className="rounded-xl bg-gray-100 border border-gray-200 p-5">
-            <h2 className="text-xl font-semibold text-gray-900 mt-0 mb-3">1. Identificação</h2>
-            <p className="mb-0">
-              A plataforma <strong>Rankea</strong> (&quot;Rankea&quot;, &quot;Plataforma&quot;, &quot;nós&quot;) é operada por{' '}
-              <strong>T &amp; V Consultoria em Tecnologia da Informação LTDA</strong> (nome fantasia{' '}
-              <strong>TC IT Consultancy</strong>), inscrita no CNPJ sob o nº{' '}
-              <strong>45.679.027/0001-90</strong>, com sede na Av. Prefeito Osmar Cunha, 416, Sala 1108,
-              Edifício Empresarial Koerich Rio Branco, Centro, Florianópolis/SC, CEP 88.015-100.
-            </p>
-          </section>
-
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">2. Aceitação dos Termos</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-0 mb-3">1. Aceitação dos Termos</h2>
             <p>
               Ao acessar e utilizar a Plataforma, você declara ter no mínimo 18 anos (ou ser legalmente emancipado)
               e capacidade civil para contratar, e concorda integralmente com estes Termos de Uso e com nossa{' '}
@@ -36,7 +25,7 @@ export default function TermosDeUsoPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">3. Descrição do Serviço</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">2. Descrição do Serviço</h2>
             <p>
               O Rankea é uma plataforma de software como serviço (SaaS) que conecta recrutadores e candidatos,
               permitindo a publicação de vagas, o recebimento de candidaturas e a gestão de processos seletivos,
@@ -45,7 +34,7 @@ export default function TermosDeUsoPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">4. Cadastro e Conta</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">3. Cadastro e Conta</h2>
             <p>
               Recrutadores que se cadastram na Plataforma são responsáveis por manter a confidencialidade de suas
               credenciais de acesso e por todas as atividades realizadas em sua conta. Informações de cadastro
@@ -56,7 +45,7 @@ export default function TermosDeUsoPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">5. Uso por Candidatos</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">4. Uso por Candidatos</h2>
             <p>
               Ao se candidatar a uma vaga pela Plataforma, você declara que as informações e documentos fornecidos
               (incluindo currículo e respostas) são verdadeiros e de sua autoria, e concorda com o tratamento dos
@@ -70,7 +59,7 @@ export default function TermosDeUsoPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">6. Uso por Recrutadores</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">5. Uso por Recrutadores</h2>
             <p>
               Recrutadores são os únicos responsáveis pelo conteúdo das vagas publicadas, pela veracidade das
               informações divulgadas e pelas decisões de contratação, rejeição ou avanço de candidatos em suas
@@ -105,7 +94,7 @@ export default function TermosDeUsoPage() {
 
           <section className="rounded-xl bg-amber-50 border border-amber-200 p-5">
             <h2 className="text-xl font-semibold text-gray-900 mt-0 mb-3">
-              7. Avaliação e Ranking por Inteligência Artificial
+              6. Avaliação e Ranking por Inteligência Artificial
             </h2>
             <p>
               A Plataforma utiliza inteligência artificial para gerar notas, resumos e sugestões sobre candidatos
@@ -128,7 +117,7 @@ export default function TermosDeUsoPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">
-              8. Planos, Pagamento e Cancelamento
+              7. Planos, Pagamento e Cancelamento
             </h2>
             <p>
               Novas contas de recrutador têm acesso a um período de teste gratuito, conforme indicado na
@@ -153,7 +142,7 @@ export default function TermosDeUsoPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">9. Propriedade Intelectual</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">8. Propriedade Intelectual</h2>
             <p>
               O conteúdo da Plataforma (marca Rankea, textos, layout, software e sua documentação) é de
               propriedade da T &amp; V Consultoria em Tecnologia da Informação LTDA ou de seus licenciadores e é
@@ -163,7 +152,7 @@ export default function TermosDeUsoPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">10. Indenização</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">9. Indenização</h2>
             <p>
               O recrutador concorda em indenizar e isentar o Rankea de quaisquer reclamações, perdas, danos ou
               despesas (incluindo honorários advocatícios) decorrentes do uso indevido da Plataforma, de conteúdo
@@ -173,7 +162,7 @@ export default function TermosDeUsoPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">11. Limitação de Responsabilidade</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">10. Limitação de Responsabilidade</h2>
             <p>
               A Plataforma é oferecida &quot;como está&quot; e &quot;conforme disponível&quot;. Não garantimos resultados de
               contratação, veracidade de informações fornecidas por terceiros, nem disponibilidade ininterrupta
@@ -190,7 +179,7 @@ export default function TermosDeUsoPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">12. Suspensão e Rescisão</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">11. Suspensão e Rescisão</h2>
             <p>
               Podemos suspender ou encerrar o acesso de qualquer conta, a nosso critério, em caso de violação
               destes Termos, inadimplência, fraude ou risco à segurança da Plataforma ou de terceiros. O
@@ -204,7 +193,7 @@ export default function TermosDeUsoPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">13. Alterações</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">12. Alterações</h2>
             <p>
               Podemos alterar estes Termos a qualquer momento. Alterações relevantes serão comunicadas por meio
               da Plataforma ou por e-mail com antecedência razoável. O uso continuado após as alterações entrarem
@@ -213,7 +202,7 @@ export default function TermosDeUsoPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">14. Lei e Foro</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">13. Lei e Foro</h2>
             <p>
               Estes Termos são regidos pelas leis da República Federativa do Brasil. Fica eleito o foro da
               comarca de Florianópolis, Estado de Santa Catarina, para dirimir quaisquer controvérsias
@@ -223,7 +212,14 @@ export default function TermosDeUsoPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">15. Contato</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">14. Identificação e Contato</h2>
+            <p>
+              A plataforma <strong>Rankea</strong> (&quot;Rankea&quot;, &quot;Plataforma&quot;, &quot;nós&quot;) é operada por{' '}
+              <strong>T &amp; V Consultoria em Tecnologia da Informação LTDA</strong> (nome fantasia{' '}
+              <strong>TC IT Consultancy</strong>), inscrita no CNPJ sob o nº{' '}
+              <strong>45.679.027/0001-90</strong>, com sede na Av. Prefeito Osmar Cunha, 416, Sala 1108,
+              Edifício Empresarial Koerich Rio Branco, Centro, Florianópolis/SC, CEP 88.015-100.
+            </p>
             <p>
               Dúvidas sobre estes Termos podem ser enviadas para{' '}
               <a
