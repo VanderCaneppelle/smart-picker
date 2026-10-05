@@ -492,6 +492,10 @@ class ApiClient {
     return this.request<AdminRecruitersResponse>(`/admin/recruiters${suffix}`);
   }
 
+  async getAdminRecruiterDetail(id: string): Promise<AdminRecruiterDetail> {
+    return this.request<AdminRecruiterDetail>(`/admin/recruiters/${id}`);
+  }
+
   async getAdminSubscriptions(params: { filter?: string; page?: number } = {}) {
     const qs = new URLSearchParams();
     if (params.filter) qs.set('filter', params.filter);
@@ -728,6 +732,28 @@ export interface AdminRecruiterRow {
     trial_ends_at: string | null;
     current_period_end: string | null;
   } | null;
+}
+
+export interface AdminRecruiterDetail {
+  recruiter: {
+    id: string;
+    name: string;
+    email: string;
+    company: string | null;
+    phone_number: string | null;
+    created_at: string;
+    is_team_member: boolean;
+  };
+  subscription: AdminRecruiterRow['subscription'];
+  team: { id: string; email: string; name: string; created_at: string }[];
+  summary: {
+    jobsTotal: number;
+    jobsActive: number;
+    candidatesTotal: number;
+    lastJobCreatedAt: string | null;
+    lastCandidateAt: string | null;
+  };
+  jobs: { id: string; title: string; status: string; created_at: string; candidates: number }[];
 }
 
 export interface AdminPagination {

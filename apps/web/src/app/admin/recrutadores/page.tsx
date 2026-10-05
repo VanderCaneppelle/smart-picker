@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { apiClient, type AdminRecruiterRow, type AdminPagination } from '@/lib/api-client';
 import PageHeader from '../PageHeader';
@@ -109,7 +110,7 @@ export default function AdminRecruitersPage() {
               return (
                 <tr key={r.id}>
                   <td className="px-4 py-3">
-                    <p className="font-medium text-gray-900">{r.name}</p>
+                    <Link href={`/admin/recrutadores/${r.id}`} className="font-medium text-gray-900 hover:text-emerald-700 hover:underline">{r.name}</Link>
                     <p className="text-[13px] text-gray-500">{r.email}</p>
                     {r.company && <p className="text-[13px] text-gray-400">{r.company}</p>}
                   </td>
