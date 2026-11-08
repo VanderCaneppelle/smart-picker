@@ -484,9 +484,10 @@ class ApiClient {
     return this.request<AdminOverview>('/admin/overview');
   }
 
-  async getAdminRecruiters(params: { search?: string; page?: number } = {}) {
+  async getAdminRecruiters(params: { search?: string; page?: number; kind?: string } = {}) {
     const qs = new URLSearchParams();
     if (params.search) qs.set('search', params.search);
+    if (params.kind) qs.set('kind', params.kind);
     if (params.page) qs.set('page', String(params.page));
     const suffix = qs.toString() ? `?${qs.toString()}` : '';
     return this.request<AdminRecruitersResponse>(`/admin/recruiters${suffix}`);
@@ -704,7 +705,15 @@ export const apiClient = new ApiClient();
 export default apiClient;
 
 export interface AdminOverview {
-  recruiters: { total: number; last7d: number; last30d: number; teamMembers?: number };
+  /** Só contas reais: robôs e contas internas vêm contados à parte. */
+  recruiters: {
+    total: number;
+    last7d: number;
+    last30d: number;
+    teamMembers?: number;
+    bots?: number;
+    internal?: number;
+  };
   jobs: { total: number; active: number };
   candidates: { total: number; last7d: number; last30d: number };
   subscriptions: {
@@ -722,6 +731,9 @@ export interface AdminRecruiterRow {
   email: string;
   company: string | null;
   created_at: string;
+  /** Último login no Supabase Auth; null = nunca entrou (ou não deu para ler). */
+  last_sign_in_at?: string | null;
+  kind?: 'real' | 'internal' | 'bot';
   jobs: number;
   /** Usuários da conta, contando o dono. */
   users?: number;
@@ -765,6 +777,8 @@ export interface AdminPagination {
 
 export interface AdminRecruitersResponse {
   data: AdminRecruiterRow[];
+  /** Quantas contas de cada tipo batem com a busca, para os botões de filtro. */
+  counts?: { real: number; internal: number; bot: number; all: number };
   pagination: AdminPagination;
 }
 

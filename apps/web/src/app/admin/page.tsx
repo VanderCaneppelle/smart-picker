@@ -100,9 +100,9 @@ export default function AdminOverviewPage() {
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat
-            label="Recrutadores"
+            label="Recrutadores reais"
             value={data.recruiters.total}
-            hint={`+${data.recruiters.last7d} em 7 dias, +${data.recruiters.last30d} em 30`}
+            hint={`+${data.recruiters.last7d} em 7 dias, +${data.recruiters.last30d} em 30 · fora ${data.recruiters.bots ?? 0} robôs e ${data.recruiters.internal ?? 0} internas`}
             href="/admin/recrutadores"
           />
           <Stat label="Vagas ativas" value={data.jobs.active} hint={`${data.jobs.total} no total`} />
