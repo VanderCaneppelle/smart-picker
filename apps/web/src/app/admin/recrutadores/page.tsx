@@ -2,7 +2,12 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
-import { apiClient, type AdminRecruiterRow, type AdminPagination } from '@/lib/api-client';
+import {
+  apiClient,
+  type AdminRecruiterRow,
+  type AdminRecruitersResponse,
+  type AdminPagination,
+} from '@/lib/api-client';
 import PageHeader from '../PageHeader';
 
 const STATUS_LABEL: Record<string, string> = {
@@ -29,19 +34,48 @@ function situacao(sub: AdminRecruiterRow['subscription']): { texto: string; tom:
   return { texto: STATUS_LABEL[sub.status] || sub.status, tom: 'text-amber-700' };
 }
 
+/** "Reais" é o padrão: robô e conta de teste nossa não são cliente. */
+const TIPOS = [
+  { value: 'real', label: 'Reais' },
+  { value: 'internal', label: 'Internas' },
+  { value: 'bot', label: 'Robôs' },
+  { value: 'all', label: 'Todas' },
+] as const;
+
+const TIPO_BADGE: Record<string, { texto: string; tom: string }> = {
+  internal: { texto: 'Interna', tom: 'border-sky-200 bg-sky-50 text-sky-700' },
+  bot: { texto: 'Robô', tom: 'border-gray-200 bg-gray-50 text-gray-500' },
+};
+
+function ultimoAcesso(iso: string | null | undefined): string {
+  if (!iso) return 'Nunca';
+  const dias = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (dias <= 0) return 'Hoje';
+  if (dias === 1) return 'Ontem';
+  if (dias < 30) return `Há ${dias} dias`;
+  return new Date(iso).toLocaleDateString('pt-BR');
+}
+
 export default function AdminRecruitersPage() {
   const [rows, setRows] = useState<AdminRecruiterRow[]>([]);
   const [pagination, setPagination] = useState<AdminPagination | null>(null);
+  const [counts, setCounts] = useState<AdminRecruitersResponse['counts'] | null>(null);
   const [search, setSearch] = useState('');
+  const [kind, setKind] = useState<string>('real');
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async (searchTerm: string, pageNum: number) => {
+  const load = useCallback(async (searchTerm: string, pageNum: number, kindValue: string) => {
     setLoading(true);
     try {
-      const res = await apiClient.getAdminRecruiters({ search: searchTerm, page: pageNum });
+      const res = await apiClient.getAdminRecruiters({
+        search: searchTerm,
+        page: pageNum,
+        kind: kindValue,
+      });
       setRows(res.data);
       setPagination(res.pagination);
+      setCounts(res.counts ?? null);
     } finally {
       setLoading(false);
     }
@@ -49,9 +83,9 @@ export default function AdminRecruitersPage() {
 
   // Busca com atraso para não disparar uma consulta por tecla.
   useEffect(() => {
-    const t = setTimeout(() => load(search, page), search ? 350 : 0);
+    const t = setTimeout(() => load(search, page, kind), search ? 350 : 0);
     return () => clearTimeout(t);
-  }, [search, page, load]);
+  }, [search, page, kind, load]);
 
   return (
     <div className="space-y-4">
@@ -76,11 +110,32 @@ export default function AdminRecruitersPage() {
         )}
       </div>
 
+      <div className="flex flex-wrap items-center gap-1.5">
+        {TIPOS.map((t) => (
+          <button
+            key={t.value}
+            type="button"
+            onClick={() => {
+              setKind(t.value);
+              setPage(1);
+            }}
+            className={`rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors ${
+              kind === t.value
+                ? 'bg-gray-900 text-white'
+                : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            {t.label}
+            {counts && <span className="ml-1.5 tabular-nums opacity-60">{counts[t.value]}</span>}
+          </button>
+        ))}
+      </div>
+
       <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-200 text-left">
-              {['Recrutador', 'Situação', 'Vagas', 'Candidaturas', 'Cadastro'].map((h) => (
+              {['Recrutador', 'Situação', 'Vagas', 'Candidaturas', 'Cadastro', 'Último acesso'].map((h) => (
                 <th
                   key={h}
                   className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.15em] text-gray-400"
@@ -93,14 +148,14 @@ export default function AdminRecruitersPage() {
           <tbody className="divide-y divide-gray-100">
             {loading && rows.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
                   Carregando...
                 </td>
               </tr>
             )}
             {!loading && rows.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
                   Nenhum recrutador encontrado.
                 </td>
               </tr>
@@ -111,6 +166,13 @@ export default function AdminRecruitersPage() {
                 <tr key={r.id}>
                   <td className="px-4 py-3">
                     <Link href={`/admin/recrutadores/${r.id}`} className="font-medium text-gray-900 hover:text-emerald-700 hover:underline">{r.name}</Link>
+                    {r.kind && TIPO_BADGE[r.kind] && (
+                      <span
+                        className={`ml-2 rounded border px-1.5 py-0.5 text-[11px] font-medium ${TIPO_BADGE[r.kind].tom}`}
+                      >
+                        {TIPO_BADGE[r.kind].texto}
+                      </span>
+                    )}
                     <p className="text-[13px] text-gray-500">{r.email}</p>
                     {r.company && <p className="text-[13px] text-gray-400">{r.company}</p>}
                   </td>
@@ -119,6 +181,9 @@ export default function AdminRecruitersPage() {
                   <td className="px-4 py-3 tabular-nums text-gray-700">{r.candidates}</td>
                   <td className="px-4 py-3 text-[13px] text-gray-500">
                     {new Date(r.created_at).toLocaleDateString('pt-BR')}
+                  </td>
+                  <td className="px-4 py-3 text-[13px] text-gray-500">
+                    {ultimoAcesso(r.last_sign_in_at)}
                   </td>
                 </tr>
               );
